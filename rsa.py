@@ -1,4 +1,3 @@
-BYTE_SIZE = 256 # Number of possible values you can represent with a byte consisting of 8 bits.
 DEFAULT_BLOCK_SIZE = 4 # This value is in bytes. The block size has to be smaller than or equal to the key size, which is usually in bits.
 
 # def encrypt(message, product_of_initial_primes, public_key_exponent):
@@ -41,16 +40,16 @@ def convert_list_of_texts_to_list_of_numbers(list_of_strings):
 		numbers.append(get_number_representing_text(text))
 	return numbers
 
-def convert_list_of_numbers_to_list_of_texts(list_of_numbers):
+def convert_list_of_numbers_to_list_of_texts(list_of_numbers, block_size=DEFAULT_BLOCK_SIZE):
 	texts = []
 	for number in list_of_numbers:
-		texts.append(get_text_from_number(number))
+		texts.append(get_text_from_number(number, block_size))
 	return texts
 
 def encrypt_list_of_numbers(list_of_numbers, e, n):
-	"""
-	e is the public key exponent
-	n is the modulus for the public key and the private keys, obtained by multiplying the primes chosen when making the certificate
+	"""Args:
+		e is the public key exponent
+		n is the modulus for the public key and the private keys, obtained by multiplying the primes chosen when making the certificate
 	"""
 	encrypted_numbers = []
 	for number in list_of_numbers:
@@ -59,14 +58,51 @@ def encrypt_list_of_numbers(list_of_numbers, e, n):
 	return encrypted_numbers
 
 def decrypt_list_of_numbers(list_of_numbers, d, n):
-	"""
-	d is the private key exponent
-	n is the modulus for both the public key and the private keys, obtained by multiplying the primes chosen when making the certificate
+	"""Args:
+		d is the private key exponent
+		n is the modulus for both the public key and the private keys, obtained by multiplying the primes chosen when making the certificate
 	"""
 	decrypted_numbers = []
 	for number in list_of_numbers
 		decrypted_numbers.append(pow(number,d,n))
 	return decrypted_numbers
+
+def concatenate_numbers_to_string(list_of_numbers):
+	result = ""
+	for number in list_of_numbers:
+		result += str(number)
+	return result
+
+def concatenate_list_of_texts(list_of_texts):
+	result = ""
+	for text in list_of_texts:
+		result += text
+	return result
+
+def encrypt_message(message, e, n, block_size=DEFAULT_BLOCK_SIZE):
+	"""Args:
+		message (str): The plaintext message you want to encrypt.
+		e (int): The public key exponent you want to use to encrypt the message.
+		n (int): The public key modulus.
+	"""
+	chunked_message = split_text_into_chunks(message, block_size)
+	chunks_as_numbers = convert_list_of_texts_to_list_of_numbers(chunked_message)
+	encrypted_chunks = encrypt_list_of_numbers(chunks_as_numbers, e, n)
+	encrypted_message = concatenate_numbers_to_string(encrypted_chunks)
+	return encrypted_message
+
+def decrypt_message(message, d, n, block_size=DEFAULT_BLOCK_SIZE):
+	"""Args:
+		message (int): The encrypted message you want to decrypt. Should be a number?
+		d (int): The private key exponent.
+		n (int): The private key modulus.
+	"""
+	chunked_message = split_text_into_chunks(message, block_size)
+	decrypted_chunks = decrypt_list_of_numbers(chunked_message)
+	chunks_as_strings = convert_list_of_numbers_to_list_of_texts(decrypted_chunks, block_size)
+	decrypted_message = concatenate_list_of_texts(chunks_as_strings)
+	return decrypted_message
+
 
 if __name__ == "__main__":
 	text = 'My very long text.'
