@@ -16,22 +16,23 @@ def split_text_into_chunks(long_text, block_size=DEFAULT_BLOCK_SIZE, pad_last_ch
 		blocks.append(long_text[i:i+block_size])
 	if(pad_last_chunk):
 		if(len(blocks[-1])<block_size):
-			blocks[-1] = '{message:{fill}{align}{width}}'.format(
-				message=blocks[-1],
-				fill=' ',
-				align='<',
-				width=block_size,
-			)
+			blocks[-1] = pad_text(blocks[-1],block_size)
 	return blocks
 
-def pad_text(text, desired_length):
-	
+def pad_text(text, desired_length, char_to_fill_with=' ', alignment='<'):
+	return '{message:{fill}{align}{width}}'.format(
+		message=text,
+		fill=char_to_fill_with,
+		align=alignment,
+		width=desired_length,
+	)
+
 
 def get_number_representing_text(text_as_string):
 	return int.from_bytes(text_as_string.encode('utf-8'), byteorder='big')
 
 def get_text_from_number(number_represention_text, block_size=DEFAULT_BLOCK_SIZE):
-	return int.to_bytes(number_represention_text, length=block_size, byteorder='big').decode('utf-8')
+	return int.to_bytes(number_represention_text, length=block_size+1, byteorder='big').decode('utf-8')
 
 def convert_list_of_texts_to_list_of_numbers(list_of_strings):
 	numbers = []
@@ -47,22 +48,19 @@ def convert_list_of_numbers_to_list_of_texts(list_of_numbers):
 
 
 if __name__ == "__main__":
-	if(False):
-		print("yes")
-	else:
-		print("no")
 	text = 'My very long tex'
 	print(text)
 	print(len(text))
-	chunks = split_text_into_chunks(text, 3)
+	chunks = split_text_into_chunks(text)
 	print(chunks)
-	print("last chunk = " + chunks[-1])
+	print(len(chunks[0]))
 
 	# reclaimedNumbers = get_text_from_number(88,33)
 	# print("reclaimed text = " + reclaimedNumbers)
 
 	numbers = convert_list_of_texts_to_list_of_numbers(chunks)
 	print(numbers)
+	print((numbers[0].bit_length() + 7) // 8)
 
 	texts = convert_list_of_numbers_to_list_of_texts(numbers)
 	print(texts)
