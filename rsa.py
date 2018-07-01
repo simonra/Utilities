@@ -32,7 +32,7 @@ def get_number_representing_text(text_as_string):
 	return int.from_bytes(text_as_string.encode('utf-8'), byteorder='big')
 
 def get_text_from_number(number_represention_text, block_size=DEFAULT_BLOCK_SIZE):
-	return int.to_bytes(number_represention_text, length=block_size+1, byteorder='big').decode('utf-8')
+	return int.to_bytes(number_represention_text, length=block_size, byteorder='big').decode('utf-8')
 
 def convert_list_of_texts_to_list_of_numbers(list_of_strings):
 	numbers = []
@@ -43,7 +43,7 @@ def convert_list_of_texts_to_list_of_numbers(list_of_strings):
 def convert_list_of_numbers_to_list_of_texts(list_of_numbers):
 	texts = []
 	for i in range(0,len(list_of_numbers)):
-		texts.append(get_text_from_number(list_of_numbers[i],3))
+		texts.append(get_text_from_number(list_of_numbers[i]))
 	return texts
 
 
