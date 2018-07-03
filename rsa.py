@@ -5,6 +5,7 @@ def encrypt_numbers(list_of_numbers, e, n):
 		e is the public key exponent
 		n is the modulus for the public key and the private keys, obtained by multiplying the primes chosen when making the certificate
 	"""
+	# Alternative oneliner: return [pow(number,e,n) for number in list_of_numbers]
 	encrypted_numbers = []
 	for number in list_of_numbers:
 		# pow(a,b,c) = (a^b) mod c
@@ -30,7 +31,15 @@ def encrypt_message(message, e, n, chunk_size=DEFAULT_CHUNK_SIZE):
 	chunked_message = chunk_array(message, chunk_size)
 	chunks_as_numbers = bytes_to_numbers(chunked_message)
 	encrypted_chunks = encrypt_numbers(chunks_as_numbers, e, n)
-	encrypted_message = merge_byte_chunks(numbers_to_bytes(encrypted_chunks))
+	# Convert back to bytes before merging back together and giving out.
+	# This is done because the receiving end needs to be able to tear the
+	# encrypted message apart in manageable chunks for decrypting. With
+	# a list of bytes as input this is a simple straight forward task.
+	# If you give it out as a hughe number it becomes somewhat messy to
+	# figure out how to split it into chunks so that each chunk is of the
+	# same size. (Should you first try to split into some chunks? What about endianness?)
+	encrypted_bytes = numbers_to_bytes(encrypted_chunks)
+	encrypted_message = merge_byte_chunks(encrypted_bytes)
 	return encrypted_message
 
 def decrypt_message(message, d, n, chunk_size=DEFAULT_CHUNK_SIZE):
@@ -42,7 +51,7 @@ def decrypt_message(message, d, n, chunk_size=DEFAULT_CHUNK_SIZE):
 	chunked_message = chunk_array(message, chunk_size)
 	chunks_as_numbers = bytes_to_numbers(chunked_message)
 	decrypted_chunks = decrypt_numbers(chunks_as_numbers, d, n)
-	chunks_as_binary_strings = numbers_to_bytes(decrypted_chunks, block_size)
+	chunks_as_binary_strings = numbers_to_bytes(decrypted_chunks, chunk_size)
 	decrypted_message = merge_byte_chunks(chunks_as_strings)
 	return decrypted_message
 
@@ -55,7 +64,11 @@ def write_byte_array_to_file(byte_array, path_to_file):
 		out_file.write(byte_array)
 
 def chunk_array(array, chunk_size):
-	return [array[i:i+chunk_size] for i in range(0, len(array), chunk_size)]
+	# Alternative oneliner: return [array[i:i+chunk_size] for i in range(0, len(array), chunk_size)]
+	chunks = []
+	for i in range(0, len(array), chunk_size):
+		chunks.append(array[i:i+chunk_size])
+	return chunks
 
 def merge_byte_chunks(chunks):
 	merged_items = b''
