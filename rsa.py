@@ -63,7 +63,7 @@ def decrypt_list_of_numbers(list_of_numbers, d, n):
 		n is the modulus for both the public key and the private keys, obtained by multiplying the primes chosen when making the certificate
 	"""
 	decrypted_numbers = []
-	for number in list_of_numbers
+	for number in list_of_numbers:
 		decrypted_numbers.append(pow(number,d,n))
 	return decrypted_numbers
 
@@ -103,6 +103,41 @@ def decrypt_message(message, d, n, block_size=DEFAULT_BLOCK_SIZE):
 	decrypted_message = concatenate_list_of_texts(chunks_as_strings)
 	return decrypted_message
 
+def read_byte_array_from_file(path_to_file):
+	with open(path_to_file, "rb") as binary_file:
+		return binary_file.read()
+
+def write_byte_array_to_file(byte_array, path_to_file):
+	with open(path_to_file, "wb") as out_file:
+		out_file.write(byte_array)
+
+def chunk_array(array, chunk_size):
+	return [array[i:i+chunk_size] for i in range(0, len(array), chunk_size)]
+
+def merge_byte_chunks(chunks):
+	merged_items = b''
+	for chunk in chunks:
+		merged_items += chunk
+	return merged_items
+
+def bytes_to_number(series_of_bytes):
+	return int.from_bytes(series_of_bytes, byteorder='big')
+
+def number_to_bytes(number):
+	size_of_number_in_bytes = (number.bit_length() + 7) // 8
+	return int.to_bytes(number, length=size_of_number_in_bytes, byteorder='big')
+
+def list_of_byte_chunks_to_list_of_numbers(list_of_byte_chunks):
+	numbers = []
+	for chunk in list_of_byte_chunks:
+		numbers.append(bytes_to_number(chunk))
+	return numbers
+
+def list_of_numbers_to_list_of_byte_chunks(list_of_numbers):
+	byte_chunks = []
+	for number in list_of_numbers:
+		byte_chunks.append(number_to_bytes(number))
+	return byte_chunks
 
 if __name__ == "__main__":
 	text = 'My very long text.'
