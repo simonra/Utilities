@@ -29,6 +29,9 @@ block_size_bytes = 1073741826
 
 # Round up, because we never want to miss that last block
 number_of_blocks = math.ceil(file_size_bytes / block_size_bytes)
+if(number_of_blocks < 2):
+	print('File not large enough to be split into chunks. It\'s meaningless to to split into one chunk. Aborting.')
+	raise SystemExit
 # print('Number of blocks:')
 # print(number_of_blocks)
 
