@@ -74,6 +74,25 @@ if(len(sys.argv) > 4):
 # print('First block:')
 # print(starting_block)
 
+# for slow and messy connections where you want to have files open for as short as possible:
+# for i in range(starting_block, number_of_blocks):
+# 	print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
+# 	offset = starting_block * block_size_bytes
+# 	source_file = open(supplied_path_to_file,'rb')
+# 	source_file.seek(offset)
+# 	current_block = source_file.read(block_size_bytes)
+# 	source_file.close()
+
+# 	next_output_filename = original_filename + "." + str(i)
+# 	destination_path = os.path.join(destination_directory, next_output_filename)
+# 	# print('Writing to destination path:')
+# 	# print(destination_path)
+# 	# Uncomment in case you can't reliably write bytes to the destination:
+# 	# current_block = base64.b64encode(current_block)
+# 	with open(destination_path,'wb') as destination_file:
+# 		destination_file.write(current_block)
+
+# For fast and reliable connections:
 with open(supplied_path_to_file,'rb') as source_file:
 	print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
 	offset = starting_block * block_size_bytes
