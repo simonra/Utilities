@@ -1,17 +1,28 @@
-#merge-chunks-to-file.py
-import sys
+import argparse
 import os
-import math
 import shutil
 
-assert len(sys.argv) > 1, "No path to process specified in arguments."
-directory_with_chunks = sys.argv[1]
+parser = argparse.ArgumentParser()
+parser.add_argument(
+	'-ip',
+	'--inputPath',
+	required=True,
+	help='Path to the directory with the files you want to merge to a single file.')
+parser.add_argument(
+	'-op',
+	'--outputPath',
+	required=True,
+	help='Path to the file you want the supplied files to be merged into. For now must be supplied, and has to point to a file that doesn\'t previously exist for the operation to make sense.')
+args = parser.parse_args()
+
+directory_with_chunks = args.inputPath
 assert os.path.exists(directory_with_chunks), "Could not find anything at " + directory_with_chunks
 
-destination_path = sys.argv[2]
+destination_path = args.outputPath
 
-
-# import glob
+# If the folder where we wish to place the output-file doesn't exist, create it:
+destination_directory = os.path.abspath(os.path.join(destination_path, os.pardir))
+os.makedirs(destination_directory, exist_ok=True)
 
 files = [f for f in os.listdir(directory_with_chunks)]
 
