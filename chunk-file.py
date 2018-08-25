@@ -73,36 +73,36 @@ if(args.outputPath is not None):
 # print(starting_block)
 
 # For slow and messy connections where you want to have files open for as short as possible:
-# print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
-# for i in range(starting_block, number_of_blocks):
-# 	offset = i * block_size_bytes
-# 	source_file = open(supplied_path_to_file,'rb')
-# 	source_file.seek(offset)
-# 	current_block = source_file.read(block_size_bytes)
-# 	source_file.close()
+print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
+for i in range(starting_block, number_of_blocks):
+	offset = i * block_size_bytes
+	source_file = open(supplied_path_to_file,'rb')
+	source_file.seek(offset)
+	current_block = source_file.read(block_size_bytes)
+	source_file.close()
 
-# 	next_output_filename = original_filename + "." + str(i)
-# 	destination_path = os.path.join(destination_directory, next_output_filename)
-# 	# print('Writing to destination path: ' + destination_path)
-# 	# Uncomment in case you can't reliably write bytes to the destination:
-# 	# current_block = base64.b64encode(current_block)
-# 	with open(destination_path,'wb') as destination_file:
-# 		destination_file.write(current_block)
+	next_output_filename = original_filename + "." + str(i)
+	destination_path = os.path.join(destination_directory, next_output_filename)
+	# print('Writing to destination path: ' + destination_path)
+	# Uncomment in case you can't reliably write bytes to the destination:
+	# current_block = base64.b64encode(current_block)
+	with open(destination_path,'wb') as destination_file:
+		destination_file.write(current_block)
 
 # For fast and reliable connections:
-with open(supplied_path_to_file,'rb') as source_file:
-	print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
-	offset = starting_block * block_size_bytes
-	source_file.seek(offset)
-	for i in range(starting_block, number_of_blocks):
-		current_block = source_file.read(block_size_bytes)
-		next_output_filename = original_filename + "." + str(i)
-		destination_path = os.path.join(destination_directory, next_output_filename)
-		# print('Writing to destination path: ' + destination_path)
-		# Uncomment in case you can't reliably write bytes to the destination:
-		# current_block = base64.b64encode(current_block)
-		with open(destination_path,'wb') as destination_file:
-			destination_file.write(current_block)
+# with open(supplied_path_to_file,'rb') as source_file:
+# 	print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
+# 	offset = starting_block * block_size_bytes
+# 	source_file.seek(offset)
+# 	for i in range(starting_block, number_of_blocks):
+# 		current_block = source_file.read(block_size_bytes)
+# 		next_output_filename = original_filename + "." + str(i)
+# 		destination_path = os.path.join(destination_directory, next_output_filename)
+# 		# print('Writing to destination path: ' + destination_path)
+# 		# Uncomment in case you can't reliably write bytes to the destination:
+# 		# current_block = base64.b64encode(current_block)
+# 		with open(destination_path,'wb') as destination_file:
+# 			destination_file.write(current_block)
 
 print('Finished writing all chunks to directory:')
 print(destination_directory)
