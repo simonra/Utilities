@@ -30,4 +30,4 @@ if __name__ == "__main__":
 		type=int,
 		help='Number you want to find a multiple of.')
 	args = parser.parse_args()
-	print(smallest_multiple_of_m_greater_than_or_equal_to_n(args.threshold,args.factor))
+	print(smallest_multiple_of_m_greater_than_or_equal_to_n(args.threshold, args.factor))
