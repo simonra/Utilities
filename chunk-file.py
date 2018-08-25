@@ -39,6 +39,7 @@ file_size_bytes = os.path.getsize(supplied_path_to_file)
 # Smallest even number larger than 2^30 (1024^3) that is a multiple of 3
 block_size_bytes = 1073741826
 # block_size_bytes = 6424141
+# block_size_bytes = 385449
 
 # Round up, because we never want to miss that last block
 number_of_blocks = math.ceil(file_size_bytes / block_size_bytes)
@@ -72,9 +73,9 @@ if(args.outputPath is not None):
 # print(starting_block)
 
 # For slow and messy connections where you want to have files open for as short as possible:
+# print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
 # for i in range(starting_block, number_of_blocks):
-# 	print('Starting to chunk ' + supplied_path_to_file + ' into parts in ' + destination_directory)
-# 	offset = starting_block * block_size_bytes
+# 	offset = i * block_size_bytes
 # 	source_file = open(supplied_path_to_file,'rb')
 # 	source_file.seek(offset)
 # 	current_block = source_file.read(block_size_bytes)
