@@ -41,3 +41,6 @@ for filename in files:
 	with open(path_to_current_chunk, 'rb') as readfile:
 		with open(destination_path, 'ab+') as outfile:
 			shutil.copyfileobj(readfile, outfile)
+
+print('Finished merging chunks to the file at:')
+print(destination_path)
