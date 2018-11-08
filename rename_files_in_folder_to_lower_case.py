@@ -8,10 +8,8 @@ def rename_files_in_folder_to_lower_case(directory_path):
 	print('files', files)
 
 	for file_name in files:
-		# print('Now working on file:', file)
 		path_to_current_file = os.path.join(directory_path, file_name)
 		if os.path.isfile(path_to_current_file):
-			# print('Is file =D', file)
 			if file_name != file_name.casefold():
 				path_to_new_file_name = os.path.join(directory_path, file_name.casefold())
 				print(f'Renaming {path_to_current_file} to {path_to_new_file_name}')
