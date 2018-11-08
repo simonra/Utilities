@@ -5,7 +5,6 @@ def rename_files_in_folder_to_lower_case(directory_path):
 		raise NotADirectoryError(f'To make sure all files in directory have lowe case names path to valid directory has to be supplied. Got {directory_path}, which does not seem to be an existing directory on your system.')
 
 	files = os.listdir(directory_path)
-	print('files', files)
 
 	for file_name in files:
 		path_to_current_file = os.path.join(directory_path, file_name)
