@@ -29,7 +29,8 @@ get_k_elements_stating_at_j(k, j):
 	n = -1
 	while(m < j + k):
 		n = math.floor(j / m)
-		if(n * m <= j and (n+1)*m >= j + k):
+		# (n+1)*m should be the first entry in the next slice
+		if(n * m <= j and (n+1)*m > j + k):
 			break
 		m++
 	slice_to_look_in = get_nth_slice_of_size_m(n, m)
