@@ -48,6 +48,19 @@
 			}
 		}
 
+		// function onlyShowRelevantExportOptionsForCurrentlySelectedAlgorithm(){
+		// 	var chosenAlgorithm = document.getElementById('keyType').value;
+		// 	var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+
+		// }
+
+		// function enableAllExportOptions(){
+		// 	var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+		// 	for (var i = exportFormatOptions.length - 1; i >= 0; i--) {
+		// 		exportFormatOptions[i].disabled = false;
+		// 	}
+		// }
+
 		function clearKeyTextAreas(){
 			var publicKeyTextArea = document.getElementById('keyPublic');
 			publicKeyTextArea.value = publicKeyTextArea.defaultValue;
@@ -101,14 +114,13 @@
 		}
 
 		function getUsages(keyType){
-			if(keyType === 'aes'){
-				return ['encrypt', 'decrypt'];
-			}
-
-			return ["sign", "verify"];
+			return Array.from(document.querySelectorAll('input[type="checkbox"]'))
+				.filter((checkbox) => checkbox.checked)
+				.map((checkbox) => checkbox.getAttribute('data-usage'));
 		}
 
 		async function getKey(){
+			clearKeyTextAreas();
 			var selectedKeyType = document.getElementById('keyType').value;
 
 			var key = await generateKey(selectedKeyType);
@@ -126,7 +138,7 @@
 				exportKeyToOutputTextArea(key.publicKey, privateKeyExportFormat, 'keyPublic');
 			}
 			else{
-				exportKeyToOutputTextArea(key, keyExportFormat, 'keyPrivate');
+				exportKeyToOutputTextArea(key, keyExportFormat, 'keyPublic');
 			}
 		}
 
@@ -251,6 +263,34 @@
 					<option value="128">128</option>
 				</select>
 			</fieldset>
+			<fieldset id=keyUsages>
+				<legend>Key usages</legend>
+
+				<input type="checkbox" name="keyUsageEncrypt" id ="keyUsageEncrypt" data-usage="encrypt">
+				<label for="keyUsageEncrypt">Encrypt</label>
+				<br>
+				<input type="checkbox" name="keyUsageDecrypt" id ="keyUsageDecrypt" data-usage="decrypt">
+				<label for="keyUsageDecrypt">Decrypt</label>
+				<br>
+				<input type="checkbox" name="keyUsageSign" id ="keyUsageSign" data-usage="sign">
+				<label for="keyUsageSign">Sign</label>
+				<br>
+				<input type="checkbox" name="keyUsageVerify" id ="keyUsageVerify" data-usage="verify">
+				<label for="keyUsageVerify">Verify</label>
+				<br>
+				<input type="checkbox" name="keyUsageDeriveKey" id ="keyUsageDeriveKey" data-usage="deriveKey">
+				<label for="keyUsageDeriveKey">DeriveKey</label>
+				<br>
+				<input type="checkbox" name="keyUsageDeriveBits" id ="keyUsageDeriveBits" data-usage="deriveBits">
+				<label for="keyUsageDeriveBits">DeriveBits</label>
+				<br>
+				<input type="checkbox" name="keyUsageWrapKey" id ="keyUsageWrapKey" data-usage="wrapKey">
+				<label for="keyUsageWrapKey">WrapKey</label>
+				<br>
+				<input type="checkbox" name="keyUsageUnwrapKey" id ="keyUsageUnwrapKey" data-usage="unwrapKey">
+				<label for="keyUsageUnwrapKey">UnwrapKey</label>
+				<br>
+			</fieldset>
 			<br/>
 			<label for="exportFormat">Export Format: </label>
 			<select id="exportFormat" name="exportFormat">
@@ -259,7 +299,7 @@
 				<option value="raw">Raw</option>
 			</select>
 			<br/>
-			<button id="generateKey">Generate key</button>
+			<button id="generateKey">Generate new key</button>
 		</fieldset>
 		<br/>
 		<fieldset>
