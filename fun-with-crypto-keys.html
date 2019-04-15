@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Fun with encryption keys!</title>
+	<meta charset="utf-8">
+	<script type="text/javascript">
+		window.onload = function(){
+			console.log("Onload window at least works...");
+			clearKeyTextAreas();
+			document.getElementById('generateKey').addEventListener('click', (e) => {e.preventDefault(); getKey();});
+		}
+
+		function clearKeyTextAreas(){
+			var publicKeyTextArea = document.getElementById('keyPublic');
+			publicKeyTextArea.value = publicKeyTextArea.defaultValue;
+
+			var privateKeyTextArea = document.getElementById('keyPrivate');
+			privateKeyTextArea.value = privateKeyTextArea.defaultValue;
+		}
+
+		function getRsaParams(){
+			return {
+				// Possibillities for `name`: RSASSA-PKCS1-v1_5, RSA-PSS, RSA-OAEP
+				name: 'RSA-PSS',
+				modulusLength: 4096,
+				publicExponent: new Uint8Array([1, 0, 1]),
+				hash: 'SHA-512'
+			};
+		}
+
+		function getElipticCurveParams(){
+			return {
+				// Name should be ECDSA or ECDH
+				name: 'ECDSA',
+				namedCurve: 'P-521'
+			}
+		}
+
+		function getAesParams(){
+			return {
+				//AES-CBC,  AES-CTR, AES-GCM, or AES-KW
+				name: 'AES-CBC',
+				length: 256
+			}
+		}
+
+		function getAlgorithmParameters(keyType){
+			switch(keyType){
+				case 'rsa':{
+					return getRsaParams();
+				}
+				case 'ec':{
+					return getElipticCurveParams();
+				}
+				case 'aes':{
+					return getAesParams();
+				}
+			}
+		}
+
+		function getUsages(keyType){
+			if(keyType === 'aes'){
+				return ['encrypt', 'decrypt'];
+			}
+
+			return ["sign", "verify"];
+		}
+
+		async function getKey(){
+			var selectedKeyType = document.getElementById('keyType').value;
+
+			var algorithm = getAlgorithmParameters(selectedKeyType);
+			var exportable = true;
+			var usages = getUsages(selectedKeyType);
+			var key = await crypto.subtle.generateKey(algorithm, exportable, usages);
+
+			var keyExportFormat = document.getElementById('exportFormat').value; // Possible values: raw, pkcs8, spki, jwk
+			// var exportedKey = await keyPromise.then(key => crypto.subtle.exportKey(keyExportFormat, key));
+			if(selectedKeyType !== 'aes'){
+				var privateKeyExportFormat = keyExportFormat;
+				var publicKeyExportFormat = keyExportFormat;
+				if(keyExportFormat === 'pkcsSpki'){
+					privateKeyExportFormat = 'pkcs8';
+					publicKeyExportFormat = 'spki';
+				}
+				var exportedPrivateKey = await crypto.subtle.exportKey(privateKeyExportFormat, key.privateKey);
+				var privateKeyString = keyToString(exportedPrivateKey, privateKeyExportFormat);
+				writeKeyToOutputTextArea(privateKeyString, 'keyPrivate');
+
+				var exportedPublicKey = await crypto.subtle.exportKey(publicKeyExportFormat, key.publicKey);
+				var publicKeyString = keyToString(exportedPublicKey, publicKeyExportFormat);
+				writeKeyToOutputTextArea(publicKeyString, 'keyPublic');
+			}
+			else{
+				var exportedKey = await crypto.subtle.exportKey(keyExportFormat, key);
+				var keyString = keyToString(exportedKey, keyExportFormat);
+				writeKeyToOutputTextArea(keyString, 'keyPrivate');
+			}
+		}
+
+		function keyToString(exportedKey, format){
+			switch(format){
+				case 'jwk':{
+					return JSON.stringify(exportedKey, null, " ");
+				}
+				case 'pkcs8':{
+					var exportedKeyAsString = String.fromCharCode.apply(null, new Uint8Array(exportedKey));
+					var exportedKeyInBase64 = window.btoa(exportedKeyAsString);
+					var pemExported = `-----BEGIN PRIVATE KEY-----\n${exportedKeyInBase64}\n-----END PRIVATE KEY-----`;
+					return pemExported;
+				}
+				case 'spki':{
+					var exportedKeyAsString = String.fromCharCode.apply(null, new Uint8Array(exportedKey));
+					var exportedKeyInBase64 = window.btoa(exportedKeyAsString);
+					const pemExported = `-----BEGIN PUBLIC KEY-----\n${exportedKeyInBase64}\n-----END PUBLIC KEY-----`;
+					return pemExported;
+				}
+				case 'raw':{
+					var exportedKeyArrayBuffer = new Uint8Array(exported);
+				}
+			}
+		}
+
+		function writeKeyToOutputTextArea(keyAsString, textAreaId){
+			var textAreaById = document.getElementById(textAreaId);
+			textAreaById.textContent = keyAsString;
+			textAreaById.value = keyAsString;
+		}
+	</script>
+</head>
+<body>
+	<h1>Generate crypto keys</h1>
+	<form>
+		<fieldset>
+			<legend>Parameters for generating key(s)</legend>
+
+			<label for="keyType">Key Type: </label>
+			<select id="keyType" name="keyType">
+				<option value="rsa">RSA</option>
+				<option value="ec">Eliptic Curve</option>
+				<option value="aes">AES (Advanced Encryption Standard)</option>
+			</select>
+			<br/>
+
+			<label for="exportFormat">Export Format: </label>
+			<select id="exportFormat" name="exportFormat">
+				<option value="jwk">JWK</option>
+				<option value="pkcsSpki">PKCS #8 & SPKI</option>
+				<option value="raw">Raw</option>
+			</select>
+			<br>
+			<button id="generateKey">Generate key</button>
+		</fieldset>
+		<br/>
+		<fieldset>
+			<legend>Generated Key(s)</legend>
+			<textarea id="keyPublic" placeholder="Public key" style="width: 45%; height: 20rem;"></textarea>
+			<textarea id="keyPrivate" placeholder="Private key" style="width: 45%; height: 20rem;"></textarea>
+		</fieldset>
+	</form>
+</body>
+</html>
