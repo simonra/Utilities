@@ -79,13 +79,10 @@
 		async function getKey(){
 			var selectedKeyType = document.getElementById('keyType').value;
 
-			var algorithm = getAlgorithmParameters(selectedKeyType);
-			var exportable = true;
-			var usages = getUsages(selectedKeyType);
-			var key = await crypto.subtle.generateKey(algorithm, exportable, usages);
+			var key = await generateKey(selectedKeyType);
 
-			var keyExportFormat = document.getElementById('exportFormat').value; // Possible values: raw, pkcs8, spki, jwk
-			// var exportedKey = await keyPromise.then(key => crypto.subtle.exportKey(keyExportFormat, key));
+			var keyExportFormat = document.getElementById('exportFormat').value;
+
 			if(selectedKeyType !== 'aes'){
 				var privateKeyExportFormat = keyExportFormat;
 				var publicKeyExportFormat = keyExportFormat;
@@ -93,19 +90,25 @@
 					privateKeyExportFormat = 'pkcs8';
 					publicKeyExportFormat = 'spki';
 				}
-				var exportedPrivateKey = await crypto.subtle.exportKey(privateKeyExportFormat, key.privateKey);
-				var privateKeyString = keyToString(exportedPrivateKey, privateKeyExportFormat);
-				writeKeyToOutputTextArea(privateKeyString, 'keyPrivate');
-
-				var exportedPublicKey = await crypto.subtle.exportKey(publicKeyExportFormat, key.publicKey);
-				var publicKeyString = keyToString(exportedPublicKey, publicKeyExportFormat);
-				writeKeyToOutputTextArea(publicKeyString, 'keyPublic');
+				exportKeyToOutputTextArea(key.privateKey, privateKeyExportFormat, 'keyPrivate');
+				exportKeyToOutputTextArea(key.publicKey, privateKeyExportFormat, 'keyPublic');
 			}
 			else{
-				var exportedKey = await crypto.subtle.exportKey(keyExportFormat, key);
-				var keyString = keyToString(exportedKey, keyExportFormat);
-				writeKeyToOutputTextArea(keyString, 'keyPrivate');
+				exportKeyToOutputTextArea(key, keyExportFormat, 'keyPrivate');
 			}
+		}
+
+		async function exportKeyToOutputTextArea(key, exportFormat, targetArea){
+			var exportedKey = await crypto.subtle.exportKey(exportFormat, key);
+			var keyString = keyToString(exportedKey, exportFormat);
+			writeKeyToOutputTextArea(keyString, targetArea);
+		}
+
+		async function generateKey(keyType){
+			var algorithm = getAlgorithmParameters(keyType);
+			var exportable = true;
+			var usages = getUsages(keyType);
+			return crypto.subtle.generateKey(algorithm, exportable, usages);
 		}
 
 		function keyToString(exportedKey, format){
