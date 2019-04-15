@@ -25,7 +25,7 @@
 		}
 
 		function getRsaParams(){
-			var chosenAlgorithm = document.getElementById('rsaName').value;
+			var chosenAlgorithm = document.getElementById('rsaAlgorithm').value;
 			var chosenModulusLength = Math.pow(2, document.getElementById('rsaModulusLength').value);
 			var chosenDigest = document.getElementById('rsaHash').value;
 			return {
@@ -37,10 +37,11 @@
 		}
 
 		function getElipticCurveParams(){
+			var chosenAlgorithm = document.getElementById('ecAlgorithm').value;
+			var chosenCurve = document.getElementById('ecCurveName').value;
 			return {
-				// Name should be ECDSA or ECDH
-				name: 'ECDSA',
-				namedCurve: 'P-521'
+				name: chosenAlgorithm,
+				namedCurve: chosenCurve
 			}
 		}
 
@@ -154,8 +155,8 @@
 			<fieldset>
 				<legend>Parameters for RSA key</legend>
 
-				<label for="rsaName">RSA algorithm: </label>
-				<select id="rsaName" name="rsaName">
+				<label for="rsaAlgorithm">RSA algorithm: </label>
+				<select id="rsaAlgorithm" name="rsaAlgorithm">
 					<option value="RSASSA-PKCS1-v1_5">RSASSA-PKCS1-v1_5</option>
 					<option value="RSA-PSS">RSA-PSS</option>
 					<option value="RSA-OAEP">RSA-OAEP</option>
@@ -176,6 +177,23 @@
 					<option value="SHA-512">SHA-512</option>
 					<option value="SHA-384">SHA-384</option>
 					<option value="SHA-256">SHA-256</option>
+				</select>
+			</fieldset>
+
+			<fieldset>
+				<legend>Parameters for Eliptic Curve key</legend>
+
+				<label for="ecAlgorithm">Eliptic Curve algorithm: </label>
+				<select id="ecAlgorithm" name="ecAlgorithm">
+					<option value="ECDSA">ECDSA</option>
+					<option value="ECDH">ECDH</option>
+				</select>
+				<br/>
+				<label for="ecCurveName">Eliptic Curve by name</label>
+				<select id="ecCurveName" name="ecCurveName">
+					<option value="P-256">P-256</option>
+					<option value="P-384">P-384</option>
+					<option value="P-521">P-521</option>
 				</select>
 			</fieldset>
 
