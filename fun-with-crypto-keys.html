@@ -8,6 +8,12 @@
 			console.log("Onload window at least works...");
 			clearKeyTextAreas();
 			document.getElementById('generateKey').addEventListener('click', (e) => {e.preventDefault(); getKey();});
+			var rsaModulusLengthSliderElement = document.getElementById('rsaModulusLength');
+			rsaModulusLengthSliderElement.value = rsaModulusLengthSliderElement.defaultValue;
+			rsaModulusLengthSliderElement.oninput = function(){
+				document.getElementById('rsaModulusLengthDisplayOutput').value = Math.pow(2, rsaModulusLengthSliderElement.value);
+			}
+			rsaModulusLengthSliderElement.oninput();
 		}
 
 		function clearKeyTextAreas(){
@@ -143,6 +149,33 @@
 				<option value="aes">AES (Advanced Encryption Standard)</option>
 			</select>
 			<br/>
+			<fieldset>
+				<legend>Parameters for RSA key</legend>
+
+				<label for="rsaName">RSA algorithm: </label>
+				<select id="rsaName" name="rsaName">
+					<option value="RSASSA-PKCS1-v1_5">RSASSA-PKCS1-v1_5</option>
+					<option value="RSA-PSS">RSA-PSS</option>
+					<option value="RSA-OAEP">RSA-OAEP</option>
+				</select>
+				<br/>
+				<label for="rsaModulusLength">RSA Modulus Length: </label>
+				<input type="range"
+					id="rsaModulusLength"
+					name="rsaModulusLength"
+					min="8"
+					max="15"
+					step="1"
+					value="11">
+				<output id="rsaModulusLengthDisplayOutput" name="rsaModulusLengthDisplayOutput" for="rsaModulusLength"></output>
+				<br/>
+				<label for="rsaHash">RSA digest function: </label>
+				<select id="rsaHash" name="rsaHash">
+					<option value="SHA-512">SHA-512</option>
+					<option value="SHA-384">SHA-384</option>
+					<option value="SHA-256">SHA-256</option>
+				</select>
+			</fieldset>
 
 			<label for="exportFormat">Export Format: </label>
 			<select id="exportFormat" name="exportFormat">
