@@ -46,10 +46,11 @@
 		}
 
 		function getAesParams(){
+			var chosenAlgorithm = document.getElementById('aesAlgorithm').value;
+			var chosenKeyLength = document.getElementById('aesKeyLength').value;
 			return {
-				//AES-CBC,  AES-CTR, AES-GCM, or AES-KW
-				name: 'AES-CBC',
-				length: 256
+				name: chosenAlgorithm,
+				length: chosenKeyLength
 			}
 		}
 
@@ -194,6 +195,25 @@
 					<option value="P-256">P-256</option>
 					<option value="P-384">P-384</option>
 					<option value="P-521">P-521</option>
+				</select>
+			</fieldset>
+
+			<fieldset>
+				<legend>Parameters for AES key</legend>
+
+				<label for="aesAlgorithm">AES algorithm: </label>
+				<select id="aesAlgorithm" name="aesAlgorithm">
+					<option value="AES-CBC">AES-CBC</option>
+					<option value="AES-CTR">AES-CTR</option>
+					<option value="AES-GCM">AES-GCM</option>
+					<option value="AES-KW">AES-KW</option>
+				</select>
+				<br/>
+				<label for="aesKeyLength">AES key length</label>
+				<select id="aesKeyLength" name="aesKeyLength">
+					<option value="128">128</option>
+					<option value="192">256</option>
+					<option value="256">256</option>
 				</select>
 			</fieldset>
 
