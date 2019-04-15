@@ -31,6 +31,7 @@
 			document.getElementById('rsaParameterFieldset').style.display = 'none';
 			document.getElementById('ecParameterFieldset').style.display = 'none';
 			document.getElementById('aesParameterFieldset').style.display = 'none';
+			document.getElementById('hmacParameterFieldset').style.display = 'none';
 			var chosenAlgorithm = document.getElementById('keyType').value;
 			switch(chosenAlgorithm){
 				case 'rsa':{
@@ -43,6 +44,10 @@
 				}
 				case 'aes':{
 					document.getElementById('aesParameterFieldset').style.display = 'initial';
+					break;
+				}
+				case 'hmac':{
+					document.getElementById('hmacParameterFieldset').style.display = 'initial';
 					break;
 				}
 			}
@@ -126,7 +131,7 @@
 
 			var keyExportFormat = document.getElementById('exportFormat').value;
 
-			if(selectedKeyType !== 'aes'){
+			if(selectedKeyType === 'ec' || selectedKeyType === 'rsa'){
 				var privateKeyExportFormat = keyExportFormat;
 				var publicKeyExportFormat = keyExportFormat;
 				if(keyExportFormat === 'pkcsSpki'){
@@ -136,7 +141,7 @@
 				exportKeyToOutputTextArea(key.privateKey, privateKeyExportFormat, 'keyPrivate');
 				exportKeyToOutputTextArea(key.publicKey, publicKeyExportFormat, 'keyPublic');
 			}
-			else{
+			if(selectedKeyType === 'aes' || selectedKeyType === 'hmac'){
 				exportKeyToOutputTextArea(key, keyExportFormat, 'keyPublic');
 			}
 		}
@@ -197,6 +202,7 @@
 				<option value="rsa">RSA</option>
 				<option value="ec">Eliptic Curve</option>
 				<option value="aes">AES (Advanced Encryption Standard)</option>
+				<option value="hmac">HMAC</option>
 			</select>
 			<br/>
 			<fieldset id="rsaParameterFieldset">
@@ -262,6 +268,22 @@
 					<option value="128">128</option>
 				</select>
 			</fieldset>
+
+			<fieldset id="hmacParameterFieldset">
+				<legend>Parameters for HMAC key</legend>
+
+				<label for="hmacHash">HMAC digest function: </label>
+				<select id="hmacHash" name="hmacHash">
+					<option value="SHA-512">SHA-512</option>
+					<option value="SHA-384">SHA-384</option>
+					<option value="SHA-256">SHA-256</option>
+					<option value="SHA-1">SHA-1</option>
+				</select>
+				<br>
+				<label for="hmacLength">HMAC Length: </label>
+				<input type="number" name="hmacLength" id="hmacLength" placeholder="Optional">
+			</fieldset>
+
 			<fieldset id=keyUsages>
 				<legend>Key usages</legend>
 
