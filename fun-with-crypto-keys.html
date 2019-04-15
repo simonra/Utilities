@@ -25,12 +25,14 @@
 		}
 
 		function getRsaParams(){
+			var chosenAlgorithm = document.getElementById('rsaName').value;
+			var chosenModulusLength = Math.pow(2, document.getElementById('rsaModulusLength').value);
+			var chosenDigest = document.getElementById('rsaHash').value;
 			return {
-				// Possibillities for `name`: RSASSA-PKCS1-v1_5, RSA-PSS, RSA-OAEP
-				name: 'RSA-PSS',
-				modulusLength: 4096,
+				name: chosenAlgorithm,
+				modulusLength: chosenModulusLength,
 				publicExponent: new Uint8Array([1, 0, 1]),
-				hash: 'SHA-512'
+				hash: chosenDigest
 			};
 		}
 
