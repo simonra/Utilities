@@ -63,10 +63,10 @@
 
 		function clearKeyTextAreas(){
 			var publicKeyTextArea = document.getElementById('keyPublic');
-			publicKeyTextArea.value = publicKeyTextArea.defaultValue;
+			publicKeyTextArea.value = '';
 
 			var privateKeyTextArea = document.getElementById('keyPrivate');
-			privateKeyTextArea.value = privateKeyTextArea.defaultValue;
+			privateKeyTextArea.value = '';
 		}
 
 		function getRsaParams(){
@@ -120,7 +120,6 @@
 		}
 
 		async function getKey(){
-			clearKeyTextAreas();
 			var selectedKeyType = document.getElementById('keyType').value;
 
 			var key = await generateKey(selectedKeyType);
