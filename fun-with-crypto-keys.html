@@ -7,7 +7,11 @@
 		window.onload = function(){
 			console.log("Onload window at least works...");
 			clearKeyTextAreas();
-			document.getElementById('generateKey').addEventListener('click', (e) => {e.preventDefault(); getKey();});
+			document.getElementById('generateKey').addEventListener('click', (e) => {
+				e.preventDefault();
+				clearKeyTextAreas();
+				getKey();
+			});
 
 			var rsaModulusLengthSliderElement = document.getElementById('rsaModulusLength');
 			rsaModulusLengthSliderElement.value = rsaModulusLengthSliderElement.defaultValue;
