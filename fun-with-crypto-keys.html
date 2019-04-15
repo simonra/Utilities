@@ -8,12 +8,40 @@
 			console.log("Onload window at least works...");
 			clearKeyTextAreas();
 			document.getElementById('generateKey').addEventListener('click', (e) => {e.preventDefault(); getKey();});
+
 			var rsaModulusLengthSliderElement = document.getElementById('rsaModulusLength');
 			rsaModulusLengthSliderElement.value = rsaModulusLengthSliderElement.defaultValue;
 			rsaModulusLengthSliderElement.oninput = function(){
 				document.getElementById('rsaModulusLengthDisplayOutput').value = Math.pow(2, rsaModulusLengthSliderElement.value);
 			}
 			rsaModulusLengthSliderElement.oninput();
+
+			var keyTypeSelector = document.getElementById('keyType');
+			document.getElementById('keyType').addEventListener('change', () => {
+				onlyShowParamFieldsForCurrentlySelectedAlgorithm();
+			});
+			onlyShowParamFieldsForCurrentlySelectedAlgorithm();
+		}
+
+		function onlyShowParamFieldsForCurrentlySelectedAlgorithm(){
+			document.getElementById('rsaParameterFieldset').style.display = 'none';
+			document.getElementById('ecParameterFieldset').style.display = 'none';
+			document.getElementById('aesParameterFieldset').style.display = 'none';
+			var chosenAlgorithm = document.getElementById('keyType').value;
+			switch(chosenAlgorithm){
+				case 'rsa':{
+					document.getElementById('rsaParameterFieldset').style.display = 'initial';
+					break;
+				}
+				case 'ec':{
+					document.getElementById('ecParameterFieldset').style.display = 'initial';
+					break;
+				}
+				case 'aes':{
+					document.getElementById('aesParameterFieldset').style.display = 'initial';
+					break;
+				}
+			}
 		}
 
 		function clearKeyTextAreas(){
@@ -156,7 +184,7 @@
 				<option value="aes">AES (Advanced Encryption Standard)</option>
 			</select>
 			<br/>
-			<fieldset>
+			<fieldset id="rsaParameterFieldset">
 				<legend>Parameters for RSA key</legend>
 
 				<label for="rsaAlgorithm">RSA algorithm: </label>
@@ -184,7 +212,7 @@
 				</select>
 			</fieldset>
 
-			<fieldset>
+			<fieldset id="ecParameterFieldset">
 				<legend>Parameters for Eliptic Curve key</legend>
 
 				<label for="ecAlgorithm">Eliptic Curve algorithm: </label>
@@ -201,7 +229,7 @@
 				</select>
 			</fieldset>
 
-			<fieldset>
+			<fieldset id="aesParameterFieldset">
 				<legend>Parameters for AES key</legend>
 
 				<label for="aesAlgorithm">AES algorithm: </label>
@@ -219,14 +247,14 @@
 					<option value="128">128</option>
 				</select>
 			</fieldset>
-
+			<br/>
 			<label for="exportFormat">Export Format: </label>
 			<select id="exportFormat" name="exportFormat">
 				<option value="jwk">JWK</option>
 				<option value="pkcsSpki">PKCS #8 & SPKI</option>
 				<option value="raw">Raw</option>
 			</select>
-			<br>
+			<br/>
 			<button id="generateKey">Generate key</button>
 		</fieldset>
 		<br/>
