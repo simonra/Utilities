@@ -323,17 +323,19 @@
 			<button id="generateKey">Generate new key</button>
 		</fieldset>
 		<br/>
-		<fieldset>
+		<fieldset style="display: grid; grid-template-columns: 1fr 1fr;">
 			<legend>Generated Key(s)</legend>
+			<label for="keyPublic" style="grid-column: 1; grid-row: 1;">Public key</label>
+			<label for="keyPrivate" style="grid-column: 2; grid-row: 1;">Private key</label>
 			<textarea id="keyPublic"
+				name="keyPublic"
 				placeholder="Public key"
-				readonly
-				style="width: 45%; height: 20rem;">
+				style="width: 97.5%; height: 20rem; grid-column: 1; grid-row: 2;">
 			</textarea>
 			<textarea id="keyPrivate"
+				name="keyPrivate"
 				placeholder="Private key"
-				readonly
-				style="width: 45%; height: 20rem;">
+				style="width: 97.5%; height: 20rem; grid-column: 2; grid-row: 2;">
 			</textarea>
 		</fieldset>
 	</form>
