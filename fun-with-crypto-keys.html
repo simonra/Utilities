@@ -116,7 +116,9 @@
 					return pemExported;
 				}
 				case 'raw':{
-					var exportedKeyArrayBuffer = new Uint8Array(exported);
+					var exportedKeyArrayBuffer = new Uint8Array(exportedKey);
+					var exportedKeyAsString = `[${exportedKeyArrayBuffer}]`;
+					return exportedKeyAsString;
 				}
 			}
 		}
