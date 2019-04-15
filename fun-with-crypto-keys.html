@@ -284,33 +284,40 @@
 				<input type="number" name="hmacLength" id="hmacLength" placeholder="Optional">
 			</fieldset>
 
-			<fieldset id=keyUsages>
+			<fieldset id=keyUsages style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
 				<legend>Key usages</legend>
-
-				<input type="checkbox" name="keyUsageEncrypt" id ="keyUsageEncrypt" data-usage="encrypt">
-				<label for="keyUsageEncrypt">Encrypt</label>
-				<br>
-				<input type="checkbox" name="keyUsageDecrypt" id ="keyUsageDecrypt" data-usage="decrypt">
-				<label for="keyUsageDecrypt">Decrypt</label>
-				<br>
-				<input type="checkbox" name="keyUsageSign" id ="keyUsageSign" data-usage="sign">
-				<label for="keyUsageSign">Sign</label>
-				<br>
-				<input type="checkbox" name="keyUsageVerify" id ="keyUsageVerify" data-usage="verify">
-				<label for="keyUsageVerify">Verify</label>
-				<br>
-				<input type="checkbox" name="keyUsageDeriveKey" id ="keyUsageDeriveKey" data-usage="deriveKey">
-				<label for="keyUsageDeriveKey">DeriveKey</label>
-				<br>
-				<input type="checkbox" name="keyUsageDeriveBits" id ="keyUsageDeriveBits" data-usage="deriveBits">
-				<label for="keyUsageDeriveBits">DeriveBits</label>
-				<br>
-				<input type="checkbox" name="keyUsageWrapKey" id ="keyUsageWrapKey" data-usage="wrapKey">
-				<label for="keyUsageWrapKey">WrapKey</label>
-				<br>
-				<input type="checkbox" name="keyUsageUnwrapKey" id ="keyUsageUnwrapKey" data-usage="unwrapKey">
-				<label for="keyUsageUnwrapKey">UnwrapKey</label>
-				<br>
+				<div style="grid-column: 1; grid-row: 1;">
+					<input type="checkbox" name="keyUsageEncrypt" id ="keyUsageEncrypt" data-usage="encrypt">
+					<label for="keyUsageEncrypt">Encrypt</label>
+				</div>
+				<div style="grid-column: 1; grid-row: 2;">
+					<input type="checkbox" name="keyUsageDecrypt" id ="keyUsageDecrypt" data-usage="decrypt">
+					<label for="keyUsageDecrypt">Decrypt</label>
+				</div>
+				<div style="grid-column: 2; grid-row: 1;">
+					<input type="checkbox" name="keyUsageSign" id ="keyUsageSign" data-usage="sign">
+					<label for="keyUsageSign">Sign</label>
+				</div>
+				<div style="grid-column: 2; grid-row: 2;">
+					<input type="checkbox" name="keyUsageVerify" id ="keyUsageVerify" data-usage="verify">
+					<label for="keyUsageVerify">Verify</label>
+				</div>
+				<div style="grid-column: 3; grid-row: 1;">
+					<input type="checkbox" name="keyUsageDeriveKey" id ="keyUsageDeriveKey" data-usage="deriveKey">
+					<label for="keyUsageDeriveKey">DeriveKey</label>
+				</div>
+				<div style="grid-column: 3; grid-row: 2;">
+					<input type="checkbox" name="keyUsageDeriveBits" id ="keyUsageDeriveBits" data-usage="deriveBits">
+					<label for="keyUsageDeriveBits">DeriveBits</label>
+				</div>
+				<div style="grid-column: 4; grid-row: 1;">
+					<input type="checkbox" name="keyUsageWrapKey" id ="keyUsageWrapKey" data-usage="wrapKey">
+					<label for="keyUsageWrapKey">WrapKey</label>
+				</div>
+				<div style="grid-column: 4; grid-row: 2;">
+					<input type="checkbox" name="keyUsageUnwrapKey" id ="keyUsageUnwrapKey" data-usage="unwrapKey">
+					<label for="keyUsageUnwrapKey">UnwrapKey</label>
+				</div>
 			</fieldset>
 			<br/>
 			<label for="exportFormat">Export Format: </label>
