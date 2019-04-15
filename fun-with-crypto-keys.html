@@ -104,6 +104,23 @@
 			}
 		}
 
+		function getHmacParams(){
+			var chosenDigest = document.getElementById('hmacHash').value;
+			var chosenKeyLength = document.getElementById('hmacLength').value;
+			if(chosenKeyLength > 0){
+				return {
+					name: 'HMAC',
+					hash: {name: chosenDigest},
+					length: chosenKeyLength
+				}
+			}
+
+			return {
+				name: "HMAC",
+				hash: {name: chosenDigest}
+			}
+		}
+
 		function getAlgorithmParameters(keyType){
 			switch(keyType){
 				case 'rsa':{
@@ -114,6 +131,9 @@
 				}
 				case 'aes':{
 					return getAesParams();
+				}
+				case 'hmac':{
+					return getHmacParams();
 				}
 			}
 		}
