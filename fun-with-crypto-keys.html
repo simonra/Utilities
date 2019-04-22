@@ -26,10 +26,11 @@
 			});
 
 			Array.from(document.getElementsByClassName('algorithm'))
-			.map((algorithmSelect) => algorithmSelect.addEventListener('change', () => {
-				onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
-				onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
-			}));
+				.map((algorithmSelect) => algorithmSelect.addEventListener('change', () => {
+					onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
+					onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
+				})
+			);
 
 			onlyShowParamFieldsForCurrentlySelectedKeyType();
 			onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
@@ -71,9 +72,8 @@
 		}
 
 		function onlyShowRelevantFormatsForCurrentlySelectedAlgorithm(){
-			var chosenAlgorithmFamily = document.getElementById('keyType').value;
-			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
 			disableAllExportOptions();
+			var chosenAlgorithmFamily = document.getElementById('keyType').value;
 			switch(chosenAlgorithmFamily){
 				case 'rsa':{
 					enableExportOptions(['jwk', 'pkcsSpki']);
@@ -98,25 +98,26 @@
 		}
 
 		function enableExportOptions(formatsToEnable){
-			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
-			Array.from(exportFormatOptions)
+			Array.from(getAllExportOptions())
 				.filter((formatOption) => formatsToEnable.includes(formatOption.value))
 				.map((formatOption) => formatOption.removeAttribute('disabled'));
 		}
 
 		function disableAllExportOptions(){
-			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
-			Array.from(exportFormatOptions).map((formatOption) => formatOption.setAttribute('disabled',true));
+			Array.from(getAllExportOptions()).map((formatOption) => formatOption.setAttribute('disabled',true));
 		}
 
 		function enableAllExportOptions(){
-			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
-			Array.from(exportFormatOptions).map((formatOption) => formatOption.removeAttribute('disabled'));
+			Array.from(getAllExportOptions()).map((formatOption) => formatOption.removeAttribute('disabled'));
+		}
+
+		function getAllExportOptions(){
+			return document.getElementById('exportFormat').getElementsByTagName('option');
 		}
 
 		function onlyShowRelevantUsagesForCurrentlySelectedAlgorithm(){
-			var chosenAlgorithmFamily = document.getElementById('keyType').value;
 			disableAllUsages();
+			var chosenAlgorithmFamily = document.getElementById('keyType').value;
 			switch(chosenAlgorithmFamily){
 				case 'rsa':{
 					var chosenRsaAlgorithm = document.getElementById('rsaAlgorithm').value;
@@ -163,7 +164,7 @@
 		}
 
 		function enableUsages(usagesToEnable){
-			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+			Array.from(getAllUsagesCheckboxes())
 				.filter((usage) => usagesToEnable.includes(usage.getAttribute('data-usage')))
 				.map((usage) => {
 					usage.removeAttribute('disabled');
@@ -172,7 +173,7 @@
 		}
 
 		function disableAllUsages(){
-			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+			Array.from(getAllUsagesCheckboxes())
 				.map((usage) => {
 					usage.setAttribute('disabled',true);
 					usage.checked = false;
@@ -180,7 +181,7 @@
 		}
 
 		function enableAllUsages(){
-			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+			Array.from(getAllUsagesCheckboxes())
 				.map((usage) => usage.removeAttribute('disabled'));
 		}
 
@@ -248,8 +249,12 @@
 			}
 		}
 
+		function getAllUsagesCheckboxes(){
+			return document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]');
+		}
+
 		function getUsages(keyType){
-			return Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+			return Array.from(getAllUsagesCheckboxes())
 				.filter((checkbox) => checkbox.checked && !checkbox.disabled)
 				.map((checkbox) => checkbox.getAttribute('data-usage'));
 		}
