@@ -19,11 +19,21 @@
 			}
 			rsaModulusLengthSliderElement.oninput();
 
-			var keyTypeSelector = document.getElementById('keyType');
 			document.getElementById('keyType').addEventListener('change', () => {
-				onlyShowParamFieldsForCurrentlySelectedAlgorithm();
+				onlyShowParamFieldsForCurrentlySelectedKeyType();
+				onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
+				onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
 			});
-			onlyShowParamFieldsForCurrentlySelectedAlgorithm();
+
+			Array.from(document.getElementsByClassName('algorithm'))
+			.map((algorithmSelect) => algorithmSelect.addEventListener('change', () => {
+				onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
+				onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
+			}));
+
+			onlyShowParamFieldsForCurrentlySelectedKeyType();
+			onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
+			onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
 		}
 
 		function clearKeyTextAreas(){
@@ -34,7 +44,7 @@
 			privateKeyTextArea.value = '';
 		}
 
-		function onlyShowParamFieldsForCurrentlySelectedAlgorithm(){
+		function onlyShowParamFieldsForCurrentlySelectedKeyType(){
 			document.getElementById('rsaParameterFieldset').style.display = 'none';
 			document.getElementById('ecParameterFieldset').style.display = 'none';
 			document.getElementById('aesParameterFieldset').style.display = 'none';
@@ -110,22 +120,22 @@
 			switch(chosenAlgorithmFamily){
 				case 'rsa':{
 					var chosenRsaAlgorithm = document.getElementById('rsaAlgorithm').value;
-					switch(chosenAlgorithmFamily){
+					switch(chosenRsaAlgorithm){
 						case 'RSASSA-PKCS1-v1_5':
 						case 'RSA-PSS':{
 							enableUsages(['verify', 'sign']);
 							break;
 						}
 						case 'RSA-OAEP':{
-							enableUsages(['encryt', 'decrypt', 'wrapKey', 'unwrapKey']);
+							enableUsages(['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']);
 							break;
 						}
 					}
 					break;
 				}
 				case 'ec':{
-					var chosenRsaAlgorithm = document.getElementById('rsaAlgorithm').value;
-					switch(chosenAlgorithmFamily){
+					var chosenEcAlgorithm = document.getElementById('ecAlgorithm').value;
+					switch(chosenEcAlgorithm){
 						case 'ECDSA':{
 							enableUsages(['verify', 'sign']);
 							break;
@@ -154,13 +164,19 @@
 
 		function enableUsages(usagesToEnable){
 			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
-				.filter((usage) => usagesToEnable.includes(usage.getAttribute('usage')))
-				.map((usage) => usage.removeAttribute('disabled'));
+				.filter((usage) => usagesToEnable.includes(usage.getAttribute('data-usage')))
+				.map((usage) => {
+					usage.removeAttribute('disabled');
+					usage.checked = true;
+				});
 		}
 
 		function disableAllUsages(){
 			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
-				.map((usage) => usage.setAttribute('disabled',true));
+				.map((usage) => {
+					usage.setAttribute('disabled',true);
+					usage.checked = false;
+				});
 		}
 
 		function enableAllUsages(){
@@ -323,7 +339,7 @@
 				<legend>Parameters for RSA key</legend>
 
 				<label for="rsaAlgorithm">RSA algorithm: </label>
-				<select id="rsaAlgorithm" name="rsaAlgorithm">
+				<select id="rsaAlgorithm" name="rsaAlgorithm" class="algorithm">
 					<option value="RSASSA-PKCS1-v1_5">RSASSA-PKCS1-v1_5</option>
 					<option value="RSA-PSS">RSA-PSS</option>
 					<option value="RSA-OAEP">RSA-OAEP</option>
@@ -351,7 +367,7 @@
 				<legend>Parameters for Eliptic Curve key</legend>
 
 				<label for="ecAlgorithm">Eliptic Curve algorithm: </label>
-				<select id="ecAlgorithm" name="ecAlgorithm">
+				<select id="ecAlgorithm" name="ecAlgorithm" class="algorithm">
 					<option value="ECDSA">ECDSA</option>
 					<option value="ECDH">ECDH</option>
 				</select>
@@ -368,7 +384,7 @@
 				<legend>Parameters for AES key</legend>
 
 				<label for="aesAlgorithm">AES algorithm: </label>
-				<select id="aesAlgorithm" name="aesAlgorithm">
+				<select id="aesAlgorithm" name="aesAlgorithm" class="algorithm">
 					<option value="AES-CBC">AES-CBC</option>
 					<option value="AES-CTR">AES-CTR</option>
 					<option value="AES-GCM">AES-GCM</option>
