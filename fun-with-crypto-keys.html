@@ -5,7 +5,6 @@
 	<meta charset="utf-8">
 	<script type="text/javascript">
 		window.onload = function(){
-			console.log("Onload window at least works...");
 			clearKeyTextAreas();
 			document.getElementById('generateKey').addEventListener('click', (e) => {
 				e.preventDefault();
@@ -25,6 +24,14 @@
 				onlyShowParamFieldsForCurrentlySelectedAlgorithm();
 			});
 			onlyShowParamFieldsForCurrentlySelectedAlgorithm();
+		}
+
+		function clearKeyTextAreas(){
+			var publicKeyTextArea = document.getElementById('keyPublic');
+			publicKeyTextArea.value = '';
+
+			var privateKeyTextArea = document.getElementById('keyPrivate');
+			privateKeyTextArea.value = '';
 		}
 
 		function onlyShowParamFieldsForCurrentlySelectedAlgorithm(){
@@ -53,25 +60,112 @@
 			}
 		}
 
-		// function onlyShowRelevantExportOptionsForCurrentlySelectedAlgorithm(){
-		// 	var chosenAlgorithm = document.getElementById('keyType').value;
-		// 	var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+		function onlyShowRelevantFormatsForCurrentlySelectedAlgorithm(){
+			var chosenAlgorithmFamily = document.getElementById('keyType').value;
+			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+			disableAllExportOptions();
+			switch(chosenAlgorithmFamily){
+				case 'rsa':{
+					enableExportOptions(['jwk', 'pkcsSpki']);
+					break;
+				}
+				case 'ec':{
+					// Note that Eliptic Curve private keys can only be exported in the JWK format
+					enableAllExportOptions();
+					break;
+				}
+				case 'aes':
+				case 'hmac':{
+					// Being symetric, note that the AES- and HMAC-keys only have a "public" componenet that gets exported.
+					enableExportOptions(['jwk', 'raw']);
+					break;
+				}
+				default:{
+					enableAllExportOptions();
+					break;
+				}
+			}
+		}
 
-		// }
+		function enableExportOptions(formatsToEnable){
+			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+			Array.from(exportFormatOptions)
+				.filter((formatOption) => formatsToEnable.includes(formatOption.value))
+				.map((formatOption) => formatOption.removeAttribute('disabled'));
+		}
 
-		// function enableAllExportOptions(){
-		// 	var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
-		// 	for (var i = exportFormatOptions.length - 1; i >= 0; i--) {
-		// 		exportFormatOptions[i].disabled = false;
-		// 	}
-		// }
+		function disableAllExportOptions(){
+			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+			Array.from(exportFormatOptions).map((formatOption) => formatOption.setAttribute('disabled',true));
+		}
 
-		function clearKeyTextAreas(){
-			var publicKeyTextArea = document.getElementById('keyPublic');
-			publicKeyTextArea.value = '';
+		function enableAllExportOptions(){
+			var exportFormatOptions = document.getElementById('exportFormat').getElementsByTagName('option');
+			Array.from(exportFormatOptions).map((formatOption) => formatOption.removeAttribute('disabled'));
+		}
 
-			var privateKeyTextArea = document.getElementById('keyPrivate');
-			privateKeyTextArea.value = '';
+		function onlyShowRelevantUsagesForCurrentlySelectedAlgorithm(){
+			var chosenAlgorithmFamily = document.getElementById('keyType').value;
+			disableAllUsages();
+			switch(chosenAlgorithmFamily){
+				case 'rsa':{
+					var chosenRsaAlgorithm = document.getElementById('rsaAlgorithm').value;
+					switch(chosenAlgorithmFamily){
+						case 'RSASSA-PKCS1-v1_5':
+						case 'RSA-PSS':{
+							enableUsages(['verify', 'sign']);
+							break;
+						}
+						case 'RSA-OAEP':{
+							enableUsages(['encryt', 'decrypt', 'wrapKey', 'unwrapKey']);
+							break;
+						}
+					}
+					break;
+				}
+				case 'ec':{
+					var chosenRsaAlgorithm = document.getElementById('rsaAlgorithm').value;
+					switch(chosenAlgorithmFamily){
+						case 'ECDSA':{
+							enableUsages(['verify', 'sign']);
+							break;
+						}
+						case 'ECDH':{
+							enableUsages(['deriveKey', 'deriveBits']);
+							break;
+						}
+					}
+					break;
+				}
+				case 'aes':{
+					enableUsages(['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']);
+					break;
+				}
+				case 'hmac':{
+					enableUsages(['verify', 'sign']);
+					break;
+				}
+				default:{
+					enableAllUsages();
+					break;
+				}
+			}
+		}
+
+		function enableUsages(usagesToEnable){
+			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+				.filter((usage) => usagesToEnable.includes(usage.getAttribute('usage')))
+				.map((usage) => usage.removeAttribute('disabled'));
+		}
+
+		function disableAllUsages(){
+			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+				.map((usage) => usage.setAttribute('disabled',true));
+		}
+
+		function enableAllUsages(){
+			Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+				.map((usage) => usage.removeAttribute('disabled'));
 		}
 
 		function getRsaParams(){
@@ -139,8 +233,8 @@
 		}
 
 		function getUsages(keyType){
-			return Array.from(document.querySelectorAll('input[type="checkbox"]'))
-				.filter((checkbox) => checkbox.checked)
+			return Array.from(document.querySelectorAll('fieldset#keyUsages input[type="checkbox"]'))
+				.filter((checkbox) => checkbox.checked && !checkbox.disabled)
 				.map((checkbox) => checkbox.getAttribute('data-usage'));
 		}
 
@@ -304,10 +398,14 @@
 				<input type="number" name="hmacLength" id="hmacLength" placeholder="Optional">
 			</fieldset>
 
-			<fieldset id=keyUsages style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+			<fieldset id="keyUsages" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
 				<legend>Key usages</legend>
 				<div style="grid-column: 1; grid-row: 1;">
-					<input type="checkbox" name="keyUsageEncrypt" id ="keyUsageEncrypt" data-usage="encrypt" checked>
+					<input type="checkbox"
+						name="keyUsageEncrypt"
+						id ="keyUsageEncrypt"
+						data-usage="encrypt"
+						checked>
 					<label for="keyUsageEncrypt">Encrypt</label>
 				</div>
 				<div style="grid-column: 1; grid-row: 2;">
