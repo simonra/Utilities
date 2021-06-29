@@ -420,7 +420,11 @@
 		}
 
 		function berIsSequence(ber){
-			return ber.cls == BerAsn1Classes.Universal.Value && ber.tag == BerAsn1NativeTypes.Tag16.TagNumberDecimal && ber.constructed == BerAsn1PCBit.C.Value
+			return ber.asn1Class.Value == BerAsn1Classes.Universal.Value && ber.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag16.TagNumberDecimal && ber.constructed.Value == BerAsn1PCBit.C.Value
+		}
+
+		function berIsConstructed(ber){
+			return ber.constructed.Value == BerAsn1PCBit.C.Value;
 		}
 
 		// Array.prototype.subarray = function(start, end) {
@@ -433,89 +437,236 @@
 		}
 
 		/* Because DER is just a stricter subset of BER, and I'd never want to do unot others something as horrible as making them have to deal with either, this function just de-obfuscates the general case and puts it into a malleable json string.
+		X.609 details: https://en.wikipedia.org/wiki/X.690
 		ToDo: Correct comment and signature to indicate that this only makes a native JS object, could still be sub-components that are DER/BER encoded. 
 		*/
-		function parseBer(byteArrayUint8){
-			var result = {};
-			// var inputAsHex = bufferToHexString(byteArrayUint8, ':');
+		// function parseBer(byteArrayUint8){
+		// 	var result = {};
+		// 	// var inputAsHex = bufferToHexString(byteArrayUint8, ':');
 
-			result.asn1Class = getAsn1Class(byteArrayUint8[0]);
-			result.asn1ClassMetadata = getAsn1ClassByValue(result.asn1Class);
-			result.constructed = getConstructed(byteArrayUint8[0]);
-			result.constructedMetadata = getAsn1ContructedByValue(result.constructed);
-			result.tag = getTag();
-			result.tagMetadata = getAsn1TagByValue(result.tag);
-			var length = getLength();
+		// 	result.asn1Class = getAsn1Class(byteArrayUint8[0]);
+		// 	result.asn1ClassMetadata = getAsn1ClassByValue(result.asn1Class);
+		// 	result.constructed = getConstructed(byteArrayUint8[0]);
+		// 	result.constructedMetadata = getAsn1ContructedByValue(result.constructed);
+		// 	result.tag = getTag();
+		// 	result.tagMetadata = getAsn1TagByValue(result.tag);
+		// 	var length = getLength();
 
-			result.content = getContent()
+		// 	result.content = getContent()
 
-			result.raw = getSubArray(byteArrayUint8, 0, result.byteLength);
-			result.contentsAsHex = {value: bufferToHexString(result.contents, ':')};
-			var inputAsHex = bufferToHexString(result.raw, ':');
-			result.headerAsHex = {value: inputAsHex.substring(0, inputAsHex.length - result.contentsAsHex.length)};
-			return result;
+		// 	result.raw = getSubArray(byteArrayUint8, 0, result.byteLength);
+		// 	result.contentsAsHex = {value: bufferToHexString(result.contents, ':')};
+		// 	var inputAsHex = bufferToHexString(result.raw, ':');
+		// 	result.headerAsHex = {value: inputAsHex.substring(0, inputAsHex.length - result.contentsAsHex.length)};
+		// 	return result;
+		// }
 
-			function getAsn1Class(firstByteOfDocument) {
-				// Extract fist two bits (from left side) from first byte in ASN.1 encoded document.
-				// Interpret first 2 bits as big-endian to obtain ASN.1 class value.
-				var asn1Class = firstByteOfDocument >> 6;
-				return asn1Class;
-			}
-
-			function getConstructed(firstByteOfDocument) {
-				// Extract third bit (from left side) from first byte in ASN.1 encoded document.
-				var constructed = (firstByteOfDocument << 2) >> 7;
-				return constructed;
-			}
-
-			// Resulting value corresponds to BerAsn1NativeTypes.tagX.NumberValue
-			function getAsn1Tag(asn1DocumentAsByteArrayUint8){
-				// If five last bits (as read from left) of first byte are all 1, the type is specified in the following bytes.
-				// Then, as long as the following bytes have a 1 in the leftmost position, the 7 other bits are concatenated with the same group of bits in the following bytes starting with a 1, which in the end are interpreted as a bit-endian number.
-				// Otherwise, if the five last bits of the first byte are not all 1, then they are the tag value (read as big-endian).
-				var firstByte = asn1DocumentAsByteArrayUint8[0];
-				var lastFiveBits = firstByte & 0b00011111;
-				if (lastFiveBits != 0b00011111){
-					// By JS magic, this is interpreted and returned as a regular number.
-					return lastFiveBits;
-				}
-
-				var nextPosition = 1;
-				var nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
-				var stringOfBits = "";
-				while(nextByte >> 7 == 1){
-					// Get byte as string of bits and remove leading bit we don't care about.
-					stringOfBits += (nextByte).toString(2).substring(1);
-					nextPosition++;
-					nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
-				}
-				var tagNumber = parseInt(stringOfBits, 2);
-				return tagNumber;
-			}
-
-			function getLength() {
-				// toDo
-			}
-
-			function getContent(){
-				// toDo;
-			}
+		function testWithPredefinedValue(){
+			var contentb64 = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDgMCMl4x0KxR/sf9RYARituR/DQ1BGsWBtdytayHuoXNeXAzVt/JTl+QBPtsmvjiJxX/Nw22K/uradc6wg1b+EGOKY7SDtBew/SBdHiZyVs6/zQEuSLscxFxv+SlrHLQi2sjvXFUdC3b7AA9qxT+pdUXzp2zYXk95+/O1feJSaJSkG04Vmnl9zldVESANOKNhTM6t7Mjtlofr7GqJSP1OCEz4tIizWdM7OFMMlEQy4AocoRuHZbxHIbf3ZwEvPOtRBvpJ2vG82mkc6QewN9rulpYd8Q6+A4I01nhJ9GnsXMgGlcYJWfWPCdAjVGkAMZHg3Bdl3zs4Kl0xVLs5mgB4LAgMBAAECggEAOaU3DHFrEM9iJ4ow/BYAFf9xguBmnl7SqCMJ01SUs1R4HPz2uprFYKLXqSebkZgPFC7zZlQK/rjQZwkMu/6qOZm6fk8O9dNdjWIIllz0leu3tOkV5XdAwccq7AaLdAaI5I1M5L+0bKWe/DmhfJFLdoZTA8DZllNv1SBNGwzizQWA3hKI+Zk28eZLsJ3E5I0ZYmmvvvi4Ftbc/ZwLD9ihRWN4UXgXRthvBxsyB8mP0W+SpyhIzfBrgR3Ds6ClvrRoPHqfqjwZFxnnzSKULgOw8LW2lZNsvrWa0DmILA81iRMzaJ7Cs2bIPAjr1h3mEsvOUWnWVOxGBIWY1dH4hPBdoQKBgQD0r9nc0g5mujep/mC182dFvX+MfyjyKNsU5vFcIClIBwXj0PYuUU2ZQCnL6YtdshsJmCalLMAyZ5kuyPf4TeR1bYxwbmUAE8FdtcOxRWncxXPZRTjOWi6qnEJInjZB2s87qv8CZABBNyX4iN7O8RYCHQrWveY7vUr+LT57LRArawKBgQDqjaiaeRP6SX5pZH4GVjyeCfxuJxrS4w539qDd7DWzw7eX+lEoE9gOQNcZyyJGvamhFbqPinnY773RuchvOXLixN6lTgGBg8y48xq6WlKQ88vgrUcrd0+cXwh0/oWltOd6q0YokCeBfnVIVMYbcE4OmSlfGCXDjGMA7G3NTBgf4QKBgBw344Ip32tNcnnyUijppzFNx1XmnExBFfL1J0SemOQrmyxIvvtcePyBf9B6YI4vqhqTJ3HJFWk6tVnF54MFSKGaPqYAtTkrDhPGkIjzHmBNjSyzZPe3QsZ+Os6xIES7/UY+VCZsbfMXbxOYhUmMWCNqQgO95r1g+TMS+K+v5Lt9AoGAMWHdy5gOUrXCfaIAvojNfmCP2wk0po3TcAJm4BJpRA3Cy6aSC6QR6v5Py0hvUQGBgz615p67BKeFCXDZ+EDaJVBZp+gCfSgopA/a4r09gPMzS3xv7YDTLBL+DtO/g6HQ0ozY2pVvG95qBu6CPyin5n7srO7ClKcr+PfOLlkFA0ECgYEAxTwAs/r0qnSpTnVSyi7QeMabcPagEybYnMTDpoPyw4ZsIdarfFiQKEOaX82M9YsxEPXNIGoAx/TjF+g799jPd+dFBoFIFwCav2Lh3DeMfms6cCvFE0jMXRjfvIafeQDzNm6xsqtwXf+XYOsiFZYBNoK3/sctX/rE1GaeGJG979w=";
+			return parseBerFromB64EncodedString(contentb64);
 		}
 
-		function berSequenceToArrayOfSubBers(ber){
-			if (!berIsSequence(ber)) {
-				throw new TypeError(`Type of given BER was not the well known ASN.1 class ${BerAsn1Classes.Universal.Name} and type ${BerAsn1NativeTypes.Tag16.Name}. Received class ${ber.cls} and type ${ber.tag}, expected class ${BerAsn1Classes.Universal.Value} and type ${BerAsn1NativeTypes.Tag16.TagNumberDecimal}.`);
-			}
+		function parseBerFromB64EncodedString(b64Input){
+			var contentAsHexString = base64ToHex(b64Input, ':');
+			// console.log(contentAsHexString);
+			var contentAsByteArray = base64ToUint8Array(b64Input);
+			// console.log(contentAsByteArray);
+			var parsedBer = parseAsn1BerAndUnpackNestedAsn1EncodedSequences(contentAsByteArray);
+			return parsedBer;
+			// return 
+		}
+
+		function parseAsn1BerAndUnpackNestedAsn1EncodedSequences(byteArrayUint8){
 			var result = new Array();
-			var nextPosition = 0;
-			var berContentLength = ber.contents.length;
-			while(nextPosition < berContentLength){
-				var nextBerBytes = getSubArray(ber.contents, nextPosition, berContentLength);
-				var nextSubBer = parseBer(nextBerBytes)
-				result.push(nextSubBer);
-				nextPosition += nextSubBer.byteLength;
+			var encodedSequences = new Array();
+			var parsedBer = parseAsn1Ber(byteArrayUint8);
+			// if(berIsSequence(parsedBer)){
+			if(berIsConstructed(parsedBer)){
+				encodedSequences.push(parsedBer);
+			}
+			else{
+				result.push(parsedBer);
+			}
+			while(encodedSequences.length > 0){
+				var nextSequenceToProcess = encodedSequences.pop();
+				var indexNextSubBerStartsAt = 0;
+				var totalLength = nextSequenceToProcess.length;
+				while(indexNextSubBerStartsAt < totalLength){
+					nextSubBerBytes = nextSequenceToProcess.content.slice(indexNextSubBerStartsAt); // Get all bytes from start of next sub ber to end. Because length is always specified, we will alwyas stop before the start of the next entry.
+					parsedBer = parseAsn1Ber(nextSubBerBytes);
+					indexNextSubBerStartsAt += parsedBer.length + 1;
+					if(berIsConstructed(parsedBer)){
+						encodedSequences.push(parsedBer);
+					}
+					else{
+						result.push(parsedBer);
+					}
+				}
 			}
 			return result;
+		}
+
+		// function berSequenceToArrayOfSubBers(ber){
+		// 	if (!berIsSequence(ber)) {
+		// 		throw new TypeError(`Type of given BER was not the well known ASN.1 class ${BerAsn1Classes.Universal.Name} and type ${BerAsn1NativeTypes.Tag16.Name}. Received class ${ber.asn1Class} and type ${ber.asn1Tag}, expected class ${BerAsn1Classes.Universal} and type ${BerAsn1NativeTypes.Tag16}.`);
+		// 	}
+		// 	var result = new Array();
+		// 	var nextPosition = 0;
+		// 	var berContentLength = ber.contents.length;
+		// 	while(nextPosition < berContentLength){
+		// 		var nextBerBytes = getSubArray(ber.contents, nextPosition, berContentLength);
+		// 		var nextSubBer = parseBer(nextBerBytes)
+		// 		result.push(nextSubBer);
+		// 		nextPosition += nextSubBer.byteLength;
+		// 	}
+		// 	return result;
+		// }
+
+		function parseAsn1Ber(byteArrayUint8){
+			var result = {};
+
+			var parsedClassValue = getAsn1Class(byteArrayUint8[0]);
+			result.asn1Class = getAsn1ClassByValue(parsedClassValue);
+
+			var parsedConstructedValue = getConstructed(byteArrayUint8[0]);
+			result.constructed = getAsn1ContructedByValue(parsedConstructedValue);
+
+			var parsedTag = getAsn1Tag(byteArrayUint8);
+			result.asn1Tag = getAsn1TagByValue(parsedTag.Value);
+
+			var firstLengthByteIndex = parsedTag.IndexOfLastByteWithTagInDocument + 1;
+			var parsedContentLenght = getLength(byteArrayUint8, firstLengthByteIndex);
+
+			var firstContentByteIndex = parsedContentLenght.IndexOfLastByteSpecifyingSizeInDocument + 1;
+			result.content = getContent(byteArrayUint8, firstContentByteIndex, parsedContentLenght.Length, parsedContentLenght.Indefinite);
+
+			result.length = firstContentByteIndex + result.content.length;
+			if(parsedContentLenght.Indefinite){
+				result.length += 2; // Account for the adittional end of content tags/bytes.
+			}
+			return result;
+		}
+
+		function getAsn1Class(firstByteOfDocument) {
+			// Extract fist two bits (from left side) from first byte in ASN.1 encoded document.
+			// Interpret first 2 bits as big-endian to obtain ASN.1 class value.
+			var asn1Class = firstByteOfDocument >> 6;
+			// var asn1Class = parseInt((firstByteOfDocument).toString(2).substring(0,2), 2);
+			return asn1Class;
+		}
+
+		function getConstructed(firstByteOfDocument) {
+			// Extract third bit (from left side) from first byte in ASN.1 encoded document.
+			// var constructed = (firstByteOfDocument << 2) >> 7;
+			// return constructed;
+			var isPrimitive = (firstByteOfDocument & 0b00100000) == 0;
+			if(isPrimitive){
+				return 0;
+			}
+			return 1;
+		}
+
+		// Resulting value corresponds to BerAsn1NativeTypes.tagX.NumberValue
+		function getAsn1Tag(asn1DocumentAsByteArrayUint8){
+			var asn1Tag = {};
+			// If five last bits (as read from left) of first byte are all 1, the type is specified in the following bytes.
+			// Then, as long as the following bytes have a 1 in the leftmost position, the 7 other bits are concatenated with the same group of bits in the following bytes starting with a 1, which in the end are interpreted as a bit-endian number.
+			// Otherwise, if the five last bits of the first byte are not all 1, then they are the tag value (read as big-endian).
+			var firstByte = asn1DocumentAsByteArrayUint8[0];
+			var lastFiveBits = firstByte & 0b00011111;
+			if (lastFiveBits != 0b00011111){
+				// By JS magic, this is interpreted and returned as a regular number.
+				asn1Tag.Value = lastFiveBits;
+				asn1Tag.IndexOfLastByteWithTagInDocument = 0;
+				return asn1Tag;
+			}
+
+			var nextPosition = 1;
+			var nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
+			var stringOfBits = "";
+			while(nextByte >> 7 == 1){
+				// Get byte as string of bits and remove leading bit we don't care about.
+				stringOfBits += (nextByte).toString(2).substring(1);
+				nextPosition++;
+				nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
+			}
+			var tagNumber = parseInt(stringOfBits, 2);
+			asn1Tag.Value = tagNumber;
+			asn1Tag.IndexOfLastByteWithTagInDocument = nextPosition - 1;
+			return asn1Tag;
+		}
+
+		function getLength(asn1DocumentAsByteArrayUint8, indexOfFirstLengthByte) {
+			// toDo
+			// There are 4 possible, and 3 allowed ways to specify the length.
+			// First, the first length byte can have the first (leftmost) bit set to 0.
+			// Then, the following 7 bits of the first byte are interpreted, big endian, as the length of the content in terms of number of bytes representing the content.
+			// Note that 0 is a valid length for the content.
+			// Second, if the first length byte has the first (leftmost) bit set to 1, and the folliwng 7 are all 0.
+			// Then the length is unspecified, and you have to read through the rest of the content untill you hit 2 end-of-content tags in a row.
+			// Note that the encoded representation of the end-of-content tag is 1 byte consisting of all 0-s, so you're looking for 2 consecutive bytes that are 0.
+			// Third case, the first length byte starts with the first (leftmost) bit set to 1, and the folliwng 7 representing a non zero value lower that 127.
+			// Then the 7 last bits (from the left) of the first byte represent (bit-endian) the number of following bytes that describe the length of the content of the document (in terms of numbers of bytes constituting the content/document body).
+			// The length-bytes are parsed to a number by mashing them together and interpreting them as a big-endian number (beware leading zeroes).
+			// Fourth, the final and unsupported/reserved for future use case.
+			// The first bit of the length byte is 1, and all the following bits are also 1 (adding up to 127).
+			var result = {
+				Length: null,
+				Indefinite: false,
+				IndexOfLastByteSpecifyingSizeInDocument: indexOfFirstLengthByte
+			};
+			var firstByte = asn1DocumentAsByteArrayUint8[indexOfFirstLengthByte];
+			var firstByteStartsWithZero = firstByte >> 7 == 0;
+			if(firstByteStartsWithZero){
+				result.length = firstByte;
+				return result;
+			}
+			if(firstByte == 0b11111111){
+				throw "ParsingError: The length byte was all 1's. At the time of writing, that is an unsupported value reserved for future use."
+			}
+			if(firstByte == 0b10000000){
+				result.Indefinite = true;
+				return result;
+			}
+			var numberOfBytesSpecifyingLength = firstByte & 0b01111111;
+			stringOfBits = "";
+			var longFormLengthStartIndex = indexOfFirstLengthByte + 1;
+			result.IndexOfLastByteSpecifyingSizeInDocument = longFormLengthStartIndex + numberOfBytesSpecifyingLength;
+			for (var i = longFormLengthStartIndex; i < result.IndexOfLastByteSpecifyingSizeInDocument; i++) {
+				stringOfBits += (asn1DocumentAsByteArrayUint8[i]).toString(2);
+			}
+			var length = parseInt(stringOfBits, 2);
+			result.Length = length;
+			return result;
+		}
+
+		function getContent(asn1DocumentAsByteArrayUint8, indexOfFirstContentByte, contentLength, contentLengthIsIndefinite){
+			if(!contentLengthIsIndefinite){
+				return asn1DocumentAsByteArrayUint8.slice(indexOfFirstContentByte,indexOfFirstContentByte + contentLength);
+			}
+
+			if(indexOfFirstContentByte + 1 < asn1DocumentAsByteArrayUint8.length){
+				throw "ParsingError: Content of indefinite length is not long enough contain end-of-content markers (2 end-of-content ASN.1 tags in a row). Something is wrong.";
+			}
+			if (indexOfFirstContentByte + 1 == asn1DocumentAsByteArrayUint8.length){
+				if(asn1DocumentAsByteArrayUint8[indexOfFirstContentByte] == 0 && asn1DocumentAsByteArrayUint8[indexOfFirstContentByte + 1] == 0){
+					return new Uint8Array();
+				}
+				throw "ParsingError: Content of indefinite length is just barely long enough to only contain 2 end-of-content tags marking end of content (for specifying content of 0-length in a weird way), however it does not specify end of content. Something is missing.";
+			}
+			var parsedLength = 1;
+			var foundEndOfContent = false;
+			for (var i = indexOfFirstContentByte; i < asn1DocumentAsByteArrayUint8.length - 2; i++) {
+				if(asn1DocumentAsByteArrayUint8[i + 1] == 0 && asn1DocumentAsByteArrayUint8[i + 2] == 0){
+					foundEndOfContent = true;
+					break;
+				}
+				parsedLength++;
+			}
+			if(!foundEndOfContent){
+				throw "ParsingError: Reached end of input marked as indefinite length, but did not find end of content marking.";
+			}
+			return asn1DocumentAsByteArrayUint8.slice(indexOfFirstContentByte,indexOfFirstContentByte + parsedLength);
 		}
 
 		function getKeyFromPemString(pemStr){
