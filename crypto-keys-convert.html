@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Fun with encryption keys!</title>
+	<meta charset="utf-8">
+	<script type="text/javascript">
+		/*
+		Convert a string into an ArrayBuffer
+		from https://developers.google.com/web/updates/2012/06/How-to-convert-ArrayBuffer-to-and-from-String
+		*/
+		function str2ab(str) {
+			const buf = new ArrayBuffer(str.length);
+			const bufView = new Uint8Array(buf);
+			for (let i = 0, strLen = str.length; i < strLen; i++) {
+				bufView[i] = str.charCodeAt(i);
+			}
+			return buf;
+		}
+
+		/* Convert base64 data to hex string. https://stackoverflow.com/a/57909068/2890086
+		*   txt : Base64 string.
+		*   sep : Hex separator, e.g. '-' for '1a-2b-3c'.  Default empty.
+		*/
+		const base64ToHex = ( () => {
+			// Lookup tables
+			const values = [], output = [];
+
+			// Main converter
+			return function base64ToHex ( txt, sep = '' ) {
+				if ( output.length <= 0 ) {
+					populateLookups();
+				}
+				const result = [];
+				let v1, v2, v3, v4;
+				for ( let i = 0, len = txt.length ; i < len ; i += 4 ) {
+					// Map four chars to values.
+					v1 = values[ txt.charCodeAt( i   ) ];
+					v2 = values[ txt.charCodeAt( i+1 ) ];
+					v3 = values[ txt.charCodeAt( i+2 ) ];
+					v4 = values[ txt.charCodeAt( i+3 ) ];
+					// Split and merge bits, then map and push to output.
+					result.push(
+						output[ ( v1 << 2) | (v2 >> 4) ],
+						output[ ((v2 & 15) << 4) | (v3 >> 2) ],
+						output[ ((v3 &  3) << 6) |  v4 ]
+					);
+				}
+				// Trim result if the last values are '='.
+				if ( v4 === 64 ) {
+					result.splice( v3 === 64 ? -2 : -1 );
+				}
+				return result.join( sep );
+			};
+
+			function populateLookups () {
+				const keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+				for ( let i = 0 ; i < 256 ; i++ ) {
+					output.push( ( '0' + i.toString( 16 ) ).slice( -2 ) );
+					values.push( 0 );
+				}
+				for ( let i = 0 ; i <  65 ; i++ ) {
+					values[ keys.charCodeAt( i ) ] = i;
+				}
+			}
+		} )();
+
+		// look up tables
+		var to_hex_array = [];
+		var to_byte_map = {};
+		function populateLookupTablesForConversionBetweenHexAndByte(){
+			if(to_hex_array > 1){
+				return;
+			}
+			for (var ord=0; ord<=0xff; ord++) {
+				var s = ord.toString(16);
+				if (s.length < 2) {
+					s = "0" + s;
+				}
+				to_hex_array.push(s);
+				to_byte_map[s] = ord;
+			}
+		}
+
+		// converter using lookups
+		function bufferToHexString(buffer, separator = '') {
+			populateLookupTablesForConversionBetweenHexAndByte();
+			var hex_array = [];
+			//(new Uint8Array(buffer)).forEach((v) => { hex_array.push(to_hex_array[v]) });
+			for (var i=0; i<buffer.length; i++) {
+				hex_array.push(to_hex_array[buffer[i]]);
+			}
+			return hex_array.join(separator);
+		}
+		// reverse conversion using lookups
+		function hexToBuffer(s) {
+			populateLookupTablesForConversionBetweenHexAndByte();
+			var length2 = s.length;
+			if ((length2 % 2) != 0) {
+				throw "hex string must have length a multiple of 2";
+			}
+			var length = length2 / 2;
+			var result = new Uint8Array(length);
+			for (var i=0; i<length; i++) {
+				var i2 = i * 2;
+				var b = s.substring(i2, i2 + 2);
+				result[i] = to_byte_map[b];
+			}
+			return result;
+		}
+
+		function hexStringToHexByteArray(hexString, separator){
+			var hexBytesInArray = hexString.split(separator)
+			var hexBytesWithCustomaryPrefixInArray = hexBytesInArray.map(byte => `0x${byte}`);
+			return hexBytesWithCustomaryPrefixInArray;
+		}
+
+		function byteArrayToHexArray(uint8ByteArray){
+			return uint8ByteArray.map(byte => byte.toString(16));
+		}
+
+		function hexArrayToString(hexArray, separator = ''){
+			const reducer = (accumulator, currentValue) => accumulator + separator + `${currentValue}`;
+			var folded = hexArray.reduce(reducer);
+			return folded;
+		}
+
+		function base64ToUint8Array(b64Text) {
+			var hexSeparator = ':';
+			var asHexString = base64ToHex(b64Text, hexSeparator);
+			var asHexArray = hexStringToHexByteArray(asHexString, hexSeparator);
+			var asUint8Array = new Uint8Array(asHexArray);
+			return asUint8Array;
+		}
+
+		let BerAsn1Classes = {
+			// These are the possible classes outlined in the 2 leftmost bits. When unpacked should be found in the "cls" field.
+			Universal: {
+				Name: 'Universal',
+				Value: 0,
+				Description: 'The type is native to ASN.1'
+			},
+			Application: {
+				Name: 'Application',
+				Value: 1,
+				Description: 'The type is only valid for one specific application'
+			},
+			ContextSpecific: {
+				Name: 'Context-specific',
+				Value: 2,
+				Description: 'Meaning of this type depends on the context (such as within a sequence, set or choice)'
+			},
+			Private: {
+				Name: 'Private',
+				Value: 3,
+				Description: 'Defined in private specifications'
+			}
+		};
+		let BerAsn1PCBit = {
+			// When unpacked should be found in the "structured" field.
+			P: {
+				Name: 'Primitive',
+				Value: 0,
+				Description: 'The contents octets directly encode the element value.'
+			},
+			C: {
+				Name: 'Constructed',
+				Value: 1,
+				Description: 'The contents octets contain 0, 1, or more element encodings.'
+			}
+		};
+		let BerAsn1NativeTypes = {
+			// These are the ASN.1 native types that are permitted used with the Universal class. If used, can be found in the tag field.
+			Tag0: {
+				Name: 'End-of-Content (EOC)',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 0,
+				TagNumberHex: '0'
+			},
+			Tag1: {
+				Name: 'BOOLEAN',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 1,
+				TagNumberHex: '1'
+			},
+			Tag2: {
+				Name: 'INTEGER',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 2,
+				TagNumberHex: '2'
+			},
+			Tag3: {
+				Name: 'BIT STRING',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 3,
+				TagNumberHex: '3'
+			},
+			Tag4: {
+				Name: 'OCTET STRING',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 4,
+				TagNumberHex: '4'
+			},
+			Tag5: {
+				Name: 'NULL',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 5,
+				TagNumberHex: '5'
+			},
+			Tag6: {
+				Name: 'OBJECT IDENTIFIER',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 6,
+				TagNumberHex: '6'
+			},
+			Tag7: {
+				Name: 'Object Descriptor',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 7,
+				TagNumberHex: '7'
+			},
+			Tag8: {
+				Name: 'EXTERNAL',
+				PermittedConstruction: 'Constructed',
+				TagNumberDecimal: 8,
+				TagNumberHex: '8'
+			},
+			Tag9: {
+				Name: 'REAL (float)',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 9,
+				TagNumberHex: '9'
+			},
+			Tag10: {
+				Name: 'ENUMERATED',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 10,
+				TagNumberHex: 'A'
+			},
+			Tag11: {
+				Name: 'EMBEDDED PDV',
+				PermittedConstruction: 'Constructed',
+				TagNumberDecimal: 11,
+				TagNumberHex: 'B'
+			},
+			Tag12: {
+				Name: 'UTF8String',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 12,
+				TagNumberHex: 'C'
+			},
+			Tag13: {
+				Name: 'RELATIVE-OID',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 13,
+				TagNumberHex: 'D'
+			},
+			Tag14: {
+				Name: 'TIME',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 14,
+				TagNumberHex: 'E'
+			},
+			Tag15: {
+				Name: 'Reserved',
+				PermittedConstruction: 'N/A',
+				TagNumberDecimal: 15,
+				TagNumberHex: 'F'
+			},
+			Tag16: {
+				Name: 'SEQUENCE and SEQUENCE OF',
+				PermittedConstruction: 'Constructed',
+				TagNumberDecimal: 16,
+				TagNumberHex: '10'
+			},
+			Tag17: {
+				Name: 'SET and SET OF',
+				PermittedConstruction: 'Constructed',
+				TagNumberDecimal: 17,
+				TagNumberHex: '11'
+			},
+			Tag18: {
+				Name: 'NumericString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 18,
+				TagNumberHex: '12'
+			},
+			Tag19: {
+				Name: 'PrintableString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 19,
+				TagNumberHex: '13'
+			},
+			Tag20: {
+				Name: 'T61String',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 20,
+				TagNumberHex: '14'
+			},
+			Tag21: {
+				Name: 'VideotexString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 21,
+				TagNumberHex: '15'
+			},
+			Tag22: {
+				Name: 'IA5String',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 22,
+				TagNumberHex: '16'
+			},
+			Tag23: {
+				Name: 'UTCTime',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 23,
+				TagNumberHex: '17'
+			},
+			Tag24: {
+				Name: 'GeneralizedTime',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 24,
+				TagNumberHex: '18'
+			},
+			Tag25: {
+				Name: 'GraphicString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 25,
+				TagNumberHex: '19'
+			},
+			Tag26: {
+				Name: 'VisibleString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 26,
+				TagNumberHex: '1A'
+			},
+			Tag27: {
+				Name: 'GeneralString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 27,
+				TagNumberHex: '1B'
+			},
+			Tag28: {
+				Name: 'UniversalString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 28,
+				TagNumberHex: '1C'
+			},
+			Tag29: {
+				Name: 'CHARACTER STRING',
+				PermittedConstruction: 'Constructed',
+				TagNumberDecimal: 29,
+				TagNumberHex: '1D'
+			},
+			Tag30: {
+				Name: 'BMPString',
+				PermittedConstruction: 'Both',
+				TagNumberDecimal: 30,
+				TagNumberHex: '1E'
+			},
+			Tag31: {
+				Name: 'DATE',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 31,
+				TagNumberHex: '1F'
+			},
+			Tag32: {
+				Name: 'TIME-OF-DAY',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 32,
+				TagNumberHex: '20'
+			},
+			Tag33: {
+				Name: 'DATE-TIME',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 33,
+				TagNumberHex: '21'
+			},
+			Tag34: {
+				Name: 'DURATION',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 34,
+				TagNumberHex: '22'
+			},
+			Tag35: {
+				Name: 'OID-IRI',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 35,
+				TagNumberHex: '23'
+			},
+			Tag36: {
+				Name: 'RELATIVE-OID-IRI',
+				PermittedConstruction: 'Primitive',
+				TagNumberDecimal: 36,
+				TagNumberHex: '24'
+			}
+		};
+
+		function getAsn1ClassByValue(integerValue){
+			for(asn1Class in BerAsn1Classes){
+				if(BerAsn1Classes[asn1Class]["Value"] == integerValue){
+					return BerAsn1Classes[asn1Class];
+				}
+			}
+		}
+
+		function getAsn1TagByValue(integerValue){
+			for(asn1tag in BerAsn1NativeTypes){
+				if(BerAsn1NativeTypes[asn1tag]["TagNumberDecimal"] == integerValue){
+					return BerAsn1NativeTypes[asn1tag];
+				}
+			}
+		}
+
+		function getAsn1ContructedByValue(integerValue){
+			if(integerValue == 0){
+				return BerAsn1PCBit["P"];
+			}
+			else if (integerValue == 1){
+				return BerAsn1PCBit["C"];
+			}
+		}
+
+		function berIsSequence(ber){
+			return ber.cls == BerAsn1Classes.Universal.Value && ber.tag == BerAsn1NativeTypes.Tag16.TagNumberDecimal && ber.constructed == BerAsn1PCBit.C.Value
+		}
+
+		// Array.prototype.subarray = function(start, end) {
+		// 	if (!end) { end = -1; }
+		// 	return this.slice(start, this.length + 1 - (end * -1));
+		// };
+
+		function getSubArray(array, startAtInclusive, endAtExclusive){
+			return array.slice(startAtInclusive, endAtExclusive);
+		}
+
+		/* Because DER is just a stricter subset of BER, and I'd never want to do unot others something as horrible as making them have to deal with either, this function just de-obfuscates the general case and puts it into a malleable json string.
+		ToDo: Correct comment and signature to indicate that this only makes a native JS object, could still be sub-components that are DER/BER encoded. 
+		*/
+		function parseBer(byteArrayUint8){
+			var result = {};
+			// var inputAsHex = bufferToHexString(byteArrayUint8, ':');
+
+			result.asn1Class = getAsn1Class(byteArrayUint8[0]);
+			result.asn1ClassMetadata = getAsn1ClassByValue(result.asn1Class);
+			result.constructed = getConstructed(byteArrayUint8[0]);
+			result.constructedMetadata = getAsn1ContructedByValue(result.constructed);
+			result.tag = getTag();
+			result.tagMetadata = getAsn1TagByValue(result.tag);
+			var length = getLength();
+
+			result.content = getContent()
+
+			result.raw = getSubArray(byteArrayUint8, 0, result.byteLength);
+			result.contentsAsHex = {value: bufferToHexString(result.contents, ':')};
+			var inputAsHex = bufferToHexString(result.raw, ':');
+			result.headerAsHex = {value: inputAsHex.substring(0, inputAsHex.length - result.contentsAsHex.length)};
+			return result;
+
+			function getAsn1Class(firstByteOfDocument) {
+				// Extract fist two bits (from left side) from first byte in ASN.1 encoded document.
+				// Interpret first 2 bits as big-endian to obtain ASN.1 class value.
+				var asn1Class = firstByteOfDocument >> 6;
+				return asn1Class;
+			}
+
+			function getConstructed(firstByteOfDocument) {
+				// Extract third bit (from left side) from first byte in ASN.1 encoded document.
+				var constructed = (firstByteOfDocument << 2) >> 7;
+				return constructed;
+			}
+
+			// Resulting value corresponds to BerAsn1NativeTypes.tagX.NumberValue
+			function getAsn1Tag(asn1DocumentAsByteArrayUint8){
+				// If five last bits (as read from left) of first byte are all 1, the type is specified in the following bytes.
+				// Then, as long as the following bytes have a 1 in the leftmost position, the 7 other bits are concatenated with the same group of bits in the following bytes starting with a 1, which in the end are interpreted as a bit-endian number.
+				// Otherwise, if the five last bits of the first byte are not all 1, then they are the tag value (read as big-endian).
+				var firstByte = asn1DocumentAsByteArrayUint8[0];
+				var lastFiveBits = firstByte & 0b00011111;
+				if (lastFiveBits != 0b00011111){
+					// By JS magic, this is interpreted and returned as a regular number.
+					return lastFiveBits;
+				}
+
+				var nextPosition = 1;
+				var nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
+				var stringOfBits = "";
+				while(nextByte >> 7 == 1){
+					// Get byte as string of bits and remove leading bit we don't care about.
+					stringOfBits += (nextByte).toString(2).substring(1);
+					nextPosition++;
+					nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
+				}
+				var tagNumber = parseInt(stringOfBits, 2);
+				return tagNumber;
+			}
+
+			function getLength() {
+				// toDo
+			}
+
+			function getContent(){
+				// toDo;
+			}
+		}
+
+		function berSequenceToArrayOfSubBers(ber){
+			if (!berIsSequence(ber)) {
+				throw new TypeError(`Type of given BER was not the well known ASN.1 class ${BerAsn1Classes.Universal.Name} and type ${BerAsn1NativeTypes.Tag16.Name}. Received class ${ber.cls} and type ${ber.tag}, expected class ${BerAsn1Classes.Universal.Value} and type ${BerAsn1NativeTypes.Tag16.TagNumberDecimal}.`);
+			}
+			var result = new Array();
+			var nextPosition = 0;
+			var berContentLength = ber.contents.length;
+			while(nextPosition < berContentLength){
+				var nextBerBytes = getSubArray(ber.contents, nextPosition, berContentLength);
+				var nextSubBer = parseBer(nextBerBytes)
+				result.push(nextSubBer);
+				nextPosition += nextSubBer.byteLength;
+			}
+			return result;
+		}
+
+		function getKeyFromPemString(pemStr){
+			const pemHeaderPublic = "-----BEGIN PUBLIC KEY-----";
+			const pemFooterPublic = "-----END PUBLIC KEY-----";
+			const pemHeaderPrivate = "-----BEGIN PRIVATE KEY-----";
+			const pemFooterPrivate = "-----END PRIVATE KEY-----";
+
+			if (pemStr.startsWith(pemHeaderPublic)) {
+				if(!pemStr.endsWith(pemFooterPublic)){
+					throw new TypeError(`Unable to parse input to function as PEM string. Exptected public key input to end with ${pemFooterPublic}. Instead got ${pemStr}.`);
+				}
+				var content = pemStr.substring(pemHeaderPublic.length, pemStr.length - pemFooterPublic.length);
+				return getKeyFromPemStringContentPublicKey(content);
+			}
+			else if(pemStr.startsWith(pemHeaderPrivate)){
+				if(!pemStr.endsWith(pemFooterPrivate)){
+					throw new TypeError(`Unable to parse input to function as PEM string. Exptected private key input to end with ${pemFooterPrivate}. Instead got ${pemStr}.`);
+				}
+				var content = pemStr.substring(pemHeaderPrivate.length, pemStr.length - pemFooterPrivate.length);
+				return getKeyFromPemStringContentPrivateKey(content);
+			}
+			else {
+				throw new TypeError(`Unable to parse input to function as PEM string. Exptected input to begin with either ${pemHeaderPublic} or ${pemHeaderPrivate}. Instead got ${pemStr}.`);
+			}
+		}
+
+		function getKeyFromPemStringContentPublicKey(pemContentStr){
+
+		}
+
+		function getKeyFromPemStringContentPrivateKey(pemContentStr){
+			// // Base64 decode content to get binary data.
+			// // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#examples
+			const binaryDerString = window.atob(pemContentStr);
+			const binaryDerArrayBuffer = str2ab(binaryDerString);
+
+			var format = "pkcs8";
+			var algoMetadata = {
+				name: "RSA-PSS",
+				modulusLength: 2048,
+				publicExponent: new Uint8Array([1, 0, 1]),
+				hash: "SHA-256",
+			};
+			var extractable = true;
+			var usages = ["sign"];
+
+			// https://docs.w3cub.com/dom/subtlecrypto/importkey
+			return window.crypto.subtle.importKey(
+				format, // Format.
+				binaryDerArrayBuffer, // keyData, ArrayBuffer or JWK.
+				algoMetadata, // Why couldn't this just be parsed from the key that's passed in??
+				extractable, // Whether the key should be exportable after the import.
+				usages // Key usages, has to be sign for private keys.
+			);
+
+			// https://crypto.stackexchange.com/questions/18031/how-to-find-modulus-from-a-rsa-public-key
+			// var derHex = base64ToHex(pemContentStr, ':');
+		}
+	</script>
+</head>
+<body>
+	<h1>Convert keys</h1>
+	<form style="display: grid; grid-template-columns: 1fr 1fr;">
+		<fieldset style="grid-column: 1; grid-row: 1;">
+			<legend>Input key</legend>
+			<label for="ConvertKeyInputFormat">Input format: </label>
+			<select id="ConvertKeyInputFormat" name="ConvertKeyInputFormat">
+				<option value="pkcs">PEM</option>
+				<option value="jwk">JWK</option>
+				<option value="raw">Raw</option>
+			</select>
+			<br/>
+			<label for="ConvertKeyInputTextArea">Input key</label>
+			<textarea id="ConvertKeyInputTextArea"
+				name="ConvertKeyInputTextArea"
+				placeholder="Enter key to convert here"
+				style="width: 97.5%; height: 20rem;"></textarea>
+		</fieldset>
+		<fieldset style="grid-column: 2; grid-row: 1;">
+			<legend>Converted key</legend>
+			<label for="ConvertKeyOutputFormat">Output Format: </label>
+			<select id="ConvertKeyOutputFormat" name="ConvertKeyOutputFormat">
+				<option value="jwk">JWK</option>
+				<option value="pkcs">PEM</option>
+				<option value="raw">Raw</option>
+			</select>
+			<br/>
+			<label for="ConvertKeyOutputTextArea">Output key</label>
+			<textarea id="ConvertKeyOutputTextArea"
+				name="ConvertKeyOutputTextArea"
+				placeholder="Converted key appears here"
+				style="width: 97.5%; height: 20rem;"
+				readonly></textarea>
+		</fieldset>
+	</form>
+</body>
+</html>
