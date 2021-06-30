@@ -539,11 +539,14 @@
 
 			var firstContentByteIndex = parsedContentLenght.IndexOfLastByteSpecifyingSizeInDocument + 1;
 			result.content = getContent(byteArrayUint8, firstContentByteIndex, parsedContentLenght.Length, parsedContentLenght.Indefinite);
+			result.contentAsHexString = bufferToHexString(result.content, ':');
+			result.inputAsHexString = bufferToHexString(byteArrayUint8, ':');
 
-			result.length = firstContentByteIndex + result.content.length;
+			var totalLengthFromStartToEndOfContent = firstContentByteIndex + result.content.length;
 			if(parsedContentLenght.Indefinite){
-				result.length += 2; // Account for the adittional end of content tags/bytes.
+				totalLengthFromStartToEndOfContent += 2; // Account for the adittional end of content tags/bytes.
 			}
+			result.length = totalLengthFromStartToEndOfContent;
 			return result;
 		}
 
@@ -551,8 +554,27 @@
 			// Extract fist two bits (from left side) from first byte in ASN.1 encoded document.
 			// Interpret first 2 bits as big-endian to obtain ASN.1 class value.
 			var asn1Class = firstByteOfDocument >> 6;
-			// var asn1Class = parseInt((firstByteOfDocument).toString(2).substring(0,2), 2);
+			console.log(`Get ASN.1 class: Processing input "${(firstByteOfDocument).toString(2).padStart(8,"0")}", got "${asn1Class}" as value`);
+			// var asn1Class = parseInt((firstByteOfDocument).toString(2).padStart(8,"0").substring(0,2), 2);
 			return asn1Class;
+		}
+
+		function testGetAsn1Class(){
+			var shouldBe0 = 0b00111111;
+			var shouldBe1 = 0b01111111;
+			var shouldBe2 = 0b10111111;
+			var shouldBe3 = 0b11000000;
+
+			var zeroGetsParsedCorrectly = getAsn1Class(shouldBe0) == 0;
+			var oneGetsParsedCorrectly = getAsn1Class(shouldBe1) == 1;
+			var twoGetsParsedCorrectly = getAsn1Class(shouldBe2) == 2;
+			var threeGetsParsedCorrectly = getAsn1Class(shouldBe3) == 3;
+
+			if(zeroGetsParsedCorrectly && oneGetsParsedCorrectly && twoGetsParsedCorrectly && threeGetsParsedCorrectly){
+				console.log("All test cases passed for testing parsing of class.");
+				return;
+			}
+			throw `Test failed. zeroGetsParsedCorrectly was ${zeroGetsParsedCorrectly}, oneGetsParsedCorrectly was ${oneGetsParsedCorrectly}, twoGetsParsedCorrectly was ${twoGetsParsedCorrectly}, threeGetsParsedCorrectly was ${threeGetsParsedCorrectly}.`;
 		}
 
 		function getConstructed(firstByteOfDocument) {
@@ -564,6 +586,20 @@
 				return 0;
 			}
 			return 1;
+		}
+
+		function testGetConstructed(){
+			var shouldBe0 = 0b11011111;
+			var shouldBe1 = 0b00100000;
+
+			var zeroGetsParsedCorrectly = getConstructed(shouldBe0) == 0;
+			var oneGetsParsedCorrectly = getConstructed(shouldBe1) == 1;
+
+			if(zeroGetsParsedCorrectly && oneGetsParsedCorrectly){
+				console.log("All test cases passed for testing parsing of constructed.");
+				return;
+			}
+			throw `Test failed. zeroGetsParsedCorrectly was ${zeroGetsParsedCorrectly}, oneGetsParsedCorrectly was ${oneGetsParsedCorrectly}.`;
 		}
 
 		// Resulting value corresponds to BerAsn1NativeTypes.tagX.NumberValue
@@ -581,19 +617,65 @@
 				return asn1Tag;
 			}
 
-			var nextPosition = 1;
-			var nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
+			var currentPosition = 0;
+			// var currentByte = asn1DocumentAsByteArrayUint8[currentPosition];
 			var stringOfBits = "";
-			while(nextByte >> 7 == 1){
+			do {
+				currentPosition++;
+				currentByte = asn1DocumentAsByteArrayUint8[currentPosition];
 				// Get byte as string of bits and remove leading bit we don't care about.
-				stringOfBits += (nextByte).toString(2).substring(1);
-				nextPosition++;
-				nextByte = asn1DocumentAsByteArrayUint8[nextPosition];
-			}
+				stringOfBits += (currentByte).toString(2).padStart(8,"0").substring(1);
+			} while(currentByte >> 7 != 0);
 			var tagNumber = parseInt(stringOfBits, 2);
 			asn1Tag.Value = tagNumber;
-			asn1Tag.IndexOfLastByteWithTagInDocument = nextPosition - 1;
+			asn1Tag.IndexOfLastByteWithTagInDocument = currentPosition;
 			return asn1Tag;
+		}
+
+		function testGetAsn1Tag(){
+			// Note that last byte in all of the samples should not be parsed as part of the tag.
+			var shouldBe0 = [0b00000000, 0b11111111, 0b11111111];
+			var shouldBe2 = [0b00000010, 0b11111111];
+			var shouldBe16 = [0b00010000, 0b11111111];
+			var shouldBe16WithCorrectHeaderValueForConstructed = [0b00110000, 0b11111111];
+			var shouldBe32 = [0b00011111, 0b00100000, 0b11111111];
+			var shouldBe255 = [0b00011111, 0b10000001, 0b01111111, 0b11111111];
+
+			var zeroParsed = getAsn1Tag(shouldBe0);
+			var zeroGetsParsedCorrectly = zeroParsed.Value == 0 && zeroParsed.IndexOfLastByteWithTagInDocument == 0;
+
+			var twoParsed = getAsn1Tag(shouldBe2);
+			var twoGetsParsedCorrectly = twoParsed.Value == 2 && twoParsed.IndexOfLastByteWithTagInDocument == 0;
+
+			var sixteenParsed = getAsn1Tag(shouldBe16);
+			var sixteenGetsParsedCorrectly = sixteenParsed.Value == 16 && sixteenParsed.IndexOfLastByteWithTagInDocument == 0;
+
+			var sixteenWithCorrectHeaderParsed = getAsn1Tag(shouldBe16WithCorrectHeaderValueForConstructed);
+			var sixteenWithCorrectHeaderGetsParsedCorrectly = sixteenWithCorrectHeaderParsed.Value == 16 && sixteenWithCorrectHeaderParsed.IndexOfLastByteWithTagInDocument == 0;
+
+			var thirtyTwoParsed = getAsn1Tag(shouldBe32);
+			var thirtyTwoGetsParsedCorrectly = thirtyTwoParsed.Value == 32 && thirtyTwoParsed.IndexOfLastByteWithTagInDocument == 1;
+
+			var twoHundredAndFiftyFiveParsed = getAsn1Tag(shouldBe255);
+			var twoHundredAndFiftyFiveGetsParsedCorrectly = twoHundredAndFiftyFiveParsed.Value == 255 && twoHundredAndFiftyFiveParsed.IndexOfLastByteWithTagInDocument == 2;
+
+			if(zeroGetsParsedCorrectly
+				&& twoGetsParsedCorrectly
+				&& sixteenGetsParsedCorrectly
+				&& sixteenWithCorrectHeaderGetsParsedCorrectly
+				&& thirtyTwoGetsParsedCorrectly
+				&& twoHundredAndFiftyFiveGetsParsedCorrectly){
+				console.log("All test cases passed for testing parsing of getTag.");
+				return;
+			}
+
+			throw 'Test failed.'
+				+ `zeroGetsParsedCorrectly was ${zeroGetsParsedCorrectly}, `
+				+ `twoGetsParsedCorrectly was ${twoGetsParsedCorrectly}, `
+				+ `sixteenGetsParsedCorrectly was ${sixteenGetsParsedCorrectly}, `
+				+ `sixteenWithCorrectHeaderGetsParsedCorrectly was ${sixteenWithCorrectHeaderGetsParsedCorrectly}, `
+				+ `thirtyTwoGetsParsedCorrectly was ${thirtyTwoGetsParsedCorrectly}, `
+				+ `twoHundredAndFiftyFiveGetsParsedCorrectly was ${twoHundredAndFiftyFiveGetsParsedCorrectly}.`;
 		}
 
 		function getLength(asn1DocumentAsByteArrayUint8, indexOfFirstLengthByte) {
@@ -618,7 +700,7 @@
 			var firstByte = asn1DocumentAsByteArrayUint8[indexOfFirstLengthByte];
 			var firstByteStartsWithZero = firstByte >> 7 == 0;
 			if(firstByteStartsWithZero){
-				result.length = firstByte;
+				result.Length = firstByte;
 				return result;
 			}
 			if(firstByte == 0b11111111){
@@ -631,13 +713,66 @@
 			var numberOfBytesSpecifyingLength = firstByte & 0b01111111;
 			stringOfBits = "";
 			var longFormLengthStartIndex = indexOfFirstLengthByte + 1;
-			result.IndexOfLastByteSpecifyingSizeInDocument = longFormLengthStartIndex + numberOfBytesSpecifyingLength;
-			for (var i = longFormLengthStartIndex; i < result.IndexOfLastByteSpecifyingSizeInDocument; i++) {
-				stringOfBits += (asn1DocumentAsByteArrayUint8[i]).toString(2);
+			result.IndexOfLastByteSpecifyingSizeInDocument = indexOfFirstLengthByte + numberOfBytesSpecifyingLength;
+			for (var i = longFormLengthStartIndex; i < result.IndexOfLastByteSpecifyingSizeInDocument + 1; i++) {
+				stringOfBits += (asn1DocumentAsByteArrayUint8[i]).toString(2).padStart(8,"0");
 			}
 			var length = parseInt(stringOfBits, 2);
 			result.Length = length;
 			return result;
+		}
+
+		function TestGetLength(){
+			var shouldBe0 = [0b00000000, 0b00000000, 0b11111111];
+			var shouldBe1 = [0b00000000, 0b00000001, 0b11111111];
+			var shouldBeIndefinite = [0b00000000, 0b10000000, 0b11111111];
+			var shouldBe256 = [0b00000000, 0b10000010, 0b00000001, 0b00000000, 0b11111111];
+			var shouldBe65535 = [0b00000000, 0b10000010, 0b11111111, 0b11111111, 0b00000000];
+
+			var shouldBe0Parsed = getLength(shouldBe0, 1);
+			var shouldBe0ParsedCorrectly = shouldBe0Parsed.Length == 0 && shouldBe0Parsed.IndexOfLastByteSpecifyingSizeInDocument == 1 && shouldBe0Parsed.Indefinite == false;
+			if(!shouldBe0ParsedCorrectly){
+				console.log("Failed to parse shouldBe0Parsed correctly. Result was:");
+				console.log(shouldBe0Parsed);
+			}
+
+			var shouldBe1Parsed = getLength(shouldBe1, 1);
+			var shouldBe1ParsedCorrectly = shouldBe1Parsed.Length == 1 && shouldBe1Parsed.IndexOfLastByteSpecifyingSizeInDocument == 1 && shouldBe1Parsed.Indefinite == false;
+			if(!shouldBe1ParsedCorrectly){
+				console.log("Failed to parse shouldBe1Parsed correctly. Result was:");
+				console.log(shouldBe1Parsed);
+			}
+
+			var shouldBeIndefiniteParsed = getLength(shouldBeIndefinite, 1);
+			var shouldBeIndefiniteParsedCorrectly = shouldBeIndefiniteParsed.IndexOfLastByteSpecifyingSizeInDocument == 1 && shouldBeIndefiniteParsed.Indefinite == true;
+			if(!shouldBeIndefiniteParsedCorrectly){
+				console.log("Failed to parse shouldBeIndefiniteParsed correctly. Result was:");
+				console.log(shouldBeIndefiniteParsed);
+			}
+
+			var shouldBe256Parsed = getLength(shouldBe256, 1);
+			var shouldBe256ParsedCorrectly = shouldBe256Parsed.Length == 256 && shouldBe256Parsed.IndexOfLastByteSpecifyingSizeInDocument == 3 && shouldBe256Parsed.Indefinite == false;
+			if(!shouldBe256ParsedCorrectly){
+				console.log("Failed to parse shouldBe256Parsed correctly. Result was:");
+				console.log(shouldBe256Parsed);
+			}
+
+			var shouldBe65535Parsed = getLength(shouldBe65535, 1);
+			var shouldBe65535ParsedCorrectly = shouldBe65535Parsed.Length == 65535 && shouldBe65535Parsed.IndexOfLastByteSpecifyingSizeInDocument == 3 && shouldBe65535Parsed.Indefinite == false;
+			if(!shouldBe65535ParsedCorrectly){
+				console.log("Failed to parse shouldBe65535Parsed correctly. Result was:");
+				console.log(shouldBe65535Parsed);
+			}
+
+			if(shouldBe0ParsedCorrectly
+				&& shouldBe1ParsedCorrectly
+				&& shouldBeIndefiniteParsedCorrectly
+				&& shouldBe256ParsedCorrectly
+				&& shouldBe65535ParsedCorrectly){
+				console.log("All test cases passed for testing parsing of GetLength.");
+				return;
+			}
+			throw "Test Failed."
 		}
 
 		function getContent(asn1DocumentAsByteArrayUint8, indexOfFirstContentByte, contentLength, contentLengthIsIndefinite){
