@@ -780,7 +780,7 @@
 				return asn1DocumentAsByteArrayUint8.slice(indexOfFirstContentByte,indexOfFirstContentByte + contentLength);
 			}
 
-			if(indexOfFirstContentByte + 1 < asn1DocumentAsByteArrayUint8.length){
+			if(indexOfFirstContentByte + 1 > asn1DocumentAsByteArrayUint8.length){
 				throw "ParsingError: Content of indefinite length is not long enough contain end-of-content markers (2 end-of-content ASN.1 tags in a row). Something is wrong.";
 			}
 			if (indexOfFirstContentByte + 1 == asn1DocumentAsByteArrayUint8.length){
@@ -788,6 +788,9 @@
 					return new Uint8Array();
 				}
 				throw "ParsingError: Content of indefinite length is just barely long enough to only contain 2 end-of-content tags marking end of content (for specifying content of 0-length in a weird way), however it does not specify end of content. Something is missing.";
+			}
+			if(asn1DocumentAsByteArrayUint8[indexOfFirstContentByte] == 0 && asn1DocumentAsByteArrayUint8[indexOfFirstContentByte + 1] == 0){
+					return new Uint8Array();
 			}
 			var parsedLength = 1;
 			var foundEndOfContent = false;
@@ -802,6 +805,56 @@
 				throw "ParsingError: Reached end of input marked as indefinite length, but did not find end of content marking.";
 			}
 			return asn1DocumentAsByteArrayUint8.slice(indexOfFirstContentByte,indexOfFirstContentByte + parsedLength);
+		}
+
+		function testGetContent(){
+			var shouldBe0 = [0b00000000, 0b00000001, 0b00000000, 0b11111111];
+			var shouldBe0Parsed = getContent(shouldBe0, 2, 1, false);
+			var shouldBe0ParsedCorrectly = shouldBe0Parsed == 0;
+			if(!shouldBe0ParsedCorrectly){
+				console.log("Failed to parse shouldBe0 correctly. Result was:");
+				console.log(shouldBe0Parsed);
+			}
+
+			var shouldBe1 = [0b00000010, 0b00000001, 0b00000001, 0b11111111];
+			var shouldBe1Parsed = getContent(shouldBe1, 2, 1, false);
+			var shouldBe1ParsedCorrectly = shouldBe1Parsed == 1;
+			if(!shouldBe1ParsedCorrectly){
+				console.log("Failed to parse shouldBe1 correctly. Result was:");
+				console.log(shouldBe1Parsed);
+			}
+
+			var shouldBeArrayWith2Elements =  [0b00000010, 0b0000010, 0b00000001, 0b11111111, 0b00000001];
+			var shouldBeArrayWith2ElementsParsed = getContent(shouldBeArrayWith2Elements, 2, 2, false);
+			// var shouldBeArrayWith2ElementsParsedCorrectly = bufferToHexString(shouldBeArrayWith2ElementsParsed) == bufferToHexString([0b00000001, 0b11111111]);
+			var shouldBeArrayWith2ElementsParsedCorrectly =
+				bufferToHexString(shouldBeArrayWith2ElementsParsed) == bufferToHexString([shouldBeArrayWith2Elements[2], shouldBeArrayWith2Elements[3]]);
+			if(!shouldBeArrayWith2ElementsParsedCorrectly){
+				console.log("Failed to parse shouldBeArrayWith2Elements correctly. Result was:");
+				console.log(shouldBeArrayWith2Elements);
+			}
+
+			var shouldBeIndefiniteArrayWith3Elements = [0b00000010, 0b1000000, 0b00000001, 0b11111111, 0b10000001, 0b00000000, 0b00000000];
+			var shouldBeIndefiniteArrayWith3ElementsParsed = getContent(shouldBeIndefiniteArrayWith3Elements, 2, null, true);
+			var shouldBeIndefiniteArrayWith3ElementsParsedCorrectly =
+				bufferToHexString(shouldBeIndefiniteArrayWith3ElementsParsed) == bufferToHexString([shouldBeIndefiniteArrayWith3Elements[2], shouldBeIndefiniteArrayWith3Elements[3], shouldBeIndefiniteArrayWith3Elements[4]]);
+			if(!shouldBeIndefiniteArrayWith3ElementsParsedCorrectly){
+				console.log("Failed to parse shouldBeIndefiniteArrayWith3ElementsParsedCorrectly correctly. Result was:");
+				console.log(shouldBeIndefiniteArrayWith3ElementsParsed);
+				console.log("As hex:");
+				console.log(bufferToHexString(shouldBeIndefiniteArrayWith3ElementsParsed, ':'));
+				console.log("Expected value as hex:");
+				console.log(bufferToHexString([shouldBeIndefiniteArrayWith3Elements[2], shouldBeIndefiniteArrayWith3Elements[3], shouldBeIndefiniteArrayWith3Elements[4]], ':'));
+			}
+
+			var shouldBeIndefiniteArrayWith0Elements = [0b00000010, 0b1000000, 0b00000000, 0b00000000];
+			var shouldBeIndefiniteArrayWith0ElementsParsed = getContent(shouldBeIndefiniteArrayWith0Elements, 2, null, true);
+			var shouldBeIndefiniteArrayWith0ElementsParsedCorrectly = bufferToHexString(shouldBeIndefiniteArrayWith0ElementsParsed) == bufferToHexString([]);
+			if(!shouldBeIndefiniteArrayWith0ElementsParsedCorrectly){
+				console.log("Failed to parse shouldBeIndefiniteArrayWith0ElementsParsedCorrectly correctly. Result was:");
+				console.log(shouldBeIndefiniteArrayWith0ElementsParsed);
+			}
+			console.log("Success!");
 		}
 
 		function getKeyFromPemString(pemStr){
