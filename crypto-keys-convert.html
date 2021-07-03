@@ -479,7 +479,9 @@
 		function parseAsn1BerAndUnpackNestedAsn1EncodedSequences(byteArrayUint8){
 			var result = new Array();
 			var encodedSequences = new Array();
+			var debugAllBersProcessed = new Array();
 			var parsedBer = parseAsn1Ber(byteArrayUint8);
+			debugAllBersProcessed.push(parsedBer);
 			// if(berIsSequence(parsedBer)){
 			if(berIsConstructed(parsedBer)){
 				encodedSequences.push(parsedBer);
@@ -490,11 +492,12 @@
 			while(encodedSequences.length > 0){
 				var nextSequenceToProcess = encodedSequences.pop();
 				var indexNextSubBerStartsAt = 0;
-				var totalLength = nextSequenceToProcess.length;
+				var totalLength = nextSequenceToProcess.content.length;
 				while(indexNextSubBerStartsAt < totalLength){
-					nextSubBerBytes = nextSequenceToProcess.content.slice(indexNextSubBerStartsAt); // Get all bytes from start of next sub ber to end. Because length is always specified, we will alwyas stop before the start of the next entry.
+					nextSubBerBytes = nextSequenceToProcess.content.slice(indexNextSubBerStartsAt); // Get all bytes from start of next sub ber to end. Because length is always specified, we will alwyas stop extracting content before the start of the next entry.
 					parsedBer = parseAsn1Ber(nextSubBerBytes);
-					indexNextSubBerStartsAt += parsedBer.length + 1;
+					debugAllBersProcessed.push(parsedBer);
+					indexNextSubBerStartsAt += parsedBer.length;
 					if(berIsConstructed(parsedBer)){
 						encodedSequences.push(parsedBer);
 					}
@@ -503,7 +506,66 @@
 					}
 				}
 			}
+			console.log("Debug: All bers processed:");
+			console.log(debugAllBersProcessed);
 			return result;
+		}
+
+		function testParseAsn1BerAndUnpackNestedAsn1EncodedSequences(){
+			var simpleIntWith1BytePredefinedLength = [0b00000010, 0b00000001, 0b00110011];
+			var parsedSimpleIntWith1BytePredefinedLength = parseAsn1BerAndUnpackNestedAsn1EncodedSequences(simpleIntWith1BytePredefinedLength);
+			var assertSimpleIntWith1BytePredefinedLengthPrefix = "Parsing of Asn1Ber of simple integer with 1 byte content failed.";
+			console.assert(
+				bufferToHexString(parsedSimpleIntWith1BytePredefinedLength[0].content) == bufferToHexString(new Uint8Array([simpleIntWith1BytePredefinedLength[2]])),
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected content to be ${simpleIntWith1BytePredefinedLength[2]} but found ${parsedSimpleIntWith1BytePredefinedLength[0].content}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength[0].length == simpleIntWith1BytePredefinedLength.length,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected length to be ${simpleIntWith1BytePredefinedLength.length} but found ${parsedSimpleIntWith1BytePredefinedLength[0].length}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength[0].asn1Class.Value == BerAsn1Classes.Universal.Value,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected class value to be ${BerAsn1Classes.Universal.Value} but found ${parsedSimpleIntWith1BytePredefinedLength[0].asn1Class.Value}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength[0].constructed.Value == BerAsn1PCBit.P.Value,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSimpleIntWith1BytePredefinedLength[0].constructed.Value}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength[0].asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSimpleIntWith1BytePredefinedLength[0].asn1Tag.TagNumberDecimal}.`
+			);
+
+			var simpleIntWith3Bytes = [0b00000010, 0b00000011, 0b00000000, 0b11111111, 0b00110011];
+			var simpleIntWith2Bytes = [0b00000010, 0b00000010, 0b00000000, 0b01010101];
+			// Sequence header: 0b00110000; class 00 concat P/C 1 concat tag 10000 => 0b00110000
+			// Length: simpleIntWith3Bytes.length + simpleIntWith2Bytes.length = 0b1001
+			var SecuenceOfInts = [0b00110000, 0b00001001].concat(simpleIntWith3Bytes).concat(simpleIntWith2Bytes);
+			// console.log(SecuenceOfInts.reduce((accumulator, currentValue) => accumulator + ", " + `${(currentValue).toString(2).padStart(8,"0")}`));
+			var parsedBerFromSecuenceOfInts = parseAsn1BerAndUnpackNestedAsn1EncodedSequences(SecuenceOfInts);
+			assertSecuenceOfIntsPrefix = 'Parsing of of Asn1Ber of sequence of 2 integers failed.';
+			console.assert(
+				parsedBerFromSecuenceOfInts.length == 2,
+				`${assertSecuenceOfIntsPrefix} Expected result to be array with the 2 integer bers, but found length to be ${parsedBerFromSecuenceOfInts.length}.`
+			);
+			console.assert(
+				parsedBerFromSecuenceOfInts[0].length == simpleIntWith3Bytes.length,
+				`${assertSecuenceOfIntsPrefix} Expected first element of result to be of same size as first integer, ${simpleIntWith3Bytes.length}, but instead found the length to be ${parsedBerFromSecuenceOfInts[0].length}.`
+			);
+			console.assert(
+				bufferToHexString(parsedBerFromSecuenceOfInts[0].content) == bufferToHexString(simpleIntWith3Bytes.slice(2)),
+				`${assertSecuenceOfIntsPrefix} Expected first element content to be ${simpleIntWith3Bytes.slice(2)}, but instead found the length to be ${parsedBerFromSecuenceOfInts[0].content}.`
+			);
+			console.assert(
+				parsedBerFromSecuenceOfInts[1].length == simpleIntWith2Bytes.length,
+				`${assertSecuenceOfIntsPrefix} Expected second element of result to be of same size as second integer, ${simpleIntWith2Bytes.length}, but instead found the length to be ${parsedBerFromSecuenceOfInts[1].length}.`
+			);
+			console.assert(
+				bufferToHexString(parsedBerFromSecuenceOfInts[1].content) == bufferToHexString(simpleIntWith2Bytes.slice(2)),
+				`${assertSecuenceOfIntsPrefix} Expected second element content to be ${simpleIntWith2Bytes.slice(2)}, but instead found the length to be ${parsedBerFromSecuenceOfInts[1].content}.`
+			);
+
+			console.log('Finished testing parseAsn1BerAndUnpackNestedAsn1EncodedSequences');
 		}
 
 		// function berSequenceToArrayOfSubBers(ber){
@@ -864,6 +926,22 @@
 				console.log("Failed to parse shouldBe65535Parsed correctly. Result was:");
 				console.log(shouldBe65535Parsed);
 			}
+
+			shouldBe128 = [0b00000010, 0b10000001, 0b10000000, 0b00000000];
+			var shouldBe128Parsed = getLength(shouldBe128, 1);
+			var assertShouldBe128Prefix = "Parsing of length from shouldBe128 failed."
+			console.assert(
+				shouldBe128Parsed.Length == 128,
+				`${assertShouldBe128Prefix} Expected parsed length to be 128, but instead got ${shouldBe128Parsed.Length}.`
+			);
+			console.assert(
+				shouldBe128Parsed.IndexOfLastByteSpecifyingSizeInDocument == 2,
+				`${assertShouldBe128Prefix} Expected parsed length to indicate that the last byte/octet specifying lenght was at index 2, but instead got index ${shouldBe128Parsed.IndexOfLastByteSpecifyingSizeInDocument}.`
+			);
+			console.assert(
+				shouldBe128Parsed.Indefinite == false,
+				`${assertShouldBe128Prefix} Expected parsed lengths indefinite indicator to be false, but instead got ${shouldBe128Parsed.Indefinite}.`
+			);
 
 			if(shouldBe0ParsedCorrectly
 				&& shouldBe1ParsedCorrectly
