@@ -462,7 +462,9 @@
 
 		function testWithPredefinedValue(){
 			var contentb64 = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDgMCMl4x0KxR/sf9RYARituR/DQ1BGsWBtdytayHuoXNeXAzVt/JTl+QBPtsmvjiJxX/Nw22K/uradc6wg1b+EGOKY7SDtBew/SBdHiZyVs6/zQEuSLscxFxv+SlrHLQi2sjvXFUdC3b7AA9qxT+pdUXzp2zYXk95+/O1feJSaJSkG04Vmnl9zldVESANOKNhTM6t7Mjtlofr7GqJSP1OCEz4tIizWdM7OFMMlEQy4AocoRuHZbxHIbf3ZwEvPOtRBvpJ2vG82mkc6QewN9rulpYd8Q6+A4I01nhJ9GnsXMgGlcYJWfWPCdAjVGkAMZHg3Bdl3zs4Kl0xVLs5mgB4LAgMBAAECggEAOaU3DHFrEM9iJ4ow/BYAFf9xguBmnl7SqCMJ01SUs1R4HPz2uprFYKLXqSebkZgPFC7zZlQK/rjQZwkMu/6qOZm6fk8O9dNdjWIIllz0leu3tOkV5XdAwccq7AaLdAaI5I1M5L+0bKWe/DmhfJFLdoZTA8DZllNv1SBNGwzizQWA3hKI+Zk28eZLsJ3E5I0ZYmmvvvi4Ftbc/ZwLD9ihRWN4UXgXRthvBxsyB8mP0W+SpyhIzfBrgR3Ds6ClvrRoPHqfqjwZFxnnzSKULgOw8LW2lZNsvrWa0DmILA81iRMzaJ7Cs2bIPAjr1h3mEsvOUWnWVOxGBIWY1dH4hPBdoQKBgQD0r9nc0g5mujep/mC182dFvX+MfyjyKNsU5vFcIClIBwXj0PYuUU2ZQCnL6YtdshsJmCalLMAyZ5kuyPf4TeR1bYxwbmUAE8FdtcOxRWncxXPZRTjOWi6qnEJInjZB2s87qv8CZABBNyX4iN7O8RYCHQrWveY7vUr+LT57LRArawKBgQDqjaiaeRP6SX5pZH4GVjyeCfxuJxrS4w539qDd7DWzw7eX+lEoE9gOQNcZyyJGvamhFbqPinnY773RuchvOXLixN6lTgGBg8y48xq6WlKQ88vgrUcrd0+cXwh0/oWltOd6q0YokCeBfnVIVMYbcE4OmSlfGCXDjGMA7G3NTBgf4QKBgBw344Ip32tNcnnyUijppzFNx1XmnExBFfL1J0SemOQrmyxIvvtcePyBf9B6YI4vqhqTJ3HJFWk6tVnF54MFSKGaPqYAtTkrDhPGkIjzHmBNjSyzZPe3QsZ+Os6xIES7/UY+VCZsbfMXbxOYhUmMWCNqQgO95r1g+TMS+K+v5Lt9AoGAMWHdy5gOUrXCfaIAvojNfmCP2wk0po3TcAJm4BJpRA3Cy6aSC6QR6v5Py0hvUQGBgz615p67BKeFCXDZ+EDaJVBZp+gCfSgopA/a4r09gPMzS3xv7YDTLBL+DtO/g6HQ0ozY2pVvG95qBu6CPyin5n7srO7ClKcr+PfOLlkFA0ECgYEAxTwAs/r0qnSpTnVSyi7QeMabcPagEybYnMTDpoPyw4ZsIdarfFiQKEOaX82M9YsxEPXNIGoAx/TjF+g799jPd+dFBoFIFwCav2Lh3DeMfms6cCvFE0jMXRjfvIafeQDzNm6xsqtwXf+XYOsiFZYBNoK3/sctX/rE1GaeGJG979w=";
-			return parseBerFromB64EncodedString(contentb64);
+			var outerBer = parseBerFromB64EncodedString(contentb64);
+			var parsedRsaKey = parseRsaKeyFromUnpackedBer(outerBer);
+			return parsedRsaKey;
 			// ToDo: When you unpack it you should get a large entry that is typed as "OCTET STRING", which is the actual content looked for, which you can unpack with parseAsn1BerAndUnpackNestedAsn1EncodedSequences(). The creators in their infinite wisdom did not see fit to require that it be tagged as constructed so that it could be easily unpacked immediately. A great thanks to those guys, along with the people who forsaked reason and chose ASN.1 in the first place, not to forget an honorable mention of the cursed individuals who came up with the ASN.1 OID encoding scheme and locked it to a bound amout of issuing organizations.
 		}
 
@@ -474,6 +476,57 @@
 			var parsedBer = parseAsn1BerAndUnpackNestedAsn1EncodedSequences(contentAsByteArray);
 			return parsedBer;
 			// return 
+		}
+
+		function parseRsaKeyFromUnpackedBer(arrayOfParsedBerParts){
+			// Expected format for RSA private key: https://datatracker.ietf.org/doc/html/rfc3447#appendix-A
+			var parsedBerIsRsaKey = unpackedBerArrayIsRsaKey(arrayOfParsedBerParts);
+			if(parsedBerIsRsaKey.isRsaKey){
+				var encodedRsaKey = getSingleOctetArrayThatIsPrimitive(arrayOfParsedBerParts);
+				var decodedRsaKeyParts = parseAsn1BerAndUnpackNestedAsn1EncodedSequences(encodedRsaKey);
+				var rsaPrivateKey = {};
+				rsaPrivateKey.version = decodedRsaKeyParts[0];
+				rsaPrivateKey.modulus = decodedRsaKeyParts[1]; // n
+				rsaPrivateKey.publicExponent = decodedRsaKeyParts[2]; // e
+				rsaPrivateKey.privateExponent = decodedRsaKeyParts[3]; // d
+				rsaPrivateKey.prime1 = decodedRsaKeyParts[4]; // p
+				rsaPrivateKey.prime2 = decodedRsaKeyParts[5]; // q
+				rsaPrivateKey.exponent1 = decodedRsaKeyParts[6]; // d mod (p - 1)
+				rsaPrivateKey.exponent2 = decodedRsaKeyParts[7]; // d mod (q - 1)
+				rsaPrivateKey.coefficient = decodedRsaKeyParts[8]; // (inverse of q) mod p
+				if(rsaPrivateKey.version == 1){
+					// ToDo: If this situation ever arises, this should be an encoded sequence.
+					rsaPrivateKey.otherPrimeInfos = decodedRsaKeyParts[9];
+				}
+				return rsaPrivateKey;
+			}
+		}
+
+		function unpackedBerArrayIsRsaKey(arrayOfParsedBerParts){
+			var result = {isRsaKey: false, value: null};
+			for (var i = 0; i < arrayOfParsedBerParts.length; i++) {
+				var currentBer = arrayOfParsedBerParts[i];
+				if(currentBer.asn1Class.Value == BerAsn1Classes.Universal.Value && currentBer.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag6.TagNumberDecimal){
+					var parsedValue = parseOidFromBer(currentBer);
+					var rsaKeyOid = "1.2.840.113549.1.1.1";
+					if(parsedValue == rsaKeyOid){
+						result.isRsaKey = true;
+						result.value = parsedValue;
+						return result;
+					}
+				}
+			}
+			return result;
+		}
+
+		function getSingleOctetArrayThatIsPrimitive(arrayOfParsedBerParts){
+			// Because obviously tagging the single octet string as a primitive rather than a constructed type it would make sense to automate the unpacking of makes sense.
+			for (var i = 0; i < arrayOfParsedBerParts.length; i++) {
+				var currentBer = arrayOfParsedBerParts[i];
+				if(currentBer.asn1Class.Value == BerAsn1Classes.Universal.Value && currentBer.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag4.TagNumberDecimal){
+					return currentBer.content;
+				}
+			}
 		}
 
 		function parseAsn1BerAndUnpackNestedAsn1EncodedSequences(byteArrayUint8){
@@ -1049,7 +1102,8 @@
 			// Again, a great thanks to those who made it needlessly difficult to parse ASN.1 encoded OIDs assigned by anyone else than the ITU (International Telecommunications Union) and ISO (International Organization for Standardization), if you want to be able to parse OIDs assigned by those organizations. May they never find peace.
 			// So, the way this works. The stuff is encoded as a series of numbers, encoded big endian. As long as the leftmost bit of a byte is 1, then that byte, and the following is part of the current number. Once you reach a byte that statrs with 0, then the following byte belongs to the next number. To parse the collection of bytes constitutin each number, strip the first (leftmost) bit of each byte/octet. Mash them together in a long string, and read it out as a big endian number.
 			// The first number is actually a completely mangled representation of 2 separate numbers, but the explanation of how they work will follow at the point where the code begins to extract the values from that mess.
-			if(!(arrayOfOctets.length > 0)){
+			var hasContent = arrayOfOctets.length > 0;
+			if(!hasContent){
 				console.error("parseOidFromByteArray received no bytes in given array. How do you expect to extract info from that?");
 				return;
 			}
