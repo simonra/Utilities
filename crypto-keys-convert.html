@@ -550,11 +550,112 @@
 			return result;
 		}
 
+		function testParseAsn1Ber(){
+			var simpleIntWith1BytePredefinedLength = [0b00000010, 0b00000001, 0b00110011];
+
+			var parsedSimpleIntWith1BytePredefinedLength = parseAsn1Ber(simpleIntWith1BytePredefinedLength);
+			var assertSimpleIntWith1BytePredefinedLengthPrefix = "Parsing of Asn1Ber of simple integer with 1 byte content failed.";
+			console.assert(
+				bufferToHexString(parsedSimpleIntWith1BytePredefinedLength.content) == bufferToHexString(new Uint8Array([simpleIntWith1BytePredefinedLength[2]])),
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected content to be ${simpleIntWith1BytePredefinedLength[2]} but found ${parsedSimpleIntWith1BytePredefinedLength.content}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength.length == simpleIntWith1BytePredefinedLength.length,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected length to be ${simpleIntWith1BytePredefinedLength.length} but found ${parsedSimpleIntWith1BytePredefinedLength.length}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength.asn1Class.Value == BerAsn1Classes.Universal.Value,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected class value to be ${BerAsn1Classes.Universal.Value} but found ${parsedSimpleIntWith1BytePredefinedLength.asn1Class.Value}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength.constructed.Value == BerAsn1PCBit.P.Value,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSimpleIntWith1BytePredefinedLength.constructed.Value}.`
+			);
+			console.assert(
+				parsedSimpleIntWith1BytePredefinedLength.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSimpleIntWith1BytePredefinedLength.asn1Tag.TagNumberDecimal}.`
+			);
+
+			var simpleIntWith3Bytes = [0b00000010, 0b00000011, 0b00000000, 0b11111111, 0b00110011];
+			var parsedSimpleIntWith3Bytes = parseAsn1Ber(simpleIntWith3Bytes);
+			var assertSimpleIntWith3BytesPrefix = "Parsing of Asn1Ber of simple integer with 3 byte content failed.";
+			console.assert(
+				bufferToHexString(parsedSimpleIntWith3Bytes.content) == bufferToHexString(simpleIntWith3Bytes.slice(2)),
+				`${assertSimpleIntWith3BytesPrefix} Expected content to be ${simpleIntWith3Bytes.slice(2)} but found ${parsedSimpleIntWith3Bytes.content}.`
+			);
+			console.assert(
+				parsedSimpleIntWith3Bytes.length == simpleIntWith3Bytes.length,
+				`${assertSimpleIntWith3BytesPrefix} Expected length to be ${simpleIntWith3Bytes.length} but found ${parsedSimpleIntWith3Bytes.length}.`
+			);
+			console.assert(
+				parsedSimpleIntWith3Bytes.asn1Class.Value == BerAsn1Classes.Universal.Value,
+				`${assertSimpleIntWith3BytesPrefix} Expected class value to be ${BerAsn1Classes.Universal.Value} but found ${parsedSimpleIntWith3Bytes.asn1Class.Value}.`
+			);
+			console.assert(
+				parsedSimpleIntWith3Bytes.constructed.Value == BerAsn1PCBit.P.Value,
+				`${assertSimpleIntWith3BytesPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSimpleIntWith3Bytes.constructed.Value}.`
+			);
+			console.assert(
+				parsedSimpleIntWith3Bytes.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
+				`${assertSimpleIntWith3BytesPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSimpleIntWith3Bytes.asn1Tag.TagNumberDecimal}.`
+			);
+
+			var sequenceEncapsulatedRandomness = [0b00110000, 0b00000011, 0b00000000, 0b00000000, 0b00000000];
+			var parsedSequenceEncapsulatedRandomness = parseAsn1Ber(sequenceEncapsulatedRandomness);
+			var assertSequenceEncapsulatedRandomnessPrefix = "Parsing of Asn1Ber of simple integer with 3 byte content failed.";
+			console.assert(
+				bufferToHexString(parsedSequenceEncapsulatedRandomness.content) == bufferToHexString(sequenceEncapsulatedRandomness.slice(2)),
+				`${assertSequenceEncapsulatedRandomnessPrefix} Expected content to be ${sequenceEncapsulatedRandomness.slice(2)} but found ${parsedSequenceEncapsulatedRandomness.content}.`
+			);
+			console.assert(
+				parsedSequenceEncapsulatedRandomness.length == sequenceEncapsulatedRandomness.length,
+				`${assertSequenceEncapsulatedRandomnessPrefix} Expected length to be ${sequenceEncapsulatedRandomness.length} but found ${parsedSequenceEncapsulatedRandomness.length}.`
+			);
+			console.assert(
+				parsedSequenceEncapsulatedRandomness.asn1Class.Value == BerAsn1Classes.Universal.Value,
+				`${assertSequenceEncapsulatedRandomnessPrefix} Expected class value to be ${BerAsn1Classes.Universal.Value} but found ${parsedSequenceEncapsulatedRandomness.asn1Class.Value}.`
+			);
+			console.assert(
+				parsedSequenceEncapsulatedRandomness.constructed.Value == BerAsn1PCBit.C.Value,
+				`${assertSequenceEncapsulatedRandomnessPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.C.Value} but found ${parsedSequenceEncapsulatedRandomness.constructed.Value}.`
+			);
+			console.assert(
+				parsedSequenceEncapsulatedRandomness.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag16.TagNumberDecimal,
+				`${assertSequenceEncapsulatedRandomnessPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag16.TagNumberDecimal} but found ${parsedSequenceEncapsulatedRandomness.asn1Tag.TagNumberDecimal}.`
+			);
+
+			var SequenceElementWithOtherSequenceElementsFollowing = simpleIntWith3Bytes.concat(simpleIntWith1BytePredefinedLength);
+			var parsedSequenceElementWithOtherSequenceElementsFollowing = parseAsn1Ber(SequenceElementWithOtherSequenceElementsFollowing);
+			var assertSequenceElementWithOtherSequenceElementsFollowingPrefix = "Parsing of Asn1Ber of simple integer with 3 byte content failed.";
+			console.assert(
+				bufferToHexString(parsedSequenceElementWithOtherSequenceElementsFollowing.content) == bufferToHexString(simpleIntWith3Bytes.slice(2)),
+				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected content to be ${simpleIntWith3Bytes.slice(2)} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.content}.`
+			);
+			console.assert(
+				parsedSequenceElementWithOtherSequenceElementsFollowing.length == simpleIntWith3Bytes.length,
+				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected length to be ${simpleIntWith3Bytes.length} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.length}.`
+			);
+			console.assert(
+				parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Class.Value == BerAsn1Classes.Universal.Value,
+				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected class value to be ${BerAsn1Classes.Universal.Value} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Class.Value}.`
+			);
+			console.assert(
+				parsedSequenceElementWithOtherSequenceElementsFollowing.constructed.Value == BerAsn1PCBit.P.Value,
+				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.constructed.Value}.`
+			);
+			console.assert(
+				parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
+				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Tag.TagNumberDecimal}.`
+			);
+
+			console.log('Testing of parsing of Asn1Ber completed');
+		}
+
 		function getAsn1Class(firstByteOfDocument) {
 			// Extract fist two bits (from left side) from first byte in ASN.1 encoded document.
 			// Interpret first 2 bits as big-endian to obtain ASN.1 class value.
 			var asn1Class = firstByteOfDocument >> 6;
-			console.log(`Get ASN.1 class: Processing input "${(firstByteOfDocument).toString(2).padStart(8,"0")}", got "${asn1Class}" as value`);
+			// console.log(`Get ASN.1 class: Processing input "${(firstByteOfDocument).toString(2).padStart(8,"0")}", got "${asn1Class}" as value`);
 			// var asn1Class = parseInt((firstByteOfDocument).toString(2).padStart(8,"0").substring(0,2), 2);
 			return asn1Class;
 		}
