@@ -617,6 +617,7 @@
 				totalLengthFromStartToEndOfContent += 2; // Account for the adittional end of content tags/bytes.
 			}
 			result.length = totalLengthFromStartToEndOfContent;
+			return result;
 		}
 
 		function testParseAsn1Ber(){
