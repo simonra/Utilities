@@ -107,10 +107,11 @@
 			return result;
 		}
 
-		function hexStringToHexByteArray(hexString, separator){
+		function hexStringToByteArray(hexString, separator){
 			var hexBytesInArray = hexString.split(separator)
 			var hexBytesWithCustomaryPrefixInArray = hexBytesInArray.map(byte => `0x${byte}`);
-			return hexBytesWithCustomaryPrefixInArray;
+			var parsedToByteArray = new Uint8Array(hexBytesWithCustomaryPrefixInArray);
+			return parsedToByteArray;
 		}
 
 		// function byteArrayToHexArray(uint8ByteArray){
@@ -126,8 +127,7 @@
 		function base64ToUint8Array(b64Text) {
 			var hexSeparator = ':';
 			var asHexString = base64ToHex(b64Text, hexSeparator);
-			var asHexArray = hexStringToHexByteArray(asHexString, hexSeparator);
-			var asUint8Array = new Uint8Array(asHexArray);
+			var asUint8Array = hexStringToByteArray(asHexString, hexSeparator);
 			return asUint8Array;
 		}
 
@@ -440,7 +440,7 @@
 		}
 
 		function parseBerFromB64EncodedString(b64Input){
-			var contentAsHexString = base64ToHex(b64Input, ':');
+			// var contentAsHexString = base64ToHex(b64Input, ':');
 			// console.log(contentAsHexString);
 			var contentAsByteArray = base64ToUint8Array(b64Input);
 			// console.log(contentAsByteArray);
@@ -471,6 +471,38 @@
 				}
 				return rsaPrivateKey;
 			}
+		}
+
+		function getLengthOfRsaModulus(modulusBer){
+			var numberOf8BitBytes = modulusBer.content.length;
+			var numberOfLeadingZeroBits = getNumberOfLeadingBitsThatAreZero(modulusBer.content);
+			var lengthInBits = numberOf8BitBytes * 8 - numberOfLeadingZeroBits;
+			return lengthInBits;
+		}
+
+		function testGetLengthOfRsaModulus(){
+			var modulusBerHexEncoded = "02:82:01:01:00:e0:30:23:25:e3:1d:0a:c5:1f:ec:7f:d4:58:01:18:ad:b9:1f:c3:43:50:46:b1:60:6d:77:2b:5a:c8:7b:a8:5c:d7:97:03:35:6d:fc:94:e5:f9:00:4f:b6:c9:af:8e:22:71:5f:f3:70:db:62:bf:ba:b6:9d:73:ac:20:d5:bf:84:18:e2:98:ed:20:ed:05:ec:3f:48:17:47:89:9c:95:b3:af:f3:40:4b:92:2e:c7:31:17:1b:fe:4a:5a:c7:2d:08:b6:b2:3b:d7:15:47:42:dd:be:c0:03:da:b1:4f:ea:5d:51:7c:e9:db:36:17:93:de:7e:fc:ed:5f:78:94:9a:25:29:06:d3:85:66:9e:5f:73:95:d5:44:48:03:4e:28:d8:53:33:ab:7b:32:3b:65:a1:fa:fb:1a:a2:52:3f:53:82:13:3e:2d:22:2c:d6:74:ce:ce:14:c3:25:11:0c:b8:02:87:28:46:e1:d9:6f:11:c8:6d:fd:d9:c0:4b:cf:3a:d4:41:be:92:76:bc:6f:36:9a:47:3a:41:ec:0d:f6:bb:a5:a5:87:7c:43:af:80:e0:8d:35:9e:12:7d:1a:7b:17:32:01:a5:71:82:56:7d:63:c2:74:08:d5:1a:40:0c:64:78:37:05:d9:77:ce:ce:0a:97:4c:55:2e:ce:66:80:1e:0b";
+			var modulusBerAsByteArray = hexStringToByteArray(modulusBerHexEncoded, ':');
+			var modulusBerParsed = parseAsn1Ber(modulusBerAsByteArray);
+			var parsedLength = getLengthOfRsaModulus(modulusBerParsed);
+			console.assert(
+				parsedLength == 2048,
+				`Failed to obtain correct length of modulus parsed from ber hex. Expected ${2048} but got ${parsedLength}.`
+			);
+			console.log("Completed testing of reading length of RSA modulus.");
+		}
+
+		function getNumberOfLeadingBitsThatAreZero(arrayOfBytes){
+			// Note that this assumes that the input is big-endian, and you want to know how many of the leftmost bits are 0.
+			var numberOfLeadingZeroBits = 0;
+			for (var i = 0; i < arrayOfBytes.length; i++) {
+				var countForThis8BitByte = Math.clz32(arrayOfBytes[i]) - 24; // CLZ = count leading zeroes. Seems to exist as far down as assembly, should maybe consider exploring whether webasm has it and is more efficient. Note the subtraction of 24 due to the implementation in Math only being for speciffically 32 bit numbers.
+				numberOfLeadingZeroBits += countForThis8BitByte;
+				if(countForThis8BitByte < 8){
+					break;
+				}
+			}
+			return numberOfLeadingZeroBits;
 		}
 
 		function unpackedBerArrayIsRsaKey(arrayOfParsedBerParts){
@@ -1095,7 +1127,7 @@
 		function testParseOidFromByteArray(){
 			var rsaKeyOidHexEncodedValue = "2a:86:48:86:f7:0d:01:01:01";
 			var rsaKeyDecimalExpectedValue = "1.2.840.113549.1.1.1";
-			var rsaKeyOidEncodedAsByteArray = new Uint8Array(hexStringToHexByteArray(rsaKeyOidHexEncodedValue, ':'));
+			var rsaKeyOidEncodedAsByteArray = hexStringToByteArray(rsaKeyOidHexEncodedValue, ':');
 			var parsedOidFromEncodedRsaKeyOid = parseOidFromByteArray(rsaKeyOidEncodedAsByteArray);
 			// debugger;
 			console.assert(
@@ -1115,9 +1147,8 @@
 			testParseAsn1Ber();
 			testParseAsn1BerAndUnpackNestedAsn1EncodedSequences();
 			testParseOidFromByteArray();
+			testGetLengthOfRsaModulus();
 		}
-
-
 
 		function getKeyFromPemString(pemStr){
 			const pemHeaderPublic = "-----BEGIN PUBLIC KEY-----";
