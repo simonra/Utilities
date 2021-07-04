@@ -1217,7 +1217,7 @@
 		}
 
 		function getKeyFromPemStringContentPublicKey(pemContentStr){
-
+			// ToDo
 		}
 
 		function getKeyFromPemStringContentPrivateKey(pemContentStr){
@@ -1294,12 +1294,34 @@
 			for (var i = 0; i < len; i++) {
 				binary += String.fromCharCode( bytes[ i ] );
 			}
-			return window.btoa( binary );
+			return urlEncodeBase64String( window.btoa( binary ));
 		}
+
+		// function base64_arraybuffer(bytes){
+		// 	return urlEncodeBase64String( getB64StringFromByteArray(bytes));
+		// }
+
+		function urlEncodeBase64String(b64String){
+			return b64String.replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+		}
+
+		// function base64_arraybuffer(byteArray) {
+		// 	return bytesToBase64(byteArray)
+		// }
 
 		async function testConversionOfPemToJwk(){
 			var pemContentB64 = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDgMCMl4x0KxR/sf9RYARituR/DQ1BGsWBtdytayHuoXNeXAzVt/JTl+QBPtsmvjiJxX/Nw22K/uradc6wg1b+EGOKY7SDtBew/SBdHiZyVs6/zQEuSLscxFxv+SlrHLQi2sjvXFUdC3b7AA9qxT+pdUXzp2zYXk95+/O1feJSaJSkG04Vmnl9zldVESANOKNhTM6t7Mjtlofr7GqJSP1OCEz4tIizWdM7OFMMlEQy4AocoRuHZbxHIbf3ZwEvPOtRBvpJ2vG82mkc6QewN9rulpYd8Q6+A4I01nhJ9GnsXMgGlcYJWfWPCdAjVGkAMZHg3Bdl3zs4Kl0xVLs5mgB4LAgMBAAECggEAOaU3DHFrEM9iJ4ow/BYAFf9xguBmnl7SqCMJ01SUs1R4HPz2uprFYKLXqSebkZgPFC7zZlQK/rjQZwkMu/6qOZm6fk8O9dNdjWIIllz0leu3tOkV5XdAwccq7AaLdAaI5I1M5L+0bKWe/DmhfJFLdoZTA8DZllNv1SBNGwzizQWA3hKI+Zk28eZLsJ3E5I0ZYmmvvvi4Ftbc/ZwLD9ihRWN4UXgXRthvBxsyB8mP0W+SpyhIzfBrgR3Ds6ClvrRoPHqfqjwZFxnnzSKULgOw8LW2lZNsvrWa0DmILA81iRMzaJ7Cs2bIPAjr1h3mEsvOUWnWVOxGBIWY1dH4hPBdoQKBgQD0r9nc0g5mujep/mC182dFvX+MfyjyKNsU5vFcIClIBwXj0PYuUU2ZQCnL6YtdshsJmCalLMAyZ5kuyPf4TeR1bYxwbmUAE8FdtcOxRWncxXPZRTjOWi6qnEJInjZB2s87qv8CZABBNyX4iN7O8RYCHQrWveY7vUr+LT57LRArawKBgQDqjaiaeRP6SX5pZH4GVjyeCfxuJxrS4w539qDd7DWzw7eX+lEoE9gOQNcZyyJGvamhFbqPinnY773RuchvOXLixN6lTgGBg8y48xq6WlKQ88vgrUcrd0+cXwh0/oWltOd6q0YokCeBfnVIVMYbcE4OmSlfGCXDjGMA7G3NTBgf4QKBgBw344Ip32tNcnnyUijppzFNx1XmnExBFfL1J0SemOQrmyxIvvtcePyBf9B6YI4vqhqTJ3HJFWk6tVnF54MFSKGaPqYAtTkrDhPGkIjzHmBNjSyzZPe3QsZ+Os6xIES7/UY+VCZsbfMXbxOYhUmMWCNqQgO95r1g+TMS+K+v5Lt9AoGAMWHdy5gOUrXCfaIAvojNfmCP2wk0po3TcAJm4BJpRA3Cy6aSC6QR6v5Py0hvUQGBgz615p67BKeFCXDZ+EDaJVBZp+gCfSgopA/a4r09gPMzS3xv7YDTLBL+DtO/g6HQ0ozY2pVvG95qBu6CPyin5n7srO7ClKcr+PfOLlkFA0ECgYEAxTwAs/r0qnSpTnVSyi7QeMabcPagEybYnMTDpoPyw4ZsIdarfFiQKEOaX82M9YsxEPXNIGoAx/TjF+g799jPd+dFBoFIFwCav2Lh3DeMfms6cCvFE0jMXRjfvIafeQDzNm6xsqtwXf+XYOsiFZYBNoK3/sctX/rE1GaeGJG979w=";
-			var importedKey = await crypto.subtle.importKey("pkcs8", str2ab(atob(pemContentB64)), {name: "RSA-PSS", hash: "SHA-256", publicExponent: new Uint8Array([1, 0, 1]), modulusLength: 2048 }, true, ["sign"]);
+			var importedKey = await crypto.subtle.importKey(
+				"pkcs8",
+				str2ab(atob(pemContentB64)),
+				{
+					name: "RSA-PSS",
+					hash: "SHA-256",
+					publicExponent: new Uint8Array([1, 0, 1]),
+					modulusLength: 2048
+				},
+				true,
+				["sign"]);
 			var exportedKey = await crypto.subtle.exportKey('jwk', importedKey);
 			var stringifiedExportedKey = JSON.stringify(exportedKey, null, " ");
 			console.log("Key as converted/exported to JWK from SubtleCrypto:");
