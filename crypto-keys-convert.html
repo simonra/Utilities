@@ -1159,7 +1159,7 @@
 			var rsaKeyDecimalExpectedValue = "1.2.840.113549.1.1.1";
 			var rsaKeyOidEncodedAsByteArray = hexStringToByteArray(rsaKeyOidHexEncodedValue, ':');
 			var parsedOidFromEncodedRsaKeyOid = parseOidFromByteArray(rsaKeyOidEncodedAsByteArray);
-			// debugger;
+
 			console.assert(
 				parsedOidFromEncodedRsaKeyOid == rsaKeyDecimalExpectedValue,
 				`Failed to parse RSA Key OID from ASN.1 encoded value. Expected ${rsaKeyDecimalExpectedValue} but got ${parsedOidFromEncodedRsaKeyOid}.`
@@ -1184,8 +1184,6 @@
 		function inputKeyFieldChange(){
 			writeKeyToOutputTextArea("", 'ConvertKeyOutputTextArea');
 			var keyInputTextArea = document.getElementById('ConvertKeyInputTextArea');
-			// textAreaById.textContent = keyAsString;
-			// textAreaById.value = keyAsString;
 
 			var outputValue = getKeyFromPemString(keyInputTextArea.value);
 
@@ -1259,16 +1257,15 @@
 
 			// https://crypto.stackexchange.com/questions/18031/how-to-find-modulus-from-a-rsa-public-key
 		}
-		// async
+
 		function makeJwkFromPemStringContentRsaPrivateKey(pemContentStr){
 			var decodedKey = parseRsaFromB64EncodedPemString(pemContentStr);
-// getB64StringFromByteArray()
 			var jwk = {};
 			jwk.kty = "RSA";
 			// jwk.alg = "RS256";// Ommit this because https://datatracker.ietf.org/doc/html/rfc7517#section-4.4 says it's optional and I haven't seen the value in pem encoded keys yet.
 			// jwk.key_ops = ["sign"]; // Ommit this because https://datatracker.ietf.org/doc/html/rfc7517#section-4.3 says it's optional
-			jwk.n = `${ base64_arraybuffer(decodedKey.modulus.content)}`;
-			jwk.e = `${ base64_arraybuffer(decodedKey.publicExponent.content)}`;
+			jwk.n = `${base64_arraybuffer(decodedKey.modulus.content)}`;
+			jwk.e = `${base64_arraybuffer(decodedKey.publicExponent.content)}`;
 			jwk.d = `${base64_arraybuffer(decodedKey.privateExponent.content)}`;
 			jwk.p = `${base64_arraybuffer(decodedKey.prime1.content)}`;
 			jwk.q = `${base64_arraybuffer(decodedKey.prime2.content)}`;
@@ -1276,6 +1273,8 @@
 			jwk.dq = `${base64_arraybuffer(decodedKey.exponent2.content)}`;
 			jwk.qi = `${base64_arraybuffer(decodedKey.coefficient.content)}`;
 
+			console.log("Trivially parsable printout of the JWK encoded key:");
+			console.log(JSON.stringify(jwk).replaceAll('"','\\"'));
 			var jwkAsJsonString = JSON.stringify(jwk, null, 3);
 			// writeKeyToOutputTextArea(jwkAsJsonString, 'ConvertKeyOutputTextArea');
 			// ConvertKeyOutputTextArea
@@ -1296,6 +1295,54 @@
 				binary += String.fromCharCode( bytes[ i ] );
 			}
 			return window.btoa( binary );
+		}
+
+		async function testConversionOfPemToJwk(){
+			var pemContentB64 = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDgMCMl4x0KxR/sf9RYARituR/DQ1BGsWBtdytayHuoXNeXAzVt/JTl+QBPtsmvjiJxX/Nw22K/uradc6wg1b+EGOKY7SDtBew/SBdHiZyVs6/zQEuSLscxFxv+SlrHLQi2sjvXFUdC3b7AA9qxT+pdUXzp2zYXk95+/O1feJSaJSkG04Vmnl9zldVESANOKNhTM6t7Mjtlofr7GqJSP1OCEz4tIizWdM7OFMMlEQy4AocoRuHZbxHIbf3ZwEvPOtRBvpJ2vG82mkc6QewN9rulpYd8Q6+A4I01nhJ9GnsXMgGlcYJWfWPCdAjVGkAMZHg3Bdl3zs4Kl0xVLs5mgB4LAgMBAAECggEAOaU3DHFrEM9iJ4ow/BYAFf9xguBmnl7SqCMJ01SUs1R4HPz2uprFYKLXqSebkZgPFC7zZlQK/rjQZwkMu/6qOZm6fk8O9dNdjWIIllz0leu3tOkV5XdAwccq7AaLdAaI5I1M5L+0bKWe/DmhfJFLdoZTA8DZllNv1SBNGwzizQWA3hKI+Zk28eZLsJ3E5I0ZYmmvvvi4Ftbc/ZwLD9ihRWN4UXgXRthvBxsyB8mP0W+SpyhIzfBrgR3Ds6ClvrRoPHqfqjwZFxnnzSKULgOw8LW2lZNsvrWa0DmILA81iRMzaJ7Cs2bIPAjr1h3mEsvOUWnWVOxGBIWY1dH4hPBdoQKBgQD0r9nc0g5mujep/mC182dFvX+MfyjyKNsU5vFcIClIBwXj0PYuUU2ZQCnL6YtdshsJmCalLMAyZ5kuyPf4TeR1bYxwbmUAE8FdtcOxRWncxXPZRTjOWi6qnEJInjZB2s87qv8CZABBNyX4iN7O8RYCHQrWveY7vUr+LT57LRArawKBgQDqjaiaeRP6SX5pZH4GVjyeCfxuJxrS4w539qDd7DWzw7eX+lEoE9gOQNcZyyJGvamhFbqPinnY773RuchvOXLixN6lTgGBg8y48xq6WlKQ88vgrUcrd0+cXwh0/oWltOd6q0YokCeBfnVIVMYbcE4OmSlfGCXDjGMA7G3NTBgf4QKBgBw344Ip32tNcnnyUijppzFNx1XmnExBFfL1J0SemOQrmyxIvvtcePyBf9B6YI4vqhqTJ3HJFWk6tVnF54MFSKGaPqYAtTkrDhPGkIjzHmBNjSyzZPe3QsZ+Os6xIES7/UY+VCZsbfMXbxOYhUmMWCNqQgO95r1g+TMS+K+v5Lt9AoGAMWHdy5gOUrXCfaIAvojNfmCP2wk0po3TcAJm4BJpRA3Cy6aSC6QR6v5Py0hvUQGBgz615p67BKeFCXDZ+EDaJVBZp+gCfSgopA/a4r09gPMzS3xv7YDTLBL+DtO/g6HQ0ozY2pVvG95qBu6CPyin5n7srO7ClKcr+PfOLlkFA0ECgYEAxTwAs/r0qnSpTnVSyi7QeMabcPagEybYnMTDpoPyw4ZsIdarfFiQKEOaX82M9YsxEPXNIGoAx/TjF+g799jPd+dFBoFIFwCav2Lh3DeMfms6cCvFE0jMXRjfvIafeQDzNm6xsqtwXf+XYOsiFZYBNoK3/sctX/rE1GaeGJG979w=";
+			var importedKey = await crypto.subtle.importKey("pkcs8", str2ab(atob(pemContentB64)), {name: "RSA-PSS", hash: "SHA-256", publicExponent: new Uint8Array([1, 0, 1]), modulusLength: 2048 }, true, ["sign"]);
+			var exportedKey = await crypto.subtle.exportKey('jwk', importedKey);
+			var stringifiedExportedKey = JSON.stringify(exportedKey, null, " ");
+			console.log("Key as converted/exported to JWK from SubtleCrypto:");
+			console.log(stringifiedExportedKey);
+			var convertedKeyJson = makeJwkFromPemStringContentRsaPrivateKey(pemContentB64);
+			console.log("Key as converted to JWK using my methods:");
+			console.log(convertedKeyJson);
+			var convertedKey = JSON.parse(convertedKeyJson);
+
+			var assertFailPrefix = "Mismatch between converted and what SubtleCrypto exported."
+			console.assert(
+				convertedKey.n == exportedKey.n,
+				`${assertFailPrefix} When comparing modulus, expected n to be "${exportedKey.n}", but got "${convertedKey.n}"`
+			);
+			console.assert(
+				convertedKey.e == exportedKey.e,
+				`${assertFailPrefix} When comparing publicExponent, expected e to be "${exportedKey.e}", but got "${convertedKey.e}"`
+			);
+			console.assert(
+				convertedKey.d == exportedKey.d,
+				`${assertFailPrefix} When comparing privateExponent, expected e to be "${exportedKey.d}", but got "${convertedKey.d}"`
+			);
+			var assertFailPrefix = "Mismatch between converted and what SubtleCrypto exported."
+			console.assert(
+				convertedKey.p == exportedKey.p,
+				`${assertFailPrefix} When comparing prime1, expected p to be "${exportedKey.p}", but got "${convertedKey.p}"`
+			);
+			console.assert(
+				convertedKey.q == exportedKey.q,
+				`${assertFailPrefix} When comparing prime2, expected q to be "${exportedKey.q}", but got "${convertedKey.q}"`
+			);
+			console.assert(
+				convertedKey.dp == exportedKey.dp,
+				`${assertFailPrefix} When comparing exponent1, expected dp to be "${exportedKey.dp}", but got "${convertedKey.dp}"`
+			);
+			console.assert(
+				convertedKey.dq == exportedKey.dq,
+				`${assertFailPrefix} When comparing exponent2, expected dq to be "${exportedKey.dq}", but got "${convertedKey.dq}"`
+			);
+			console.assert(
+				convertedKey.qi == exportedKey.qi,
+				`${assertFailPrefix} When comparing coefficient, expected qi to be "${exportedKey.qi}", but got "${convertedKey.qi}"`
+			);
 		}
 	</script>
 </head>
