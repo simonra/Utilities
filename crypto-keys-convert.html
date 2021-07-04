@@ -892,7 +892,7 @@
 			return result;
 		}
 
-		function TestGetLength(){
+		function testGetLength(){
 			var shouldBe0 = [0b00000000, 0b00000000, 0b11111111];
 			var shouldBe1 = [0b00000000, 0b00000001, 0b11111111];
 			var shouldBeIndefinite = [0b00000000, 0b10000000, 0b11111111];
@@ -1104,6 +1104,17 @@
 			);
 
 			console.log('Completed tests of testParseOidFromByteArray');
+		}
+
+		function testRunAllTests(){
+			testGetAsn1Class();
+			testGetAsn1Tag();
+			testGetConstructed();
+			testGetContent();
+			testGetLength();
+			testParseAsn1Ber();
+			testParseAsn1BerAndUnpackNestedAsn1EncodedSequences();
+			testParseOidFromByteArray();
 		}
 
 
