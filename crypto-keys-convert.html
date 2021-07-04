@@ -457,6 +457,12 @@
 			// ToDo: When you unpack it you should get a large entry that is typed as "OCTET STRING", which is the actual content looked for, which you can unpack with parseAsn1BerAndUnpackNestedAsn1EncodedSequences(). The creators in their infinite wisdom did not see fit to require that it be tagged as constructed so that it could be easily unpacked immediately. A great thanks to those guys, along with the people who forsaked reason and chose ASN.1 in the first place, not to forget an honorable mention of the cursed individuals who came up with the ASN.1 OID encoding scheme and locked it to a bound amout of issuing organizations.
 		}
 
+		function parseRsaFromB64EncodedPemString(b64PemContent){
+			var outerPackaging = parseBerFromB64EncodedString(b64PemContent);
+			var parsedRsaKey = parseRsaKeyFromUnpackedBer(outerPackaging);
+			return parsedRsaKey;
+		}
+
 		function parseBerFromB64EncodedString(b64Input){
 			// var contentAsHexString = base64ToHex(b64Input, ':');
 			// console.log(contentAsHexString);
@@ -480,12 +486,18 @@
 				rsaPrivateKey.privateExponent = decodedRsaKeyParts[3]; // d
 				rsaPrivateKey.prime1 = decodedRsaKeyParts[4]; // p
 				rsaPrivateKey.prime2 = decodedRsaKeyParts[5]; // q
-				rsaPrivateKey.exponent1 = decodedRsaKeyParts[6]; // d mod (p - 1)
-				rsaPrivateKey.exponent2 = decodedRsaKeyParts[7]; // d mod (q - 1)
-				rsaPrivateKey.coefficient = decodedRsaKeyParts[8]; // (inverse of q) mod p
+				rsaPrivateKey.exponent1 = decodedRsaKeyParts[6]; // d mod (p - 1), aka "dp" in jwk-land
+				rsaPrivateKey.exponent2 = decodedRsaKeyParts[7]; // d mod (q - 1), aka "dq" in jwk-land
+				rsaPrivateKey.coefficient = decodedRsaKeyParts[8]; // (inverse of q) mod p, aka "qi" in jwk-land
 				if(rsaPrivateKey.version == 1){
 					// ToDo: If this situation ever arises, this should be an encoded sequence.
-					rsaPrivateKey.otherPrimeInfos = decodedRsaKeyParts[9];
+					rsaPrivateKey.otherPrimeInfos = []; // "oth" in jwk
+					if(decodedRsaKeyParts.length > 9){
+						rsaPrivateKey.otherPrimeInfos[0] = {};
+						rsaPrivateKey.otherPrimeInfos[0].prime1 = decodedRsaKeyParts[9]; // r
+						rsaPrivateKey.otherPrimeInfos[0].exponent1 = decodedRsaKeyParts[10]; // d
+						rsaPrivateKey.otherPrimeInfos[0].coefficient = decodedRsaKeyParts[11]; // t
+					}
 				}
 				return rsaPrivateKey;
 			}
@@ -1169,6 +1181,17 @@
 			testGetB64StringFromByteArray();
 		}
 
+		function inputKeyFieldChange(){
+			writeKeyToOutputTextArea("", 'ConvertKeyOutputTextArea');
+			var keyInputTextArea = document.getElementById('ConvertKeyInputTextArea');
+			// textAreaById.textContent = keyAsString;
+			// textAreaById.value = keyAsString;
+
+			var outputValue = getKeyFromPemString(keyInputTextArea.value);
+
+			writeKeyToOutputTextArea(outputValue, 'ConvertKeyOutputTextArea');
+		}
+
 		function getKeyFromPemString(pemStr){
 			const pemHeaderPublic = "-----BEGIN PUBLIC KEY-----";
 			const pemFooterPublic = "-----END PUBLIC KEY-----";
@@ -1187,7 +1210,8 @@
 					throw new TypeError(`Unable to parse input to function as PEM string. Exptected private key input to end with ${pemFooterPrivate}. Instead got ${pemStr}.`);
 				}
 				var content = pemStr.substring(pemHeaderPrivate.length, pemStr.length - pemFooterPrivate.length);
-				return getKeyFromPemStringContentPrivateKey(content);
+				content = content.replace(/[\n\r]/g,"");
+				return makeJwkFromPemStringContentRsaPrivateKey(content);
 			}
 			else {
 				throw new TypeError(`Unable to parse input to function as PEM string. Exptected input to begin with either ${pemHeaderPublic} or ${pemHeaderPrivate}. Instead got ${pemStr}.`);
@@ -1204,13 +1228,22 @@
 			const binaryDerString = window.atob(pemContentStr);
 			const binaryDerArrayBuffer = str2ab(binaryDerString);
 
+			var parsedRsaPrivateKey = parseRsaFromB64EncodedPemString(pemContentStr);
+			// getLengthOfRsaModulus()
+			// var algoMetadata = {
+			// 	name: "RSA-PSS",
+			// 	modulusLength: getLengthOfRsaModulus(parsedRsaPrivateKey.modulus),
+			// 	publicExponent: parsedRsaPrivateKey.publicExponent.content),
+			// 	hash: "SHA-256"
+			// };
+
 			var format = "pkcs8";
-			var algoMetadata = {
-				name: "RSA-PSS",
-				modulusLength: 2048,
-				publicExponent: new Uint8Array([1, 0, 1]),
-				hash: "SHA-256",
-			};
+			// var algoMetadata = {
+			// 	name: "RSA-PSS",
+			// 	modulusLength: 2048,
+			// 	publicExponent: new Uint8Array([1, 0, 1]),
+			// 	hash: "SHA-256",
+			// };
 			var extractable = true;
 			var usages = ["sign"];
 
@@ -1223,7 +1256,46 @@
 				usages // Key usages, has to be sign for private keys.
 			);
 
+
 			// https://crypto.stackexchange.com/questions/18031/how-to-find-modulus-from-a-rsa-public-key
+		}
+		// async
+		function makeJwkFromPemStringContentRsaPrivateKey(pemContentStr){
+			var decodedKey = parseRsaFromB64EncodedPemString(pemContentStr);
+// getB64StringFromByteArray()
+			var jwk = {};
+			jwk.kty = "RSA";
+			// jwk.alg = "RS256";// Ommit this because https://datatracker.ietf.org/doc/html/rfc7517#section-4.4 says it's optional and I haven't seen the value in pem encoded keys yet.
+			// jwk.key_ops = ["sign"]; // Ommit this because https://datatracker.ietf.org/doc/html/rfc7517#section-4.3 says it's optional
+			jwk.n = `${ base64_arraybuffer(decodedKey.modulus.content)}`;
+			jwk.e = `${ base64_arraybuffer(decodedKey.publicExponent.content)}`;
+			jwk.d = `${base64_arraybuffer(decodedKey.privateExponent.content)}`;
+			jwk.p = `${base64_arraybuffer(decodedKey.prime1.content)}`;
+			jwk.q = `${base64_arraybuffer(decodedKey.prime2.content)}`;
+			jwk.dp = `${base64_arraybuffer(decodedKey.exponent1.content)}`;
+			jwk.dq = `${base64_arraybuffer(decodedKey.exponent2.content)}`;
+			jwk.qi = `${base64_arraybuffer(decodedKey.coefficient.content)}`;
+
+			var jwkAsJsonString = JSON.stringify(jwk, null, 3);
+			// writeKeyToOutputTextArea(jwkAsJsonString, 'ConvertKeyOutputTextArea');
+			// ConvertKeyOutputTextArea
+			return jwkAsJsonString;
+		}
+
+		function writeKeyToOutputTextArea(keyAsString, textAreaId){
+			var textAreaById = document.getElementById(textAreaId);
+			textAreaById.textContent = keyAsString;
+			textAreaById.value = keyAsString;
+		}
+
+		function base64_arraybuffer(bytes){
+			var binary = '';
+			// var bytes = new Uint8Array( buffer );
+			var len = bytes.byteLength;
+			for (var i = 0; i < len; i++) {
+				binary += String.fromCharCode( bytes[ i ] );
+			}
+			return window.btoa( binary );
 		}
 	</script>
 </head>
@@ -1242,6 +1314,7 @@
 			<label for="ConvertKeyInputTextArea">Input key</label>
 			<textarea id="ConvertKeyInputTextArea"
 				name="ConvertKeyInputTextArea"
+				oninput="inputKeyFieldChange()"
 				placeholder="Enter key to convert here"
 				style="width: 97.5%; height: 20rem;"></textarea>
 		</fieldset>
