@@ -17,6 +17,24 @@
 			return buf;
 		}
 
+		function getB64StringFromByteArray(octets){
+			var decoder = new TextDecoder('utf-8');
+			var stringificationOfOctetArray = decoder.decode(octets);
+			var b64EncodedResult = btoa(stringificationOfOctetArray);
+			return b64EncodedResult;
+		}
+
+		function testGetB64StringFromByteArray(){
+			console.log("Beginning testing getB64StringFromByteArray.")
+			var raw = new Uint8Array([1,0,1]);
+			var encoded = getB64StringFromByteArray(raw);
+			console.assert(
+				encoded == "AQAB",
+				`Failed to get Base64 encoded string from byte array. Expected "AQAB" but got "${encoded}".`
+			);
+			console.log("Finised testing getB64StringFromByteArray.")
+		}
+
 		/* Convert base64 data to hex string. https://stackoverflow.com/a/57909068/2890086
 		*   txt : Base64 string.
 		*   sep : Hex separator, e.g. '-' for '1a-2b-3c'.  Default empty.
@@ -1148,6 +1166,7 @@
 			testParseAsn1BerAndUnpackNestedAsn1EncodedSequences();
 			testParseOidFromByteArray();
 			testGetLengthOfRsaModulus();
+			testGetB64StringFromByteArray();
 		}
 
 		function getKeyFromPemString(pemStr){
