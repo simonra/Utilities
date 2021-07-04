@@ -113,9 +113,9 @@
 			return hexBytesWithCustomaryPrefixInArray;
 		}
 
-		function byteArrayToHexArray(uint8ByteArray){
-			return uint8ByteArray.map(byte => byte.toString(16));
-		}
+		// function byteArrayToHexArray(uint8ByteArray){
+		// 	return uint8ByteArray.map(byte => byte.toString(16));
+		// }
 
 		function hexArrayToString(hexArray, separator = ''){
 			const reducer = (accumulator, currentValue) => accumulator + separator + `${currentValue}`;
@@ -418,18 +418,9 @@
 			}
 		}
 
-		function berIsSequence(ber){
-			return ber.asn1Class.Value == BerAsn1Classes.Universal.Value && ber.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.SequenceAndSequenceOfTag.TagNumberDecimal && ber.constructed.Value == BerAsn1PCBit.C.Value
-		}
-
 		function berIsConstructed(ber){
 			return ber.constructed.Value == BerAsn1PCBit.C.Value;
 		}
-
-		// Array.prototype.subarray = function(start, end) {
-		// 	if (!end) { end = -1; }
-		// 	return this.slice(start, this.length + 1 - (end * -1));
-		// };
 
 		function getSubArray(array, startAtInclusive, endAtExclusive){
 			return array.slice(startAtInclusive, endAtExclusive);
@@ -439,26 +430,6 @@
 		X.609 details: https://en.wikipedia.org/wiki/X.690
 		ToDo: Correct comment and signature to indicate that this only makes a native JS object, could still be sub-components that are DER/BER encoded. 
 		*/
-		// function parseBer(byteArrayUint8){
-		// 	var result = {};
-		// 	// var inputAsHex = bufferToHexString(byteArrayUint8, ':');
-
-		// 	result.asn1Class = getAsn1Class(byteArrayUint8[0]);
-		// 	result.asn1ClassMetadata = getAsn1ClassByValue(result.asn1Class);
-		// 	result.constructed = getConstructed(byteArrayUint8[0]);
-		// 	result.constructedMetadata = getAsn1ContructedByValue(result.constructed);
-		// 	result.tag = getTag();
-		// 	result.tagMetadata = getAsn1TagByValue(result.tag);
-		// 	var length = getLength();
-
-		// 	result.content = getContent()
-
-		// 	result.raw = getSubArray(byteArrayUint8, 0, result.byteLength);
-		// 	result.contentsAsHex = {value: bufferToHexString(result.contents, ':')};
-		// 	var inputAsHex = bufferToHexString(result.raw, ':');
-		// 	result.headerAsHex = {value: inputAsHex.substring(0, inputAsHex.length - result.contentsAsHex.length)};
-		// 	return result;
-		// }
 
 		function testWithPredefinedValue(){
 			var contentb64 = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDgMCMl4x0KxR/sf9RYARituR/DQ1BGsWBtdytayHuoXNeXAzVt/JTl+QBPtsmvjiJxX/Nw22K/uradc6wg1b+EGOKY7SDtBew/SBdHiZyVs6/zQEuSLscxFxv+SlrHLQi2sjvXFUdC3b7AA9qxT+pdUXzp2zYXk95+/O1feJSaJSkG04Vmnl9zldVESANOKNhTM6t7Mjtlofr7GqJSP1OCEz4tIizWdM7OFMMlEQy4AocoRuHZbxHIbf3ZwEvPOtRBvpJ2vG82mkc6QewN9rulpYd8Q6+A4I01nhJ9GnsXMgGlcYJWfWPCdAjVGkAMZHg3Bdl3zs4Kl0xVLs5mgB4LAgMBAAECggEAOaU3DHFrEM9iJ4ow/BYAFf9xguBmnl7SqCMJ01SUs1R4HPz2uprFYKLXqSebkZgPFC7zZlQK/rjQZwkMu/6qOZm6fk8O9dNdjWIIllz0leu3tOkV5XdAwccq7AaLdAaI5I1M5L+0bKWe/DmhfJFLdoZTA8DZllNv1SBNGwzizQWA3hKI+Zk28eZLsJ3E5I0ZYmmvvvi4Ftbc/ZwLD9ihRWN4UXgXRthvBxsyB8mP0W+SpyhIzfBrgR3Ds6ClvrRoPHqfqjwZFxnnzSKULgOw8LW2lZNsvrWa0DmILA81iRMzaJ7Cs2bIPAjr1h3mEsvOUWnWVOxGBIWY1dH4hPBdoQKBgQD0r9nc0g5mujep/mC182dFvX+MfyjyKNsU5vFcIClIBwXj0PYuUU2ZQCnL6YtdshsJmCalLMAyZ5kuyPf4TeR1bYxwbmUAE8FdtcOxRWncxXPZRTjOWi6qnEJInjZB2s87qv8CZABBNyX4iN7O8RYCHQrWveY7vUr+LT57LRArawKBgQDqjaiaeRP6SX5pZH4GVjyeCfxuJxrS4w539qDd7DWzw7eX+lEoE9gOQNcZyyJGvamhFbqPinnY773RuchvOXLixN6lTgGBg8y48xq6WlKQ88vgrUcrd0+cXwh0/oWltOd6q0YokCeBfnVIVMYbcE4OmSlfGCXDjGMA7G3NTBgf4QKBgBw344Ip32tNcnnyUijppzFNx1XmnExBFfL1J0SemOQrmyxIvvtcePyBf9B6YI4vqhqTJ3HJFWk6tVnF54MFSKGaPqYAtTkrDhPGkIjzHmBNjSyzZPe3QsZ+Os6xIES7/UY+VCZsbfMXbxOYhUmMWCNqQgO95r1g+TMS+K+v5Lt9AoGAMWHdy5gOUrXCfaIAvojNfmCP2wk0po3TcAJm4BJpRA3Cy6aSC6QR6v5Py0hvUQGBgz615p67BKeFCXDZ+EDaJVBZp+gCfSgopA/a4r09gPMzS3xv7YDTLBL+DtO/g6HQ0ozY2pVvG95qBu6CPyin5n7srO7ClKcr+PfOLlkFA0ECgYEAxTwAs/r0qnSpTnVSyi7QeMabcPagEybYnMTDpoPyw4ZsIdarfFiQKEOaX82M9YsxEPXNIGoAx/TjF+g799jPd+dFBoFIFwCav2Lh3DeMfms6cCvFE0jMXRjfvIafeQDzNm6xsqtwXf+XYOsiFZYBNoK3/sctX/rE1GaeGJG979w=";
@@ -535,7 +506,6 @@
 			var debugAllBersProcessed = new Array();
 			var parsedBer = parseAsn1Ber(byteArrayUint8);
 			debugAllBersProcessed.push(parsedBer);
-			// if(berIsSequence(parsedBer)){
 			if(berIsConstructed(parsedBer)){
 				encodedSequences.push(parsedBer);
 			}
@@ -621,22 +591,6 @@
 			console.log('Finished testing parseAsn1BerAndUnpackNestedAsn1EncodedSequences');
 		}
 
-		// function berSequenceToArrayOfSubBers(ber){
-		// 	if (!berIsSequence(ber)) {
-		// 		throw new TypeError(`Type of given BER was not the well known ASN.1 class ${BerAsn1Classes.Universal.Name} and type ${BerAsn1NativeTypes.SequenceAndSequenceOfTag.Name}. Received class ${ber.asn1Class} and type ${ber.asn1Tag}, expected class ${BerAsn1Classes.Universal} and type ${BerAsn1NativeTypes.SequenceAndSequenceOfTag}.`);
-		// 	}
-		// 	var result = new Array();
-		// 	var nextPosition = 0;
-		// 	var berContentLength = ber.contents.length;
-		// 	while(nextPosition < berContentLength){
-		// 		var nextBerBytes = getSubArray(ber.contents, nextPosition, berContentLength);
-		// 		var nextSubBer = parseBer(nextBerBytes)
-		// 		result.push(nextSubBer);
-		// 		nextPosition += nextSubBer.byteLength;
-		// 	}
-		// 	return result;
-		// }
-
 		function parseAsn1Ber(byteArrayUint8){
 			var result = {};
 
@@ -663,7 +617,6 @@
 				totalLengthFromStartToEndOfContent += 2; // Account for the adittional end of content tags/bytes.
 			}
 			result.length = totalLengthFromStartToEndOfContent;
-			return result;
 		}
 
 		function testParseAsn1Ber(){
@@ -1209,7 +1162,6 @@
 			);
 
 			// https://crypto.stackexchange.com/questions/18031/how-to-find-modulus-from-a-rsa-public-key
-			// var derHex = base64ToHex(pemContentStr, ':');
 		}
 	</script>
 </head>
