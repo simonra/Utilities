@@ -1320,9 +1320,8 @@
 			);
 			console.assert(
 				convertedKey.d == exportedKey.d,
-				`${assertFailPrefix} When comparing privateExponent, expected e to be "${exportedKey.d}", but got "${convertedKey.d}"`
+				`${assertFailPrefix} When comparing privateExponent, expected d to be "${exportedKey.d}", but got "${convertedKey.d}"`
 			);
-			var assertFailPrefix = "Mismatch between converted and what SubtleCrypto exported."
 			console.assert(
 				convertedKey.p == exportedKey.p,
 				`${assertFailPrefix} When comparing prime1, expected p to be "${exportedKey.p}", but got "${convertedKey.p}"`
