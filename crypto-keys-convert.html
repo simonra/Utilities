@@ -169,223 +169,223 @@
 		};
 		let BerAsn1NativeTypes = {
 			// These are the ASN.1 native types that are permitted used with the Universal class. If used, can be found in the tag field.
-			Tag0: {
+			EndOfContentTag: {
 				Name: 'End-of-Content (EOC)',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 0,
 				TagNumberHex: '0'
 			},
-			Tag1: {
+			BooleanTag: {
 				Name: 'BOOLEAN',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 1,
 				TagNumberHex: '1'
 			},
-			Tag2: {
+			IntegerTag: {
 				Name: 'INTEGER',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 2,
 				TagNumberHex: '2'
 			},
-			Tag3: {
+			BitStringTag: {
 				Name: 'BIT STRING',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 3,
 				TagNumberHex: '3'
 			},
-			Tag4: {
+			OctetStringTag: {
 				Name: 'OCTET STRING',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 4,
 				TagNumberHex: '4'
 			},
-			Tag5: {
+			NullTag: {
 				Name: 'NULL',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 5,
 				TagNumberHex: '5'
 			},
-			Tag6: {
+			ObjectIdentifierTag: {
 				Name: 'OBJECT IDENTIFIER',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 6,
 				TagNumberHex: '6'
 			},
-			Tag7: {
+			ObjectDescriptorTag: {
 				Name: 'Object Descriptor',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 7,
 				TagNumberHex: '7'
 			},
-			Tag8: {
+			ExternalTag: {
 				Name: 'EXTERNAL',
 				PermittedConstruction: 'Constructed',
 				TagNumberDecimal: 8,
 				TagNumberHex: '8'
 			},
-			Tag9: {
+			RealFloatTag: {
 				Name: 'REAL (float)',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 9,
 				TagNumberHex: '9'
 			},
-			Tag10: {
+			EnumeratedTag: {
 				Name: 'ENUMERATED',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 10,
 				TagNumberHex: 'A'
 			},
-			Tag11: {
+			EmbeddedPdvTag: {
 				Name: 'EMBEDDED PDV',
 				PermittedConstruction: 'Constructed',
 				TagNumberDecimal: 11,
 				TagNumberHex: 'B'
 			},
-			Tag12: {
+			Utf8StringTag: {
 				Name: 'UTF8String',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 12,
 				TagNumberHex: 'C'
 			},
-			Tag13: {
+			RelativeOidTag: {
 				Name: 'RELATIVE-OID',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 13,
 				TagNumberHex: 'D'
 			},
-			Tag14: {
+			TimeTag: {
 				Name: 'TIME',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 14,
 				TagNumberHex: 'E'
 			},
-			Tag15: {
+			ReservedTag: {
 				Name: 'Reserved',
 				PermittedConstruction: 'N/A',
 				TagNumberDecimal: 15,
 				TagNumberHex: 'F'
 			},
-			Tag16: {
+			SequenceAndSequenceOfTag: {
 				Name: 'SEQUENCE and SEQUENCE OF',
 				PermittedConstruction: 'Constructed',
 				TagNumberDecimal: 16,
 				TagNumberHex: '10'
 			},
-			Tag17: {
+			SetAndSetOfTag: {
 				Name: 'SET and SET OF',
 				PermittedConstruction: 'Constructed',
 				TagNumberDecimal: 17,
 				TagNumberHex: '11'
 			},
-			Tag18: {
+			NumericStringTag: {
 				Name: 'NumericString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 18,
 				TagNumberHex: '12'
 			},
-			Tag19: {
+			PrintableStringTag: {
 				Name: 'PrintableString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 19,
 				TagNumberHex: '13'
 			},
-			Tag20: {
+			T61StringTag: {
 				Name: 'T61String',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 20,
 				TagNumberHex: '14'
 			},
-			Tag21: {
+			VideotexStringTag: {
 				Name: 'VideotexString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 21,
 				TagNumberHex: '15'
 			},
-			Tag22: {
+			IA5StringTag: {
 				Name: 'IA5String',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 22,
 				TagNumberHex: '16'
 			},
-			Tag23: {
+			UTCTimeTag: {
 				Name: 'UTCTime',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 23,
 				TagNumberHex: '17'
 			},
-			Tag24: {
+			GeneralizedTimeTag: {
 				Name: 'GeneralizedTime',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 24,
 				TagNumberHex: '18'
 			},
-			Tag25: {
+			GraphicStringTag: {
 				Name: 'GraphicString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 25,
 				TagNumberHex: '19'
 			},
-			Tag26: {
+			VisibleStringTag: {
 				Name: 'VisibleString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 26,
 				TagNumberHex: '1A'
 			},
-			Tag27: {
+			GeneralStringTag: {
 				Name: 'GeneralString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 27,
 				TagNumberHex: '1B'
 			},
-			Tag28: {
+			UniversalStringTag: {
 				Name: 'UniversalString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 28,
 				TagNumberHex: '1C'
 			},
-			Tag29: {
+			CharacterStringTag: {
 				Name: 'CHARACTER STRING',
 				PermittedConstruction: 'Constructed',
 				TagNumberDecimal: 29,
 				TagNumberHex: '1D'
 			},
-			Tag30: {
+			BMPStringTag: {
 				Name: 'BMPString',
 				PermittedConstruction: 'Both',
 				TagNumberDecimal: 30,
 				TagNumberHex: '1E'
 			},
-			Tag31: {
+			DateTag: {
 				Name: 'DATE',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 31,
 				TagNumberHex: '1F'
 			},
-			Tag32: {
+			TimeOfDayTag: {
 				Name: 'TIME-OF-DAY',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 32,
 				TagNumberHex: '20'
 			},
-			Tag33: {
+			DateTimeTag: {
 				Name: 'DATE-TIME',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 33,
 				TagNumberHex: '21'
 			},
-			Tag34: {
+			DurationTag: {
 				Name: 'DURATION',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 34,
 				TagNumberHex: '22'
 			},
-			Tag35: {
+			OidIriTag: {
 				Name: 'OID-IRI',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 35,
 				TagNumberHex: '23'
 			},
-			Tag36: {
+			RelativeOidIriTag: {
 				Name: 'RELATIVE-OID-IRI',
 				PermittedConstruction: 'Primitive',
 				TagNumberDecimal: 36,
@@ -419,7 +419,7 @@
 		}
 
 		function berIsSequence(ber){
-			return ber.asn1Class.Value == BerAsn1Classes.Universal.Value && ber.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag16.TagNumberDecimal && ber.constructed.Value == BerAsn1PCBit.C.Value
+			return ber.asn1Class.Value == BerAsn1Classes.Universal.Value && ber.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.SequenceAndSequenceOfTag.TagNumberDecimal && ber.constructed.Value == BerAsn1PCBit.C.Value
 		}
 
 		function berIsConstructed(ber){
@@ -506,7 +506,7 @@
 			var result = {isRsaKey: false, value: null};
 			for (var i = 0; i < arrayOfParsedBerParts.length; i++) {
 				var currentBer = arrayOfParsedBerParts[i];
-				if(currentBer.asn1Class.Value == BerAsn1Classes.Universal.Value && currentBer.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag6.TagNumberDecimal){
+				if(currentBer.asn1Class.Value == BerAsn1Classes.Universal.Value && currentBer.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.ObjectIdentifierTag.TagNumberDecimal){
 					var parsedValue = parseOidFromBer(currentBer);
 					var rsaKeyOid = "1.2.840.113549.1.1.1";
 					if(parsedValue == rsaKeyOid){
@@ -523,7 +523,7 @@
 			// Because obviously tagging the single octet string as a primitive rather than a constructed type it would make sense to automate the unpacking of makes sense.
 			for (var i = 0; i < arrayOfParsedBerParts.length; i++) {
 				var currentBer = arrayOfParsedBerParts[i];
-				if(currentBer.asn1Class.Value == BerAsn1Classes.Universal.Value && currentBer.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag4.TagNumberDecimal){
+				if(currentBer.asn1Class.Value == BerAsn1Classes.Universal.Value && currentBer.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.OctetStringTag.TagNumberDecimal){
 					return currentBer.content;
 				}
 			}
@@ -585,8 +585,8 @@
 				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSimpleIntWith1BytePredefinedLength[0].constructed.Value}.`
 			);
 			console.assert(
-				parsedSimpleIntWith1BytePredefinedLength[0].asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
-				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSimpleIntWith1BytePredefinedLength[0].asn1Tag.TagNumberDecimal}.`
+				parsedSimpleIntWith1BytePredefinedLength[0].asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.IntegerTag.TagNumberDecimal,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected tag value to be ${BerAsn1NativeTypes.IntegerTag.TagNumberDecimal} but found ${parsedSimpleIntWith1BytePredefinedLength[0].asn1Tag.TagNumberDecimal}.`
 			);
 
 			var simpleIntWith3Bytes = [0b00000010, 0b00000011, 0b00000000, 0b11111111, 0b00110011];
@@ -623,7 +623,7 @@
 
 		// function berSequenceToArrayOfSubBers(ber){
 		// 	if (!berIsSequence(ber)) {
-		// 		throw new TypeError(`Type of given BER was not the well known ASN.1 class ${BerAsn1Classes.Universal.Name} and type ${BerAsn1NativeTypes.Tag16.Name}. Received class ${ber.asn1Class} and type ${ber.asn1Tag}, expected class ${BerAsn1Classes.Universal} and type ${BerAsn1NativeTypes.Tag16}.`);
+		// 		throw new TypeError(`Type of given BER was not the well known ASN.1 class ${BerAsn1Classes.Universal.Name} and type ${BerAsn1NativeTypes.SequenceAndSequenceOfTag.Name}. Received class ${ber.asn1Class} and type ${ber.asn1Tag}, expected class ${BerAsn1Classes.Universal} and type ${BerAsn1NativeTypes.SequenceAndSequenceOfTag}.`);
 		// 	}
 		// 	var result = new Array();
 		// 	var nextPosition = 0;
@@ -688,8 +688,8 @@
 				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSimpleIntWith1BytePredefinedLength.constructed.Value}.`
 			);
 			console.assert(
-				parsedSimpleIntWith1BytePredefinedLength.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
-				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSimpleIntWith1BytePredefinedLength.asn1Tag.TagNumberDecimal}.`
+				parsedSimpleIntWith1BytePredefinedLength.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.IntegerTag.TagNumberDecimal,
+				`${assertSimpleIntWith1BytePredefinedLengthPrefix} Expected tag value to be ${BerAsn1NativeTypes.IntegerTag.TagNumberDecimal} but found ${parsedSimpleIntWith1BytePredefinedLength.asn1Tag.TagNumberDecimal}.`
 			);
 
 			var simpleIntWith3Bytes = [0b00000010, 0b00000011, 0b00000000, 0b11111111, 0b00110011];
@@ -712,8 +712,8 @@
 				`${assertSimpleIntWith3BytesPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSimpleIntWith3Bytes.constructed.Value}.`
 			);
 			console.assert(
-				parsedSimpleIntWith3Bytes.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
-				`${assertSimpleIntWith3BytesPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSimpleIntWith3Bytes.asn1Tag.TagNumberDecimal}.`
+				parsedSimpleIntWith3Bytes.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.IntegerTag.TagNumberDecimal,
+				`${assertSimpleIntWith3BytesPrefix} Expected tag value to be ${BerAsn1NativeTypes.IntegerTag.TagNumberDecimal} but found ${parsedSimpleIntWith3Bytes.asn1Tag.TagNumberDecimal}.`
 			);
 
 			var sequenceEncapsulatedRandomness = [0b00110000, 0b00000011, 0b00000000, 0b00000000, 0b00000000];
@@ -736,8 +736,8 @@
 				`${assertSequenceEncapsulatedRandomnessPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.C.Value} but found ${parsedSequenceEncapsulatedRandomness.constructed.Value}.`
 			);
 			console.assert(
-				parsedSequenceEncapsulatedRandomness.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag16.TagNumberDecimal,
-				`${assertSequenceEncapsulatedRandomnessPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag16.TagNumberDecimal} but found ${parsedSequenceEncapsulatedRandomness.asn1Tag.TagNumberDecimal}.`
+				parsedSequenceEncapsulatedRandomness.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.SequenceAndSequenceOfTag.TagNumberDecimal,
+				`${assertSequenceEncapsulatedRandomnessPrefix} Expected tag value to be ${BerAsn1NativeTypes.SequenceAndSequenceOfTag.TagNumberDecimal} but found ${parsedSequenceEncapsulatedRandomness.asn1Tag.TagNumberDecimal}.`
 			);
 
 			var SequenceElementWithOtherSequenceElementsFollowing = simpleIntWith3Bytes.concat(simpleIntWith1BytePredefinedLength);
@@ -760,8 +760,8 @@
 				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected Primitive/Constructed value to be ${BerAsn1PCBit.P.Value} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.constructed.Value}.`
 			);
 			console.assert(
-				parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.Tag2.TagNumberDecimal,
-				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected tag value to be ${BerAsn1NativeTypes.Tag2.TagNumberDecimal} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Tag.TagNumberDecimal}.`
+				parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Tag.TagNumberDecimal == BerAsn1NativeTypes.IntegerTag.TagNumberDecimal,
+				`${assertSequenceElementWithOtherSequenceElementsFollowingPrefix} Expected tag value to be ${BerAsn1NativeTypes.IntegerTag.TagNumberDecimal} but found ${parsedSequenceElementWithOtherSequenceElementsFollowing.asn1Tag.TagNumberDecimal}.`
 			);
 
 			console.log('Testing of parsing of Asn1Ber completed');
