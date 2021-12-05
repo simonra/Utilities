@@ -54,44 +54,15 @@ function PrintStringWithHightlightingForDifferentTypesOfCharacters(textToClarify
 		// console.log(character);
 	}
 
-	console.log("Legend: %cABCD%c1234%c!@#$", `background: ${BackgroundColour}; color: ${LetterColour};`, `background: ${BackgroundColour}; color: ${NumberColour};`, `background: ${BackgroundColour}; color: ${OtherColour};`);
+	// Print legend so that it's easier to remember what is what if you only have a lot of lookalike characters:
+	console.log("Legend: %cABCD%c1234%c!@#$",
+		`background: ${BackgroundColour}; color: ${LetterColour}; font-size: ${PrintSize};`,
+		`background: ${BackgroundColour}; color: ${NumberColour}; font-size: ${PrintSize};`,
+		`background: ${BackgroundColour}; color: ${OtherColour}; font-size: ${PrintSize};`);
 
+	// Print the highlighted string:
 	console.log(ReassembledStringForPrinting, ...ListOfCssStrings);
 }
-
-
-// var ListOfCharactersWithProperties = [];
-// var ListOfCssStrings = [];
-// var ReassembledStringForPrinting = "";
-// for(const character of textToClarify){
-// 	var colour = OtherColour;
-// 	if(IsCharacterLetter(character)){
-// 		colour = LetterColour;
-// 	}
-// 	else if(IsCharacterDigit(character)){
-// 		colour = NumberColour;
-// 	}
-
-// 	var CssString = `background: ${BackgroundColour} color: ${colour};`;
-// 	var PrintString = `%c${character}`;
-
-// 	var characterWithMetadata = {
-// 		Character: character,
-// 		StringRepresentationForPrinting: PrintString,
-// 		CssForPrinting: CssString
-// 	};
-
-// 	ListOfCharactersWithProperties.push(characterWithMetadata);
-// 	ListOfCssStrings.push(CssString);
-// 	ReassembledStringForPrinting += PrintString;
-
-// 	// console.log(character);
-// }
-
-// console.log(ReassembledStringForPrinting, ...ListOfCssStrings);
-
-
-
 
 // Use this for coloring:
 // https://stackoverflow.com/a/13017382
