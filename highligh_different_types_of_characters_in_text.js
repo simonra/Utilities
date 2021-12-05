@@ -1,6 +1,6 @@
-var testString = "My string has NUMBERS! 1234! ^^";
-
-
+// Small script to highlight different types of characters in a string.
+// Intended for confirmation codes with lookalike characters that you have to retype, where you're not sure what exactly to enter in the other place.
+// Usage: Run `HighlightString("string you want to highlight");`.
 
 function IsCharacterDigit(character){
 	if(0 <= character && character <= 9){
@@ -36,9 +36,17 @@ function HighlightString(StringToHighlight){
 	// Output size
 	var PrintSize = '2em';
 
+	/* Note that ListOfCharactersWithProperties is not used, because I decided
+	 it would be simpler and faster to iterate over the string only once, with
+	 the tradeof for more memor needed to store the precomputed list of css
+	 string and the premade string for the output. Still keeping it around,
+	 because it's neat for debugging without having to step through everything
+	 for each character.
+	*/
 	var ListOfCharactersWithProperties = [];
 	var ListOfCssStrings = [];
 	var ReassembledStringForPrinting = "";
+
 	for(const character of StringToHighlight){
 		var colour = OtherColour;
 		if(IsCharacterLetter(character)){
@@ -66,8 +74,10 @@ function HighlightString(StringToHighlight){
 		ListOfCssStrings.push(CssString);
 		ReassembledStringForPrinting += PrintString;
 
-		// console.log(character);
+		// console.debug(character);
 	}
+
+	// console.debug(ListOfCharactersWithProperties);
 
 	// Print legend so that it's easier to remember what is what if you only have a lot of lookalike characters:
 	console.log("Legend: %cABCD%cefgh%c1234%c!@#$",
@@ -78,6 +88,12 @@ function HighlightString(StringToHighlight){
 
 	// Print the highlighted string:
 	console.log(ReassembledStringForPrinting, ...ListOfCssStrings);
+}
+
+
+function TestHighlightString(){
+	var testString = "My string has NUMBERS! 1234! ^^";
+	HighlightString(testString);
 }
 
 // Use this for coloring:
