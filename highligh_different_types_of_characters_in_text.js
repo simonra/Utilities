@@ -1,14 +1,6 @@
 var textToClarify = "My? Or Your? Text. It has numbers, like 1, and 1000! OH~";
 
-// const BackgroundColour = '#fff' // white
-// const LetterColour = '#008080' // teal
-// const NumberColour = '#800080' // purple
-// const OtherColour = '#9a6510' // Golden-brown
 
-const BackgroundColour = '#2e2e2e'
-const LetterColour = '#b4d273'
-const NumberColour = '#6c99bb'
-const OtherColour = '#e87d3e'
 
 function IsCharacterDigit(character){
 	if(0 <= character && character <= 9){
@@ -23,35 +15,80 @@ function IsCharacterLetter(character){
 	return character.toLowerCase() != character.toUpperCase();
 }
 
-var ListOfCharactersWithProperties = [];
-var ListOfCssStrings = [];
-var ReassembledStringForPrinting = "";
-for(const character of textToClarify){
-	var colour = OtherColour;
-	if(IsCharacterLetter(character)){
-		colour = LetterColour;
+function PrintStringWithHightlightingForDifferentTypesOfCharacters(textToClarify){
+	// const BackgroundColour = '#fff' // white
+	// const LetterColour = '#008080' // teal
+	// const NumberColour = '#800080' // purple
+	// const OtherColour = '#9a6510' // Golden-brown
+
+	var BackgroundColour = '#2e2e2e'
+	var LetterColour = '#b4d273'
+	var NumberColour = '#6c99bb'
+	var OtherColour = '#e87d3e'
+
+	var ListOfCharactersWithProperties = [];
+	var ListOfCssStrings = [];
+	var ReassembledStringForPrinting = "";
+	for(const character of textToClarify){
+		var colour = OtherColour;
+		if(IsCharacterLetter(character)){
+			colour = LetterColour;
+		}
+		else if(IsCharacterDigit(character)){
+			colour = NumberColour;
+		}
+
+		var CssString = `background: ${BackgroundColour}; color: ${colour};`;
+		var PrintString = `%c${character}`;
+
+		var characterWithMetadata = {
+			Character: character,
+			StringRepresentationForPrinting: PrintString,
+			CssForPrinting: CssString
+		};
+
+		ListOfCharactersWithProperties.push(characterWithMetadata);
+		ListOfCssStrings.push(CssString);
+		ReassembledStringForPrinting += PrintString;
+
+		// console.log(character);
 	}
-	else if(IsCharacterDigit(character)){
-		colour = NumberColour;
-	}
 
-	var CssString = `background: ${BackgroundColour} color: ${colour};`;
-	var PrintString = `%c${character}`;
+	console.log("Legend: %cABCD%c1234%c!@#$", `background: ${BackgroundColour}; color: ${LetterColour};`, `background: ${BackgroundColour}; color: ${NumberColour};`, `background: ${BackgroundColour}; color: ${OtherColour};`);
 
-	var characterWithMetadata = {
-		Character: character,
-		StringRepresentationForPrinting: PrintString,
-		CssForPrinting: CssString
-	};
-
-	ListOfCharactersWithProperties.push(characterWithMetadata);
-	ListOfCssStrings.push(CssString);
-	ReassembledStringForPrinting += PrintString;
-
-	// console.log(character);
+	console.log(ReassembledStringForPrinting, ...ListOfCssStrings);
 }
 
-console.log(ReassembledStringForPrinting, ...ListOfCssStrings);
+
+// var ListOfCharactersWithProperties = [];
+// var ListOfCssStrings = [];
+// var ReassembledStringForPrinting = "";
+// for(const character of textToClarify){
+// 	var colour = OtherColour;
+// 	if(IsCharacterLetter(character)){
+// 		colour = LetterColour;
+// 	}
+// 	else if(IsCharacterDigit(character)){
+// 		colour = NumberColour;
+// 	}
+
+// 	var CssString = `background: ${BackgroundColour} color: ${colour};`;
+// 	var PrintString = `%c${character}`;
+
+// 	var characterWithMetadata = {
+// 		Character: character,
+// 		StringRepresentationForPrinting: PrintString,
+// 		CssForPrinting: CssString
+// 	};
+
+// 	ListOfCharactersWithProperties.push(characterWithMetadata);
+// 	ListOfCssStrings.push(CssString);
+// 	ReassembledStringForPrinting += PrintString;
+
+// 	// console.log(character);
+// }
+
+// console.log(ReassembledStringForPrinting, ...ListOfCssStrings);
 
 
 
