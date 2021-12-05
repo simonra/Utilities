@@ -1,4 +1,4 @@
-var testString = "My? Or Your? Text. It has numbers, like 1, and 1000! OH~";
+var testString = "My string has numbers! 1234! ^^";
 
 
 
