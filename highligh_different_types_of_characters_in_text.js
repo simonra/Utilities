@@ -1,4 +1,4 @@
-var testString = "My string has numbers! 1234! ^^";
+var testString = "My string has NUMBERS! 1234! ^^";
 
 
 
@@ -15,28 +15,39 @@ function IsCharacterLetter(character){
 	return character.toLowerCase() != character.toUpperCase();
 }
 
+function IsLetterUppercase(letter){
+	return letter == letter.toUpperCase();
+}
+
 function HighlightString(StringToHighlight){
 	// const BackgroundColour = '#fff' // white
-	// const LetterColour = '#008080' // teal
+	// const LetterColourLowerCase = '#008080' // teal
+	// const LetterColourUpperCase = red
 	// const NumberColour = '#800080' // purple
 	// const OtherColour = '#9a6510' // Golden-brown
 
 	// Colour scheme:
 	var BackgroundColour = '#2e2e2e'
-	var LetterColour = '#b4d273'
-	var NumberColour = '#6c99bb'
-	var OtherColour = '#e87d3e'
+	var LetterColourLowerCase = '#b4d273' // Green
+	var LetterColourUpperCase = '#9e86c8' // Purple
+	var NumberColour = '#6c99bb' // Blue
+	var OtherColour = '#e87d3e' // Orange
 
 	// Output size
 	var PrintSize = '2em';
 
-	var ListOfCharactersWithProperties = []; // Array for 
+	var ListOfCharactersWithProperties = [];
 	var ListOfCssStrings = [];
 	var ReassembledStringForPrinting = "";
 	for(const character of StringToHighlight){
 		var colour = OtherColour;
 		if(IsCharacterLetter(character)){
-			colour = LetterColour;
+			if(IsLetterUppercase(character)){
+				colour = LetterColourUpperCase;
+			}
+			else{
+				colour = LetterColourLowerCase;
+			}
 		}
 		else if(IsCharacterDigit(character)){
 			colour = NumberColour;
@@ -59,8 +70,9 @@ function HighlightString(StringToHighlight){
 	}
 
 	// Print legend so that it's easier to remember what is what if you only have a lot of lookalike characters:
-	console.log("Legend: %cABCD%c1234%c!@#$",
-		`background: ${BackgroundColour}; color: ${LetterColour}; font-size: ${PrintSize};`,
+	console.log("Legend: %cABCD%cefgh%c1234%c!@#$",
+		`background: ${BackgroundColour}; color: ${LetterColourUpperCase}; font-size: ${PrintSize};`,
+		`background: ${BackgroundColour}; color: ${LetterColourLowerCase}; font-size: ${PrintSize};`,
 		`background: ${BackgroundColour}; color: ${NumberColour}; font-size: ${PrintSize};`,
 		`background: ${BackgroundColour}; color: ${OtherColour}; font-size: ${PrintSize};`);
 
