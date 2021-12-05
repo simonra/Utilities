@@ -1,4 +1,4 @@
-var textToClarify = "My? Or Your? Text. It has numbers, like 1, and 1000! OH~";
+var testString = "My? Or Your? Text. It has numbers, like 1, and 1000! OH~";
 
 
 
@@ -15,21 +15,25 @@ function IsCharacterLetter(character){
 	return character.toLowerCase() != character.toUpperCase();
 }
 
-function PrintStringWithHightlightingForDifferentTypesOfCharacters(textToClarify){
+function HighlightString(StringToHighlight){
 	// const BackgroundColour = '#fff' // white
 	// const LetterColour = '#008080' // teal
 	// const NumberColour = '#800080' // purple
 	// const OtherColour = '#9a6510' // Golden-brown
 
+	// Colour scheme:
 	var BackgroundColour = '#2e2e2e'
 	var LetterColour = '#b4d273'
 	var NumberColour = '#6c99bb'
 	var OtherColour = '#e87d3e'
 
-	var ListOfCharactersWithProperties = [];
+	// Output size
+	var PrintSize = '2em';
+
+	var ListOfCharactersWithProperties = []; // Array for 
 	var ListOfCssStrings = [];
 	var ReassembledStringForPrinting = "";
-	for(const character of textToClarify){
+	for(const character of StringToHighlight){
 		var colour = OtherColour;
 		if(IsCharacterLetter(character)){
 			colour = LetterColour;
@@ -38,7 +42,7 @@ function PrintStringWithHightlightingForDifferentTypesOfCharacters(textToClarify
 			colour = NumberColour;
 		}
 
-		var CssString = `background: ${BackgroundColour}; color: ${colour};`;
+		var CssString = `background: ${BackgroundColour}; color: ${colour}; font-size: ${PrintSize};`;
 		var PrintString = `%c${character}`;
 
 		var characterWithMetadata = {
