@@ -2,23 +2,6 @@
 // Intended for confirmation codes with lookalike characters that you have to retype, where you're not sure what exactly to enter in the other place.
 // Usage: Run `HighlightString("string you want to highlight");`.
 
-function IsCharacterDigit(character){
-	if(0 <= character && character <= 9){
-		return true;
-	}
-	return false;
-}
-
-function IsCharacterLetter(character){
-	// If the character has a different upper and lower case representation it is reasonable for my use to assume that it is a letter.
-	// It might even be a bit too inclusive, I guess if it annoys me over time I'll go for something more limmited like "return (/[a-zA-Z]/).test(char)"
-	return character.toLowerCase() != character.toUpperCase();
-}
-
-function IsLetterUppercase(letter){
-	return letter == letter.toUpperCase();
-}
-
 function HighlightString(StringToHighlight){
 	// const BackgroundColour = '#fff' // white
 	// const LetterColourLowerCase = '#008080' // teal
@@ -35,6 +18,24 @@ function HighlightString(StringToHighlight){
 
 	// Output size
 	var PrintSize = '2em';
+
+	function IsCharacterDigit(character){
+		if(0 <= character && character <= 9){
+			return true;
+		}
+		return false;
+	}
+
+	function IsCharacterLetter(character){
+		// If the character has a different upper and lower case representation it is reasonable for my use to assume that it is a letter.
+		// It might even be a bit too inclusive, I guess if it annoys me over time I'll go for something more limmited like "return (/[a-zA-Z]/).test(char)"
+		return character.toLowerCase() != character.toUpperCase();
+	}
+
+	function IsLetterUppercase(letter){
+		return letter == letter.toUpperCase();
+	}
+
 
 	/* Note that ListOfCharactersWithProperties is not used, because I decided
 	 it would be simpler and faster to iterate over the string only once, with
