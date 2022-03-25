@@ -14,12 +14,13 @@ help_text_params="Valid parameters:
 -f (--file)        The file you want to verify the checksum for. Required.
 -s (--sum)         The checksum you want to verify against. You can choose to supply a file with the sum instead.
 -S (--sum_file)    A file containing the checksum you want to verify against. You can choose to supply the sum directly instead.
+-q (--quiet)       Don't print pass/fail text for results, only return 0 if match or 1 if not match. Still prints if errors are encountered.
 "
 
 
 # Parameter validation helpers
 
-known_params="-f --file -s --sum -S --sum_file -h --help"
+known_params="-f --file -s --sum -S --sum_file -q --quiet -h --help"
 
 function validate_parameter()
 {
@@ -70,6 +71,15 @@ do
             validate_parameter "$sum_file" "sum_file"
             validate_file_exists "$sum_file" "sum_file"
             shift
+            ;;
+        -S|--sum_file)
+            sum_file="$2";
+            validate_parameter "$sum_file" "sum_file"
+            validate_file_exists "$sum_file" "sum_file"
+            shift
+            ;;
+        -q|--quiet)
+            quiet=true
             ;;
         *)
             echo "Unknown parameter passed: $1"
@@ -125,10 +135,16 @@ precomputed_checksum_lowercase=$( echo $sum | sed -E --expression="s/(.*)/\L\1/"
 
 if [ $checksum_of_file_lowercase = $precomputed_checksum_lowercase ]
 then
-    echo "pass"
+    if [ ! $quiet = true ]
+    then
+        echo "pass"
+    fi
     exit 0
 else
-    echo "fail"
+    if [ ! $quiet = true ]
+    then
+        echo "fail"
+    fi
     exit 1
 fi
 
