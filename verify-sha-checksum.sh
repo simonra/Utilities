@@ -77,6 +77,16 @@ do
     esac
     shift
 done
+# Note on mechanics behind parsing:
+# Arguments are by default `function_name $1 $2 ... $n`.
+# The invocation of `shift` removes the first parameter and shifts the others after it is called,
+# so that $2 becomes $1, $3 becomes $2, and so on.
+# This means that for named parameters with an input,
+# calling `shift` inside the switch case in addittion to the `shift` at the end of the wile loop iteration
+# will remove both the parameter and the value that was passed in for it,
+# while if we only want to check for the presence of a flag,
+# then the `shift` at the end will remove just the flag
+# and we don't have to have an addittional shift inside the switch case.
 
 # Check we have all the input we need
 if [ "$file" = "" ]
