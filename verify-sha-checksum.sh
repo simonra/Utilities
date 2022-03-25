@@ -48,7 +48,8 @@ function validate_file_exists()
 }
 
 # Parse parameters:
-while [[ "$#" -gt 0 ]]; do
+while [ "$#" -gt 0 ]
+do
     case $1 in
         -h|--help) printf "$help_text_about\n$help_text_params"; exit 0 ;;
         -f|--file)
