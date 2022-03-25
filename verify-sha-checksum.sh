@@ -15,6 +15,10 @@ help_text_params="Valid parameters:
 -S (--sum_file)    A file containing the checksum you want to verify against. You can choose to supply the sum directly instead.
 "
 
+help_test_sample_usage="Sample usage:
+$ ./verify-sha-checksum.sh --file ~/Downloads/GE-Proton7-10.tar.gz -S ~/Downloads/GE-Proton7-10.sha512sum
+"
+
 # Parameter validation helpers
 
 known_params="-f --file -s --sum -S --sum_file -h --help"
@@ -51,7 +55,7 @@ function validate_file_exists()
 while [ "$#" -gt 0 ]
 do
     case $1 in
-        -h|--help) printf "$help_text_about\n$help_text_params"; exit 0 ;;
+        -h|--help) printf "$help_text_about\n$help_text_params\n$help_test_sample_usage"; exit 0 ;;
         -f|--file)
             file="$2"
             validate_parameter "$file" "file"
