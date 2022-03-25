@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Usage example:
-# ./verify-sha-checksum.sh --file ~/Downloads/GE-Proton7-10.tar.gz -S ~/Downloads/GE-Proton7-10.sha512sum
+help_text_sample_usage="Sample usage:
+$ ./verify-sha-checksum.sh --file ~/Downloads/GE-Proton7-10.tar.gz -S ~/Downloads/GE-Proton7-10.sha512sum
+"
 
 help_text_about="This is a CLI utility to validate the checksum of a file. It works by
 taking the file and the checksum and comparing them. The reason for it's
@@ -15,9 +16,6 @@ help_text_params="Valid parameters:
 -S (--sum_file)    A file containing the checksum you want to verify against. You can choose to supply the sum directly instead.
 "
 
-help_test_sample_usage="Sample usage:
-$ ./verify-sha-checksum.sh --file ~/Downloads/GE-Proton7-10.tar.gz -S ~/Downloads/GE-Proton7-10.sha512sum
-"
 
 # Parameter validation helpers
 
@@ -55,7 +53,7 @@ function validate_file_exists()
 while [ "$#" -gt 0 ]
 do
     case $1 in
-        -h|--help) printf "$help_text_about\n$help_text_params\n$help_test_sample_usage"; exit 0 ;;
+        -h|--help) printf "$help_text_about\n$help_text_params\n$help_text_sample_usage"; exit 0 ;;
         -f|--file)
             file="$2"
             validate_parameter "$file" "file"
