@@ -29,7 +29,7 @@ function validate_parameter()
         echo "Error:Cannot pass option \"$value\" as the \"$name\" argument."
         exit 1
     fi
-    if [[ ! ${#value} -gt 0 ]]
+    if [ ! ${#value} -gt 0 ]
     then
         echo "Error: \"$name\" parameter was empty."
         exit 1
