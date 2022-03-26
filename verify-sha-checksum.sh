@@ -135,13 +135,13 @@ precomputed_checksum_lowercase=$( echo $sum | sed -E --expression="s/(.*)/\L\1/"
 
 if [ $checksum_of_file_lowercase = $precomputed_checksum_lowercase ]
 then
-    if [ ! $quiet = true ]
+    if [ ! "$quiet" = true ]
     then
         echo "pass"
     fi
     exit 0
 else
-    if [ ! $quiet = true ]
+    if [ ! "$quiet" = true ]
     then
         echo "fail"
     fi
