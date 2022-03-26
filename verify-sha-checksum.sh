@@ -17,7 +17,6 @@ help_text_params="Valid parameters:
 -q (--quiet)       Don't print pass/fail text for results, only return 0 if match or 1 if not match. Still prints if errors are encountered.
 "
 
-
 # Parameter validation helpers
 
 known_params="-f --file -s --sum -S --sum_file -q --quiet -h --help"
@@ -62,18 +61,18 @@ do
             shift
             ;;
         -s|--sum)
-            sum="$2";
+            sum="$2"
             validate_parameter "$sum" "sum"
             shift
             ;;
         -S|--sum_file)
-            sum_file="$2";
+            sum_file="$2"
             validate_parameter "$sum_file" "sum_file"
             validate_file_exists "$sum_file" "sum_file"
             shift
             ;;
         -S|--sum_file)
-            sum_file="$2";
+            sum_file="$2"
             validate_parameter "$sum_file" "sum_file"
             validate_file_exists "$sum_file" "sum_file"
             shift
@@ -89,7 +88,7 @@ do
     esac
     shift
 done
-# Note on mechanics behind parsing:
+# Note on mechanics behind parsing above:
 # Arguments are by default `function_name $1 $2 ... $n`.
 # The invocation of `shift` removes the first parameter and shifts the others after it is called,
 # so that $2 becomes $1, $3 becomes $2, and so on.
