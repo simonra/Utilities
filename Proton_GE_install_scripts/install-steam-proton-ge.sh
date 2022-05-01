@@ -31,7 +31,7 @@ then
     echo "The latest version, $version, is alredy installed at $PROTON_INSTALL_DIR/."
     echo "To re-install, delete the existing version and re-run the install latest script."
     echo "To delete: rm -rf $install_dir"
-    # exit
+    exit
 fi
 
 echo "Downloading package and checksum."
