@@ -12,15 +12,15 @@
 echo "Installing latest version of GloriousEggroll Proton for Steam."
 
 # Constants
-REPO_URL=https://github.com/GloriousEggroll/proton-ge-custom
+URL_REPO=https://github.com/GloriousEggroll/proton-ge-custom
 LATEST_RELEASE_PATH=releases/latest
-LATEST_RELEASE_ENDPOINT=$REPO_URL/$LATEST_RELEASE_PATH
+URL_LATEST_RELEASE=$URL_REPO/$LATEST_RELEASE_PATH
 PROTON_INSTALL_DIR=/home/$USER/.steam/root/compatibilitytools.d
 
 # Get latest version
 echo "Downloading name/tag of latest release."
-release_url_with_resolved_version=$(curl -Ls -o /dev/null -w %{url_effective} $LATEST_RELEASE_ENDPOINT)
-version=$(echo $release_url_with_resolved_version | sed -E "s;^.*/;;")
+url_latest_release_resolved_version=$(curl -Ls -o /dev/null -w %{url_effective} $URL_LATEST_RELEASE)
+version=$(echo $url_latest_release_resolved_version | sed -E "s;^.*/;;")
 echo "Latest version is $version"
 
 install_dir=$PROTON_INSTALL_DIR/$version
@@ -38,18 +38,18 @@ echo "Downloading package and checksum."
 package_name=$version.tar.gz
 checksum_name=$version.sha512sum
 
-download_url_package=$REPO_URL/releases/download/$version/$package_name
-download_url_checksum=$REPO_URL/releases/download/$version/$checksum_name
+url_download_package=$URL_REPO/releases/download/$version/$package_name
+url_download_checksum=$URL_REPO/releases/download/$version/$checksum_name
 
 package_file=/home/$USER/Downloads/$package_name
 checksum_file=/home/$USER/Downloads/$checksum_name
 
 # echo "URLs:"
-# echo "  - package: $download_url_package"
-# echo "  - checksum: $download_url_checksum"
+# echo "  - package: $url_download_package"
+# echo "  - checksum: $url_download_checksum"
 
-curl --location $download_url_package --output $package_file
-curl --location $download_url_checksum --output $checksum_file
+curl --location $url_download_package --output $package_file
+curl --location $url_download_checksum --output $checksum_file
 
 echo "Download finished."
 
@@ -57,7 +57,6 @@ echo "Download finished."
 # package_name=GE-Proton7-10.tar.gz
 # checksum_name=GE-Proton7-10.sha512sum
 # END DEBUG
-
 
 echo "Checking that package matches checksum."
 
