@@ -23,7 +23,7 @@ PROTON_INSTALL_DIR=/home/$USER/.local/share/lutris/runners/wine
 
 # Get latest version
 echo "Downloading name/tag of latest release."
-url_latest_release_resolved_version=$(curl -Ls -o /dev/null -w %{url_effective} $URL_LATEST_RELEASE)
+url_latest_release_resolved_version=$(curl --silent --location --output /dev/null --write-out %{url_effective} --url $URL_LATEST_RELEASE)
 version=$(echo $url_latest_release_resolved_version | sed -E "s;^.*/;;")
 echo "Latest version is $version"
 
@@ -52,8 +52,8 @@ checksum_file=/home/$USER/Downloads/$checksum_name
 # echo "  - package: $url_download_package"
 # echo "  - checksum: $url_download_checksum"
 
-curl --location $url_download_package --output $package_file
-curl --location $url_download_checksum --output $checksum_file
+curl --location --url $url_download_package --output $package_file
+curl --location --url $url_download_checksum --output $checksum_file
 
 echo "Download finished."
 
