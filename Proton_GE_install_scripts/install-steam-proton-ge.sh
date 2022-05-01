@@ -7,9 +7,9 @@
 # - Extract and put in steams compatibility tools folder.
 # - Restart steam.
 
-# tar --extract --file /home/$USER/Downloads/GE-Proton7-16.tar.gz --directory=/home/$USER/.steam/root/compatibilitytools.d
-
 # Partially inspired by https://github.com/sirkhancision/update-proton-ge/
+
+echo "Installing latest version of GloriousEggroll Proton for Steam."
 
 # Constants
 REPO_URL=https://github.com/GloriousEggroll/proton-ge-custom
@@ -77,4 +77,5 @@ echo "Extracting package to install directory."
 
 tar --extract --file $package_file --directory $PROTON_INSTALL_DIR
 
-echo "Done."
+echo "Done installing GloriousEggroll proton version $version for Steam. You have to restart steam before the new version shows up and you can select it."
+echo "To restart steam: pkill -TERM steam && sleep 5s && nohup steam </dev/null &>/dev/null &"
