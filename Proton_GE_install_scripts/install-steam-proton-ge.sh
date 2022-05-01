@@ -76,5 +76,5 @@ echo "Extracting package to install directory."
 
 tar --extract --file $package_file --directory $PROTON_INSTALL_DIR
 
-echo "Done installing GloriousEggroll proton version $version for Steam. It should now be located at $install_dir. You have to restart steam before the new version shows up and you can select it."
-echo "To restart steam: pkill -TERM steam && sleep 5s && nohup steam </dev/null &>/dev/null &"
+echo "Done installing GloriousEggroll proton version $version for Steam. It should now be located at $install_dir. You have to restart Steam before the new version shows up and you can select it."
+echo "To restart Steam: pkill -TERM steam && sleep 5s && nohup steam </dev/null &>/dev/null &"
