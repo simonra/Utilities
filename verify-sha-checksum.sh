@@ -1,7 +1,9 @@
 #!/bin/bash
 
+known_checksum_algorithms="sha256 sha512"
+
 help_text_sample_usage="Sample usage:
-$ ./verify-sha-checksum.sh --file ~/Downloads/GE-Proton7-10.tar.gz -S ~/Downloads/GE-Proton7-10.sha512sum
+$ ./verify-sha-checksum.sh --file ~/Downloads/GE-Proton7-10.tar.gz --type sha512 -S ~/Downloads/GE-Proton7-10.sha512sum
 "
 
 help_text_about="This is a CLI utility to validate the checksum of a file. It works by
@@ -12,6 +14,7 @@ getting the hash of a file, nor sit an compare way too long strings.
 
 help_text_params="Valid parameters:
 -f (--file)        The file you want to verify the checksum for. Required.
+-t (--type)        The type of checksum you want to use for the verification. Required. Supported values: [$known_checksum_algorithms].
 -s (--sum)         The checksum you want to verify against. You can choose to supply a file with the sum instead.
 -S (--sum_file)    A file containing the checksum you want to verify against. You can choose to supply the sum directly instead.
 -q (--quiet)       Don't print pass/fail text for results, only return 0 if match or 1 if not match. Still prints if errors are encountered.
@@ -19,7 +22,7 @@ help_text_params="Valid parameters:
 
 # Parameter validation helpers
 
-known_params="-f --file -s --sum -S --sum_file -q --quiet -h --help"
+known_params="-f --file -t --type -s --sum -S --sum_file -q --quiet -h --help"
 
 function validate_parameter()
 {
@@ -28,7 +31,7 @@ function validate_parameter()
     name="$2"
     if [[ " ${known_params} " =~ " ${value} " ]]
     then
-        echo "Error:Cannot pass option \"$value\" as the \"$name\" argument."
+        echo "Error: Cannot pass option \"$value\" as the \"$name\" argument."
         exit 1
     fi
     if [ ! ${#value} -gt 0 ]
@@ -49,6 +52,16 @@ function validate_file_exists()
     fi
 }
 
+function validate_known_checksum_alorithm_type()
+{
+    value="$1"
+    if [[ ! " ${known_checksum_algorithms} " =~ " ${value} " ]]
+    then
+        echo "Error: \"\" is not recognized as a supported checksum algorithm. Supported values at this time are [$known_checksum_algorithms]."
+        exit 1
+    fi
+}
+
 # Parse parameters:
 while [ "$#" -gt 0 ]
 do
@@ -60,15 +73,14 @@ do
             validate_file_exists "$file" "file"
             shift
             ;;
+        -t|--type)
+            type="$2"
+            validate_parameter "$type" "type"
+            shift
+            ;;
         -s|--sum)
             sum="$2"
             validate_parameter "$sum" "sum"
-            shift
-            ;;
-        -S|--sum_file)
-            sum_file="$2"
-            validate_parameter "$sum_file" "sum_file"
-            validate_file_exists "$sum_file" "sum_file"
             shift
             ;;
         -S|--sum_file)
@@ -106,6 +118,12 @@ then
     exit 1
 fi
 
+if [ "$type" = "" ]
+then
+    echo "Error: Missing parameter. The \"type\" parameter is mandatory. Supported values are: [$known_checksum_algorithms]."
+    exit 1
+fi
+
 if [ "$sum" = "" ] && [ "$sum_file" = "" ]
 then
     echo "Error: Neither \"sum\" nor \"sum_file\" parameter were set. 1 of them has to be set."
@@ -121,6 +139,20 @@ fi
 # Do the checks
 
 checksum_of_file_raw=$(sha512sum $file)
+# known_checksum_algorithms="sha256 sha512"
+case $type in
+    "sha256")
+        checksum_of_file_raw=$(sha256sum $file)
+        ;;
+    "sha512")
+        checksum_of_file_raw=$(sha512sum $file)
+        ;;
+    *)
+        echo "Unknown checksum algorithm type passed: $type."
+        echo "Supported values are: [$known_checksum_algorithms]."
+        exit 1
+esac
+
 checksum_of_file_value_only=$( echo $checksum_of_file_raw | sed -E --expression="s/^(.*)(\s+)(.*)$/\1/" )
 checksum_of_file_lowercase=$( echo $checksum_of_file_value_only | sed -E --expression="s/(.*)/\L\1/" )
 

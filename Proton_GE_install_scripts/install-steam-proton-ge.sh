@@ -66,7 +66,7 @@ SCRIPT=$(readlink -f "$0")
 # Absolute path this script is in, thus /home/user/bin
 SCRIPTPATH=$(dirname "$SCRIPT")
 
-if ! $($SCRIPTPATH/../verify-sha-checksum.sh --file $package_file --sum_file $checksum_file --quiet)
+if ! $($SCRIPTPATH/../verify-sha-checksum.sh --file $package_file --type sha512 --sum_file $checksum_file --quiet)
 then
     echo "  Error! Checksum verification failed. Hash of '$package_file' did not match value found in '$checksum_file'."
     exit 1
