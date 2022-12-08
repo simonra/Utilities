@@ -39,6 +39,11 @@ After you are done working with the project, you can exit the virtual environmen
 
 `deactivate`
 
+### Collaborating with others
+
+Don't want to make an init-script or spend time negotiating what's the optimal name for the venv-folder so that you don't clog the top level gitignore with various creatively named folders?
+Just put a gitignore file cotaining a line with `*` in the venv-folder.
+
 ### Installing the depencencies directly
 
 If you're not using python's virtual environments, or you don't like to use the requirements file, or you for other reasons like to install the dependencies directly, you can do the following:
