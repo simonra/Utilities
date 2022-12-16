@@ -49,21 +49,21 @@ To do so, simply run the build-image.sh script
 Utilities/LaTex-docker/build-image.sh
 ```
 
-(And remember to make the files executalbe if you're not me or havent just cloned the project with git (I think it's preserving the flag that makes it executable?):
+(And remember to make the files executable if you're not me or haven't just cloned the project with git (I think it's preserving the flag that makes it executable?):
 `cd Utilities/LaTex-docker && chmod +x *.sh`
 )
 
 ## Motivation
 
 I occasionally want to make small basic things with latex, but not often enough that I want to maintain a full set of packages in my local install, nor advanced enough that I feel a need for a particularly current or updated collection of packages.
-This lets me make a stable working environment for building latex files locally on my machines, whithout much hassle or clutter.
+This lets me make a stable working environment for building latex files locally on my machines, without much hassle or clutter.
 
 ## Generalization of use of image
 
-Note that the docker image is a very basic debian image with packages for latex and some basic utilities.
+Note that the docker image is a very basic Debian image with packages for latex and some basic utilities.
 This means that you could easily use it more directly if your needs differ from what I've set up in the `latex-compile.sh` script.
 
-For instace, if you want to use the image to run arbitrary commands in the directory you are currently in, like `pdflatex main.tex`, and don't fancy running a cryptic command like
+For instance, if you want to use the image to run arbitrary commands in the directory you are currently in, like `pdflatex main.tex`, and don't fancy running a cryptic command like
 `docker run -i --rm --user="$(id -u):$(id -g)" -v "$PWD":/data --net=none "localhost/latex:latest" pdflatex main.tex`
 all the time, you could instead make a script file with content like below:
 
