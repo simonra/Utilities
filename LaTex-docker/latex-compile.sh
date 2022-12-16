@@ -9,4 +9,9 @@ exec docker run \
     --net=none \
     --volume "$PWD":/data \
     "$IMAGE" \
-    latexmk -cd -aux-directory=.latex-temp -output-directory=.latex-temp -pdf "$@"
+    latexmk \
+        -cd \
+        -aux-directory=.latex-temp \
+        -output-directory=.latex-temp \
+        -pdf \
+        "$@"
