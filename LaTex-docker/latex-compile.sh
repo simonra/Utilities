@@ -14,14 +14,21 @@ echo "Docker latex maker: (current working dir is $PWD)"
 
 echo "Docker latex maker: Starting container with latex tooling as background daemon"
 
+# Some notes on what happens below:
+# We start the container detatched in the background with the `-d` parameter (it becomes just like a daemon!)
+# We tell docker to clean up and delete the container once it's done running with `-rm`.
+# We take our current user ID and use that for running inside the docker container with `--user="$(id -u):$(id -g)"`.
+# This ensures that the output once the container is done is actually ourselves and not for instance root.
+# We disable all networking with `--network none`, because realistically all I need can be done offline.
+
 docker run \
     -d \
+    -i \
+    -t \
     --rm \
     --name latex_daemon \
-    -i \
     --user="$(id -u):$(id -g)" \
-    --net=none \
-    -t \
+    --network none \
     --volume $PWD:/data \
     "$IMAGE" \
     /bin/sh \
@@ -56,7 +63,9 @@ echo "Docker latex maker: Stopping background container"
 # Just kill the container, because `sleep infinity` does not seem to handle sigterm
 docker kill latex_daemon
 
-echo "Docker latex maker: Done! Path to produced PDF:"
-echo "Docker latex maker: $(realpath $FINAL_PDF_NAME)"
-
+echo "Docker latex maker: Changing working dir back to original location"
 cd $ORIGINAL_WORKING_DIRECTORY
+echo "Docker latex maker: (current working dir is $PWD)"
+
+echo "Docker latex maker: Done! Path to produced PDF:"
+echo "Docker latex maker: $(realpath $MAIN_TEX_FILE_DIRECTORY/$FINAL_PDF_NAME)"
