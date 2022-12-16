@@ -6,6 +6,18 @@
 Utilities/LaTex-docker/latex-compile.sh path/to/your_file.tex
 ```
 
+Or, if you feel lazy, you could make a shorter alias in your bashrc like for instance:
+
+```bash
+alias latex='Utilities/LaTex-docker/latex-compile.sh'
+```
+
+which would make usage as simple as
+
+```sh
+latex path/to/your_file.tex
+```
+
 ## Prerequisites
 
 Docker must be running.
