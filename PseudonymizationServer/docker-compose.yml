@@ -1,0 +1,113 @@
+version: '3.1'
+
+services:
+  pseudonymization_server:
+    build:
+      context: "./Code" # Relative path from dockerfile
+      dockerfile: "Dockerfile" # Relative path from context
+    image: pseudonymization_server
+    ports:
+      - "8080:80"
+    environment:
+      DatabaseConfig__Username: admin
+      DatabaseConfig__Password: default
+      DatabaseConfig__ServerAddress: 'db'
+      DatabaseConfig__Port: '5432'
+      DatabaseConfig__DbName: 'PseudonymizationDb'
+    depends_on:
+      - db
+      - kafka-broker1
+      - zookeeper1
+      - kafka-schema-registry
+  db:
+    image: postgres
+    container_name: postgres_database
+    # restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: default
+    volumes:
+      - ./ContainerData/PostgresDb:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: postgres_admin_ui
+    # restart: always
+    ports:
+      - '6432:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@users.domain
+      PGADMIN_DEFAULT_PASSWORD: default
+      PGADMIN_LISTEN_PORT: 5454
+    volumes:
+      - "./ContainerData/PostgresAdminUi:/var/lib/pgadmin" # Note that it needs access for it's default user 5050. The various solutions are as normally chown-ing the folder for 5050, running the container under your user ID, running the container under root, chmod 777-ing the folder, etc.
+
+  # Spin up a small kafka cluster for logging
+  # 1 zookeeper and 1 broker, because that's all that's needed for running at home.
+  # Kafka UI, because it's neat to see what you're doing.
+  # Schema registry, because why not make it a bit more production like if you want to debug something in that direction.
+  zookeeper1:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zookeeper1
+    container_name: zookeeper1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: zookeeper1:2888:3888
+    volumes:
+      - ./ContainerData/Kafka/ZooKeepers/ZooKeeper1/data:/var/lib/zookeeper/data # for Data
+      - ./ContainerData/Kafka/ZooKeepers/ZooKeeper1/logs:/var/lib/zookeeper/log # for transaction logs
+  kafka-broker1:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka-broker1
+    container_name: kafka-broker1
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+      - "9999:9999"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-broker1:19092,EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092,DOCKER://host.docker.internal:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper1:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: ${DOCKER_HOST_IP:-127.0.0.1}
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+    volumes:
+      - ./ContainerData/Kafka/Brokers/Broker1:/var/lib/kafka/data
+    depends_on:
+      - zookeeper1
+  kafka-schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.0
+    hostname: kafka-schema-registry
+    container_name: kafka-schema-registry
+    depends_on:
+      - zookeeper1
+      - kafka-broker1
+    ports:
+      - "9081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://kafka-broker1:19092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "9080:8080"
+    # restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-broker1:19092
+      # - KAFKA_CLUSTERS_0_READONLY=true
+    depends_on:
+      - kafka-broker1
