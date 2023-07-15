@@ -52,9 +52,28 @@ tar -czf result.tar.gz -C "$original_workdir/loong/nested/path" first-folder-i-c
 # END: Creation experiments
 
 # BEGIN: Unpackageing experiments
+# file_name_with_some_path="long/example/path/that/could/be/anywhere/really/result.tar.gz"
+
+tar_file_path="./result.tar.gz"
+tar_file_name=$(basename $tar_file_path) # `result.tar.gz`
+tar_file_directory=$(dirname $tar_file_path) # `.`
+file_name_without_tar_extensions=$(echo $tar_file_name | sed 's|.*/||' | sed 's|\.gz$||' | sed 's|.tar$||' | sed 's|.tgz$||') # `result`
+    # Notes on the sed expressions:
+    # - `sed 's|.*/||'`: matches anything in front of a slash, and a slash, then replaces it with the empty string/nothing.
+    # - `sed 's|\.gz$||'`: matches a literalt dot (`\.`) followed by `gz` and then the end of the line (`$`).
+    # - `sed 's|\.tar$||'`: matches a literalt dot (`\.`) followed by `tar` and then the end of the line (`$`).
+    # - `sed 's|\.tgz$||'`: matches a literalt dot (`\.`) followed by `tgz` and then the end of the line (`$`).
+    # - Order does to a certain degree matter if you want to be sure that you only remove things ant the end of the line.
+    # - Should someone decide that multiline filenames are cool, you will hit a small snag.
+pushd $tar_file_directory
+target_directory_for_extraction="${file_name_without_tar_extensions}"
+mkdir $target_directory_for_extraction
 # Note that if you want to unpack to a directory (as is reasonable?) you have to make it first.
-mkdir output_target
-tar -zxf result.tar.gz --directory output_target
+tar -zxf $tar_file_name --directory $target_directory_for_extraction
+popd
+# Extract to folder named "result", but only works on gnu tar, so linux but not bsd or mac
+# tar -zxf result.tar.gz --one-top-level
+
 # END: Unpackageing experiments
 
 # BEGIN: Cleanup
