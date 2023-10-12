@@ -1,0 +1,339 @@
+version: '3.8'
+
+services:
+  stable-diffusion-webui:
+    image: stable-diffusion-webui
+    container_name: stable-diffusion-webui
+    depends_on:
+      download-models:
+        condition: service_completed_successfully
+    build:
+      context: .
+      dockerfile_inline: |
+        # Based on https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Install-and-Run-on-AMD-GPUs#running-inside-docker
+        # 2023-10-11 Working version of rocm/pytorch image released 2023-09-22 having digest 56ea92985c9445fe524fcb2a6b657994599a5b81b69ed36559c3eb2724cee864
+        # Runs python version 3.9.18
+        FROM rocm/pytorch
+        RUN mkdir /dockerx
+        WORKDIR /dockerx
+        # 2023-10-11 at commit 5ef669de080814067961f28357256e8fe27544f4
+        RUN git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui
+        WORKDIR /dockerx/stable-diffusion-webui
+        RUN python -m pip install --upgrade pip wheel
+        # Workaround for https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/11642
+        RUN python -m pip install --upgrade fastapi==0.90.1
+
+        RUN chown -R 1000:1000 /dockerx
+        USER 1000:1000
+
+        WORKDIR /dockerx/stable-diffusion-webui
+        # Download more source
+        # --exit should terminate after installation according to the docs
+        RUN REQS_FILE='requirements.txt' python launch.py --skip-torch-cuda-test --exit
+
+        # Workaround for https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/11458
+        RUN sed -i'' \
+            's/pytorch_lightning.utilities.distributed/pytorch_lightning.utilities.rank_zero/' \
+            /dockerx/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/ldm/models/diffusion/ddpm.py \
+          && sed -i'' \
+            's/pytorch_lightning.utilities.distributed/pytorch_lightning.utilities.rank_zero/' \
+            /dockerx/stable-diffusion-webui/extensions-builtin/LDSR/sd_hijack_ddpm_v1.py
+
+        # ToDo: Find a way to run the `Downloading: "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors" to /dockerx/stable-diffusion-webui/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors` process at this point instead of startup
+
+        # ENTRYPOINT ["/bin/bash", "-c", "tail -f /dev/null"]
+        # ENTRYPOINT ["/bin/bash", "-c", "REQS_FILE='requirements.txt' python launch.py --precision full --no-half --skip-install --no-download-sd-model --do-not-download-clip --listen --port 8080"]
+    ports:
+      - '8080:8080'
+      - '7860:7860'
+    # tty: true
+    # network_mode: host
+    user: "1000:1000" # echo "$(id -u):$(id -g)"
+    volumes:
+      - './model-data:/model-data:ro'
+      - './model-data/Stable-diffusion:/dockerx/stable-diffusion-webui/models/Stable-diffusion'
+      - './model-data/VAE:/dockerx/stable-diffusion-webui/models/VAE'
+      - './model-data/VAE-approx:/dockerx/stable-diffusion-webui/models/VAE-approx'
+      - './model-data/deepbooru:/dockerx/stable-diffusion-webui/models/deepbooru'
+      - './model-data/karlo:/dockerx/stable-diffusion-webui/models/karlo'
+    working_dir: /dockerx/stable-diffusion-webui
+    devices:
+      - "/dev/kfd"
+      - "/dev/dri"
+    group_add:
+      - "video"
+    ipc: "host"
+    cap_add:
+      - "SYS_PTRACE"
+    security_opt:
+      - "seccomp=unconfined"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd /dockerx/stable-diffusion-webui
+        # Workaround described in https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/13534
+        export HSA_OVERRIDE_GFX_VERSION=11.0.1
+        REQS_FILE="requirements.txt" python launch.py \
+          --loglevel "DEBUG" \
+          --precision full \
+          --no-half \
+          --skip-install \
+          --allow-code \
+          --listen \
+          --port 8080
+        # --no-download-sd-model \
+        # --do-not-download-clip \
+        # --ckpt-dir "/model-data/sd_control_collection" \
+        # --skip-torch-cuda-test
+
+  download-models:
+    image: sd-download-models
+    container_name: sd-download-models
+    build:
+      context: .
+      dockerfile_inline: |
+        # Reuse base docker image from above, no need to drag in mroe dependenices
+        FROM rocm/pytorch
+        RUN apt-get install git-lfs
+    user: "1000:1000" # echo "$(id -u):$(id -g)"
+    volumes:
+      - './:/compose-dir'
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd /compose-dir
+        mkdir -p /compose-dir/model-data
+        if ! [ -f "/compose-dir/model-data/.gitignore" ]
+        then
+          echo "Setting up gitignore in newly created folder"
+          printf '%s\n' \
+          '*' \
+          '!.gitignore' \
+          > /compose-dir/model-data/.gitignore
+        fi
+
+        if ! [ -d "/compose-dir/model-data/sd_control_collection" ]
+        then
+          cd /compose-dir/model-data/
+          git lfs install
+          git clone https://huggingface.co/lllyasviel/sd_control_collection
+        fi
+
+  list-pip-freeze-output:
+    image: rocm/pytorch
+    environment:
+      PIP_FREEZE: |
+        absl-py==1.4.0
+        accelerate==0.23.0
+        addict==2.4.0
+        aenum==3.1.15
+        aiofiles==23.2.1
+        aiohttp==3.8.5
+        aiosignal==1.3.1
+        altair==5.1.2
+        antlr4-python3-runtime==4.9.3
+        anyio==4.0.0
+        apex @ file:///var/lib/jenkins/apex
+        asgiref==3.7.2
+        astunparse==1.6.3
+        async-timeout==4.0.3
+        attrs==23.1.0
+        audioread==3.0.0
+        basicsr==1.4.2
+        beautifulsoup4==4.12.2
+        blendmodes==2023
+        boto3==1.19.12
+        botocore==1.22.12
+        cachetools==5.3.1
+        certifi==2023.7.22
+        cffi==1.15.1
+        charset-normalizer==3.2.0
+        clean-fid==0.1.35
+        click==8.1.7
+        clip @ https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip#sha256=b5842c25da441d6c581b53a5c60e0c2127ebafe0f746f8e15561a006c6c3be6a
+        cmake==3.27.4.1
+        colorama==0.4.6
+        contourpy==1.1.1
+        coremltools==5.0b5
+        cycler==0.12.1
+        Cython==3.0.2
+        decorator==5.1.1
+        deprecation==2.1.0
+        Django==4.2.5
+        einops==0.7.0
+        exceptiongroup==1.1.3
+        execnet==2.0.2
+        expecttest==0.1.3
+        facexlib==0.3.0
+        fastapi==0.90.1
+        ffmpy==0.3.1
+        filelock==3.9.0
+        filterpy==1.4.5
+        flatbuffers==2.0
+        fonttools==4.43.1
+        frozenlist==1.4.0
+        fsspec==2023.9.2
+        ftfy==6.1.1
+        future==0.18.3
+        gdown==4.7.1
+        geojson==2.5.0
+        gfpgan==1.3.8
+        ghstack==0.7.1
+        gitdb==4.0.10
+        GitPython==3.1.37
+        google-auth==2.23.0
+        google-auth-oauthlib==1.0.0
+        gradio==3.41.2
+        gradio_client==0.5.0
+        grpcio==1.58.0
+        h11==0.14.0
+        httpcore==0.18.0
+        httpx==0.25.0
+        huggingface-hub==0.18.0
+        hypothesis==5.35.1
+        idna==3.4
+        image==1.5.33
+        imageio==2.31.3
+        importlib-metadata==6.8.0
+        importlib-resources==6.1.0
+        inflection==0.5.1
+        iniconfig==2.0.0
+        Jinja2==3.1.2
+        jmespath==0.10.0
+        joblib==1.3.2
+        jsonmerge==1.9.2
+        jsonschema==4.19.1
+        jsonschema-specifications==2023.7.1
+        junitparser==2.1.1
+        kiwisolver==1.4.5
+        kornia==0.7.0
+        lark==1.1.7
+        lazy_loader==0.3
+        librosa==0.10.1
+        lightning-utilities==0.9.0
+        lintrunner==0.10.7
+        lit==16.0.6
+        llvmlite==0.41.0
+        lmdb==1.4.1
+        lpips==0.1.4
+        lxml==4.9.3
+        Markdown==3.3.4
+        MarkupSafe==2.1.3
+        matplotlib==3.8.0
+        mkl-fft==1.3.1
+        mkl-random @ file:///tmp/build/80754af9/mkl_random_1626186066731/work
+        mkl-service==2.4.0
+        mpmath==1.3.0
+        msgpack==1.0.5
+        multidict==6.0.4
+        mypy==0.960
+        mypy-extensions==1.0.0
+        networkx==2.8.8
+        numba==0.58.0
+        numpy==1.22.4
+        nvidia-cublas-cu11==11.10.3.66
+        nvidia-cuda-nvrtc-cu11==11.7.99
+        nvidia-cuda-runtime-cu11==11.7.99
+        nvidia-cudnn-cu11==8.5.0.96
+        oauthlib==3.2.2
+        omegaconf==2.3.0
+        open-clip-torch @ https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip#sha256=a594e737394d4463872151a1e84ab5fa502a4f72686943526b663fa939d786b1
+        opencv-python==4.8.1.78
+        opt-einsum==3.3.0
+        optionloop==1.0.7
+        orjson==3.9.8
+        packaging==23.1
+        pandas==2.1.1
+        piexif==1.1.3
+        Pillow==10.0.1
+        platformdirs==3.10.0
+        pluggy==1.3.0
+        pooch==1.7.0
+        protobuf==3.20.0
+        psutil==5.9.5
+        pyasn1==0.5.0
+        pyasn1-modules==0.3.0
+        pycparser==2.21
+        pydantic==1.10.13
+        pydub==0.25.1
+        Pygments==2.12.0
+        pyparsing==3.1.1
+        PySocks==1.7.1
+        pytest==7.4.2
+        pytest-cpp==2.3.0
+        pytest-flakefinder==1.1.0
+        pytest-rerunfailures==12.0
+        pytest-shard==0.1.2
+        pytest-xdist==3.3.1
+        python-dateutil==2.8.2
+        python-multipart==0.0.6
+        pytorch-lightning==2.0.9.post0
+        pytz==2023.3.post1
+        PyWavelets==1.4.1
+        PyYAML @ file:///croot/pyyaml_1670514731622/work
+        realesrgan==0.3.0
+        referencing==0.30.2
+        regex==2023.10.3
+        requests==2.31.0
+        requests-oauthlib==1.3.1
+        resize-right==0.0.2
+        rockset==1.0.3
+        rpds-py==0.10.6
+        rsa==4.9
+        s3transfer==0.5.2
+        safetensors==0.4.0
+        scikit-image==0.19.3
+        scikit-learn==1.3.0
+        scipy==1.6.3
+        semantic-version==2.10.0
+        sentencepiece==0.1.99
+        six @ file:///tmp/build/80754af9/six_1644875935023/work
+        smmap==5.0.1
+        sniffio==1.3.0
+        sortedcontainers==2.4.0
+        soundfile==0.12.1
+        soupsieve==2.5
+        soxr==0.3.6
+        sqlparse==0.4.4
+        starlette==0.23.1
+        sympy==1.12
+        tb-nightly==2.13.0a20230426
+        tensorboard==2.14.0
+        tensorboard-data-server==0.7.1
+        threadpoolctl==3.2.0
+        tifffile==2023.8.30
+        timm==0.9.7
+        tokenizers==0.13.3
+        tomesd==0.1.3
+        tomli==2.0.1
+        toolz==0.12.0
+        torch @ file:///var/lib/jenkins/pytorch/dist/torch-2.1.0a0%2Bgit413b4cd-cp39-cp39-linux_x86_64.whl#sha256=a6e909f6cd59acd86223b6471e2394c45bdadba44cd4c047a5c30600f9e81e89
+        torchdiffeq==0.2.3
+        torchmetrics==1.2.0
+        torchsde==0.2.6
+        torchvision==0.16.0a0+8835737
+        tqdm==4.66.1
+        trampoline==0.1.2
+        transformers==4.30.2
+        triton @ git+https://github.com/ROCmSoftwarePlatform/triton@cd9e4c5db76b2bb0b47d0680d3d4c24523047e7c#subdirectory=python
+        typing_extensions==4.7.1
+        tzdata==2023.3
+        unittest-xml-reporting==3.2.0
+        urllib3==1.26.16
+        uvicorn==0.23.2
+        wcwidth==0.2.8
+        websockets==11.0.3
+        Werkzeug==2.3.7
+        xdoctest==1.1.0
+        yapf==0.40.2
+        yarl==1.9.2
+        zipp==3.16.2
+    command:
+      - /bin/bash
+      - c
+      - |
+        # 2023-10-11 from container
+        echo $$PIP_FREEZE
+        exit
