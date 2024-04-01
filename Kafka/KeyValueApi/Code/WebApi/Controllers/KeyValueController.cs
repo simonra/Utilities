@@ -23,7 +23,7 @@ public class KeyValueController : ControllerBase
     public void SetValue(byte[] key, byte[]? value, string correlationId)
     {
         // Dictionary<string, byte[]> headers, CorrelationId correlationId
-        _kafkaProducerService.Produce(key, value);
+        // _kafkaProducerService.Produce(key, value);
         throw new NotImplementedException();
     }
 
@@ -32,9 +32,10 @@ public class KeyValueController : ControllerBase
     {
         if(string.IsNullOrEmpty(correlationId)) correlationId = System.Guid.NewGuid().ToString("D");
         var messageValue = _keyValueStateService.GetValue(key);
-        var ApiRetrieveResult = new ApiRetrieveResult {
-            ValueB64 = messageValue,
-            CorrelationId = correlationId,
-        };
+        // var ApiRetrieveResult = new ApiRetrieveResult {
+        //     ValueB64 = messageValue,
+        //     CorrelationId = correlationId,
+        // };
+        throw new NotImplementedException();
     }
 }

@@ -59,7 +59,7 @@ public class KafkaProducerService
         var message = new Message<byte[], byte[]>
         {
             Key = key,
-            Value = value
+            Value = value ?? []
         };
         foreach(var header in headers)
         {
@@ -77,7 +77,7 @@ public class KafkaProducerService
         return true;
     }
 
-    private void OnProcessExit(object sender, EventArgs e)
+    private void OnProcessExit(object? sender, EventArgs e)
     {
         // Because finalizers are not necessarily called on program exit in newer dotnet:
         // https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/finalizers

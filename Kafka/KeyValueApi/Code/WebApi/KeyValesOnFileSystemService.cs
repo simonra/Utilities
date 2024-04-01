@@ -11,9 +11,9 @@ public class KeyValesOnFileSystemService
         _logger = logger;
         var storageRootEnvVarName = "KEY_VALUE_STORE_ROOT_DIR";
         var storageRoot = Environment.GetEnvironmentVariable(storageRootEnvVarName);
-        if(string.IsNullOrWhiteSpace(result))
+        if(string.IsNullOrWhiteSpace(storageRoot))
         {
-            if(string.IsNullOrEmpty(result))
+            if(string.IsNullOrEmpty(storageRoot))
             {
                 _logger.LogWarning($"Failed to read content of environment variable \"{storageRootEnvVarName}\", got null/empty string");
             }
@@ -21,6 +21,7 @@ public class KeyValesOnFileSystemService
             {
                 _logger.LogWarning($"Failed to read proper content of environment variable \"{storageRootEnvVarName}\", contained only whitespaces");
             }
+            storageRoot = string.Empty; // Remove possibility of null
         }
         _storageRootDirectoryPath = storageRoot;
     }
@@ -32,10 +33,12 @@ public class KeyValesOnFileSystemService
         // So same as with mkdir -p, call it just in case instead of bloating path with if()'s.
         Directory.CreateDirectory(directory); // Create if not exists
         string[] preExistingFiles = Directory.GetFiles(directory);
+        var keyPath = string.Empty;
+        var valuePath = string.Empty;
         if(preExistingFiles.Length == 0)
         {
-            var keyPath = $"{directory}/0.key";
-            var valuePath = $"{directory}/0.value";
+            keyPath = $"{directory}/0.key";
+            valuePath = $"{directory}/0.value";
             File.WriteAllBytes(keyPath, key);
             File.WriteAllBytes(valuePath, value);
             return true;
@@ -55,22 +58,22 @@ public class KeyValesOnFileSystemService
         var keyFileNames = keyFiles
             .Select(fullPath => Path.GetFileNameWithoutExtension(fullPath))
             .ToArray();
-        var fileNumbers = new List<uint>();
+        var fileNumbers = new List<int>();
         foreach(var keyFileName in keyFileNames)
         {
-            if(uint.TryParse(keyFileName, out var baseName))
+            if(int.TryParse(keyFileName, out var baseName) && 0 <= baseName)
             {
                 fileNumbers.Add(baseName);
             }
         }
         fileNumbers.Sort();
 
-        var nextAvailableBaseName = fileNumbers.Length;
+        var nextAvailableBaseName = fileNumbers.Count;
 
-        if(fileNumbers[^1] != fileNumbers.Length - 1)
+        if(fileNumbers[^1] != fileNumbers.Count - 1)
         {
-            // Here there be gaps. Unless there are duplicates. But that is hard to imagine (I don't know any file system allowing for duplicate names). Or someone snuck in a weird value that is parsable as an uint. At which point, shrek it, the retrieval will end up finding this anyways.
-            for(uint i = 0; i < fileNumbers.Length; i++)
+            // Here there be gaps. Unless there are duplicates. But that is hard to imagine (I don't know any file system allowing for duplicate names). Or someone snuck in a weird value that is parsable as an int. At which point, shrek it, the retrieval will end up finding this anyways.
+            for(int i = 0; i < fileNumbers.Count; i++)
             {
                 if(fileNumbers[i] != i)
                 {
@@ -79,8 +82,8 @@ public class KeyValesOnFileSystemService
                 }
             }
         }
-        var keyPath = $"{directory}/{nextAvailableBaseName}.key";
-        var valuePath = $"{directory}/{nextAvailableBaseName}.value";
+        keyPath = $"{directory}/{nextAvailableBaseName}.key";
+        valuePath = $"{directory}/{nextAvailableBaseName}.value";
         File.WriteAllBytes(keyPath, key);
         File.WriteAllBytes(valuePath, value);
         return true;
@@ -155,6 +158,6 @@ public class KeyValesOnFileSystemService
         var keyHashHex = Convert.ToHexString(keyHash).ToLowerInvariant();
         var firstLevel = keyHashHex.Substring(0, 3);
         var secondLevel = keyHashHex.Substring(3, 3);
-        return $"{KEY_VALUE_STORE_ROOT_DIR}/{firstLevel}/{secondLevel}/{keyHashHex}";
+        return $"{_storageRootDirectoryPath}/{firstLevel}/{secondLevel}/{keyHashHex}";
     }
 }
