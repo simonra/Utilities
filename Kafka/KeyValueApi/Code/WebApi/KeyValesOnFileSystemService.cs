@@ -69,6 +69,7 @@ public class KeyValesOnFileSystemService
 
         if(fileNumbers[^1] != fileNumbers.Length - 1)
         {
+            // Here there be gaps. Unless there are duplicates. But that is hard to imagine (I don't know any file system allowing for duplicate names). Or someone snuck in a weird value that is parsable as an uint. At which point, shrek it, the retrieval will end up finding this anyways.
             for(uint i = 0; i < fileNumbers.Length; i++)
             {
                 if(fileNumbers[i] != i)
