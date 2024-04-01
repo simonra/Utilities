@@ -112,7 +112,7 @@ public class KeyValesOnFileSystemService
                 else
                 {
                     _logger.LogWarning($"On retrieve found matching key at path {keyFile}, but no corresponding file/path for the value as expected at {associatedValueFile}. Checking other keys jut to be sure, but something truly weird is going on.");
-                    // But it matters not, if we for some inexplicable reason have a duplicate key, we will find the first proper match.
+                    // But it matters not, if we for some inexplicable reason have a duplicate key, we will just find and use the first proper match.
                     // If we on the other hand don't have an actual match at all, it will fall through to the "no result" below.
                 }
             }
