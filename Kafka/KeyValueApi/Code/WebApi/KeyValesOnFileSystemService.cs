@@ -67,12 +67,15 @@ public class KeyValesOnFileSystemService
 
         var nextAvailableBaseName = fileNumbers.Length;
 
-        for(uint i = 0; i < fileNumbers.Length; i++)
+        if(fileNumbers[^1] != fileNumbers.Length - 1)
         {
-            if(fileNumbers[i] != i)
+            for(uint i = 0; i < fileNumbers.Length; i++)
             {
-                nextAvailableBaseName = i;
-                break;
+                if(fileNumbers[i] != i)
+                {
+                    nextAvailableBaseName = i;
+                    break;
+                }
             }
         }
         var keyPath = $"{directory}/{nextAvailableBaseName}.key";
@@ -112,6 +115,36 @@ public class KeyValesOnFileSystemService
         }
         value = [];
         return false;
+    }
+
+    public bool Delete(byte[] key)
+    {
+        var directory = GetDirectoryForKey(key);
+        if(!Directory.Exists(directory))
+        {
+            _logger.LogWarning($"Someone tried to delete {directory} which doesn't exist, weird");
+            return true;
+        }
+        string[] preExistingFiles = Directory.GetFiles(directory);
+        var keyFiles = preExistingFiles.Where(fileName => fileName.EndsWith(".key")).ToArray();
+        foreach(var keyFile in keyFiles)
+        {
+            if(File.ReadAllBytes(keyFile).SequenceEqual(key))
+            {
+                var associatedValueFile = keyFile[0..^3] + "value";
+                if(File.Exists(associatedValueFile))
+                {
+                    File.Delete(associatedValueFile);
+                }
+                else
+                {
+                    _logger.LogWarning($"On delete request found matching key at path {keyFile}, but no corresponding file/path for the value as expected at {associatedValueFile}.");
+                }
+                File.Delete(keyFile);
+                return true;
+            }
+        }
+        return true;
     }
 
     private string GetDirectoryForKey(byte[] key)
