@@ -54,15 +54,15 @@ public class CryptoService
 
         using var ms = new MemoryStream();
         using var cryptoStream = new CryptoStream(ms, encryptor, CryptoStreamMode.Write);
-        cryptoStream.Write(data, 0, data.Length);
+        cryptoStream.Write(unencryptedInput, 0, unencryptedInput.Length);
         cryptoStream.FlushFinalBlock();
 
-        encrypted = ms.ToArray();
+        var encrypted = ms.ToArray();
 
         // This could maybe be avoided by starting with writing the IV to the ms MemoryStream right after creating it.
         // But, it's late, and I don't have time to experiment with it now or make up opinions about future behaviour of CryptoStream.
         // (If it doesn't overwrite the stream now but only appends, will it continue to do so forever?)
-        encryptedWithPrependedIv = new byte[randomPerMessageIv.Length + encrypted.Length];
+        var encryptedWithPrependedIv = new byte[randomPerMessageIv.Length + encrypted.Length];
         randomPerMessageIv.CopyTo(encryptedWithPrependedIv, 0);
         encrypted.CopyTo(encryptedWithPrependedIv, randomPerMessageIv.Length);
         return encryptedWithPrependedIv;
@@ -87,7 +87,7 @@ public class CryptoService
 
         using var ms = new MemoryStream();
         using var cryptoStream = new CryptoStream(ms, decryptor, CryptoStreamMode.Write);
-        cryptoStream.Write(data, 0, data.Length);
+        cryptoStream.Write(encryptedMessage, 0, encryptedMessage.Length);
         cryptoStream.FlushFinalBlock();
 
         return ms.ToArray();
