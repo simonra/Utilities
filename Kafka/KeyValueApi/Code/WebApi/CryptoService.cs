@@ -77,8 +77,7 @@ public class CryptoService
 
         // Range indices are fun! https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/ranges-indexes
         var aesIv = encryptedInput[0..AesBlockSizeBytes];
-        var firstMessageByte = AesBlockSizeBytes + 1;
-        var encryptedMessage = encryptedInput[firstMessageByte..];
+        var encryptedMessage = encryptedInput[AesBlockSizeBytes..];
 
         using Aes aesAlg = Aes.Create();
         aesAlg.Key = _aesKey;
