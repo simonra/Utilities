@@ -139,7 +139,15 @@ public class KafkaConsumerService : BackgroundService
 
     private async Task<bool> TopicKeyHasSchema(KafkaTopic topic, CancellationToken stoppingToken)
     {
-        // curl -X GET http://localhost:8081/subjects/Kafka-value/versions
+        // curl -X GET http://localhost:8081/subjects/topicname-key/versions
+        // If the above doesn't work, screw it, just go with
+        // curl -X GET http://localhost:8081/subjects
+        // And grep for the expected name in the resulting array (should look like `["subject-1","subject-2",...,"last-subject"]`).
+        // The proper
+        // curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\": \"string\"}"}' http://localhost:8081/subjects/topicname-key
+        // is too much work to stuff into the dotnet http client, and the answer is also more involved to parse than what I can be bothered with right now.
+
+
         var schemaRegistryAddress = GetSchemaRegistryAddress();
         var keySchemaAddress = $"{schemaRegistryAddress}/subjects/{topic}-key/versions";
         try
