@@ -1,7 +1,5 @@
 using System.Security.Cryptography;
 
-using static EnvVarNames;
-
 // Mostly based on https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.aes?view=net-8.0
 // Don't DI it in this project, because there is almost no savings in having a single instance (only real state is the aes key), and it allows dynamically referring to it's members.
 // If you'd DI-it with different implementations, you'd run into issues where you simultaneously want the noop version and this version at the same time, one for the topics and the other for disk.

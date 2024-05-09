@@ -1,4 +1,3 @@
-using static EnvVarNames;
 public class KeyValeStateOnFileSystemService : IKeyValueStateService
 {
     private readonly ILogger<KeyValeStateOnFileSystemService> _logger;

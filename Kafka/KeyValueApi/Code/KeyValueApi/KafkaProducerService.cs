@@ -1,5 +1,3 @@
-using static EnvVarNames;
-
 using Confluent.Kafka;
 
 public class KafkaProducerService

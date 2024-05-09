@@ -1,6 +1,6 @@
+global using static EnvVarNames;
 using System.Net;
 using System.Text;
-using static EnvVarNames;
 
 var builder = WebApplication.CreateBuilder(args);
 

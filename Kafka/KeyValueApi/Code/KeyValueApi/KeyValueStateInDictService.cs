@@ -1,5 +1,3 @@
-using static EnvVarNames;
-
 public class KeyValueStateInDictService : IKeyValueStateService
 {
     private readonly ILogger<KeyValueStateInDictService> _logger;
