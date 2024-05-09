@@ -1,36 +1,33 @@
-using System;
-using System.IO;
 using System.Security.Cryptography;
 
+using static EnvVarNames;
+
 // Mostly based on https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.aes?view=net-8.0
+// Don't DI it in this project, because there is almost no savings in having a single instance (only real state is the aes key), and it allows dynamically referring to it's members.
+// If you'd DI-it with different implementations, you'd run into issues where you simultaneously want the noop version and this version at the same time, one for the topics and the other for disk.
 public class CryptoService
 {
-    private readonly ILogger<CryptoService> _logger;
-
     // At this point (using specific implementations like this is deprecated now) 128 bits (16 bytes) is the only valid size in .Net
     // https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.aesmanaged.blocksize?view=net-8.0#remarks
     // Seems to be the general size anyways: https://crypto.stackexchange.com/a/50786
     // But, if this is to survive over some time, specify it explicitly so that stuff doesn't randomly stop working.
     private const int AesBlockSizeBytes = 16;
     private readonly byte[] _aesKey;
-    public const string aesKeyEnvVarName = "AES_KEY";
 
-    public CryptoService(ILogger<CryptoService> logger)
+    public CryptoService()
     {
-        _logger = logger;
-
         // To generate 256 bit/32 byte hex string securely enough:
         // `openssl rand -hex 32`
         // Or for rapid proof of concepting on machine without openssl this js also works:
         // `Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');`
-        var aesKeyHexString = Environment.GetEnvironmentVariable(aesKeyEnvVarName);
+        var aesKeyHexString = Environment.GetEnvironmentVariable(KV_API_AES_KEY);
         if(aesKeyHexString?.Length != 64)
         {
-            throw new ArgumentException(message: $"Env variable {aesKeyEnvVarName} must be hex representation of 256 bits/32 bytes, that is 64 characters long, the supplied value was not", paramName: aesKeyEnvVarName);
+            throw new InvalidOperationException(message: $"Env variable {KV_API_AES_KEY} must be hex representation of 256 bits/32 bytes, that is 64 characters long, the supplied value was not");
         }
         if(!aesKeyHexString.All(c => "0123456789abcdefABCDEF".Contains(c)))
         {
-            throw new ArgumentException(message: $"Env variable {aesKeyEnvVarName} must be hex value, the supplied variable contained values that are not legal hex (0-9a-fA-F)", paramName: aesKeyEnvVarName);
+            throw new InvalidOperationException(message: $"Env variable {KV_API_AES_KEY} must be hex value, the supplied variable contained values that are not legal hex (0-9a-fA-F)");
         }
         _aesKey = Convert.FromHexString(aesKeyHexString);
     }
@@ -39,7 +36,7 @@ public class CryptoService
     {
         if(unencryptedInput.Length <= 0)
         {
-            throw new ArgumentNullException(message: "Unencrypted input has to be supplied", paramName: "unencryptedInput");
+            throw new ArgumentException(message: "Unencrypted input has to be supplied", paramName: nameof(unencryptedInput));
         }
         using Aes aesAlg = Aes.Create();
         var randomPerMessageIv = GenerateKnownSizeAesIv();
@@ -72,7 +69,7 @@ public class CryptoService
     {
         if(encryptedInput.Length <= AesBlockSizeBytes + 1)
         {
-            throw new ArgumentNullException(message: "Encrypted input must be at least the length of the prepended IV and an additional encrypted byte", paramName: "encryptedInput");
+            throw new ArgumentNullException(message: "Encrypted input must be at least the length of the prepended IV and an additional encrypted byte", paramName: nameof(encryptedInput));
         }
 
         // Range indices are fun! https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/ranges-indexes
@@ -92,7 +89,7 @@ public class CryptoService
         return ms.ToArray();
     }
 
-    private byte[] GenerateKnownSizeAesIv()
+    private static byte[] GenerateKnownSizeAesIv()
     {
         return System.Security.Cryptography.RandomNumberGenerator.GetBytes(AesBlockSizeBytes);
     }

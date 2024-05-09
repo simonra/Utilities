@@ -1,18 +1,33 @@
-using System;
+using static EnvVarNames;
 
 using Confluent.Kafka;
 
 public class KafkaConsumerService : BackgroundService
 {
     private readonly ILogger<KafkaConsumerService> _logger;
-    private readonly KeyValueStateService _keyValueStateService;
+    private readonly IKeyValueStateService _keyValueStateService;
     private readonly EnvHelpers _envHelpers;
+    private readonly HttpClient _httpClient;
+    private readonly Func<byte[], byte[]> _decrypt;
+    private readonly Func<string, string> _decryptHeaderKey;
 
-    public KafkaConsumerService(ILogger<KafkaConsumerService> logger, KeyValueStateService keyValueStateService, EnvHelpers envHelpers)
+    public KafkaConsumerService(ILogger<KafkaConsumerService> logger, IKeyValueStateService keyValueStateService, EnvHelpers envHelpers, HttpClient httpClient)
     {
         _logger = logger;
         _keyValueStateService = keyValueStateService;
         _envHelpers = envHelpers;
+        _httpClient = httpClient;
+        if (_envHelpers.GetEnvironmentVariableContent(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
+        {
+            var cryptoService = new CryptoService();
+            _decrypt = cryptoService.Decrypt;
+            _decryptHeaderKey = delegate(string input) { return System.Text.Encoding.UTF8.GetString(cryptoService.Decrypt(Convert.FromBase64String(input))); };
+        }
+        else
+        {
+            _decrypt = delegate(byte[] input) { return input; };
+            _decryptHeaderKey = delegate(string input) { return input; };
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,13 +49,13 @@ public class KafkaConsumerService : BackgroundService
                 return offsets;
             })
             .Build();
-        var topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent("KAFKA_KEY_VALUE_TOPIC") };
+        var topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
         consumer.Subscribe(topic.Value);
 
         // Don't check if topic has schemas defined for every invocation, jut do it once and use the appropriate handling method.
         // Note for future me: array[x..] is new more efficient dotnet syntax for skip first x and take rest of array
         Func<byte[], byte[]> handleSchemaMagicBytesInKey =
-            TopicKeyHasSchema(topic)
+            await TopicKeyHasSchema(topic, stoppingToken)
                 ? delegate(byte[] input) { return input[5..]; }
                 : delegate(byte[] input) { return input; };
         // Func<byte[], byte[]> handleSchemaMagicBytesInKey =
@@ -48,7 +63,7 @@ public class KafkaConsumerService : BackgroundService
         //         ? (byte[] input) => input[5..]
         //         : (byte[] input) => input;
         Func<byte[], byte[]> handleSchemaMagicBytesInValue =
-            TopicKeyHasSchema(topic)
+            await TopicValueHasSchema(topic, stoppingToken)
                 ? delegate(byte[] input) { return input[5..]; }
                 : delegate(byte[] input) { return input; };
         try
@@ -67,14 +82,14 @@ public class KafkaConsumerService : BackgroundService
                     if(result.Message.Value == null)
                     {
                         // ToDo: handle tombstone, delete from dict
-                        var key = handleSchemaMagicBytesInKey(result.Message.Key);
-                        _keyValueStateService.RemoveKey(key);
+                        var key = _decrypt(handleSchemaMagicBytesInKey(result.Message.Key));
+                        _keyValueStateService.Remove(key);
                     }
                     else
                     {
-                        var key = handleSchemaMagicBytesInKey(result.Message.Key);
-                        var value = handleSchemaMagicBytesInValue(result.Message.Value);
-                        _keyValueStateService.AddKeyValuePair(key, value);
+                        var key = _decrypt(handleSchemaMagicBytesInKey(result.Message.Key));
+                        var value = _decrypt(handleSchemaMagicBytesInValue(result.Message.Value));
+                        _keyValueStateService.Store(key, value);
                     }
                 }
             }
@@ -93,23 +108,13 @@ public class KafkaConsumerService : BackgroundService
 
     private ConsumerConfig GetConsumerConfig()
     {
-        //   KAFKA_BOOTSTRAP_SERVERS: "172.80.80.11:9092,172.80.80.12:9092,172.80.80.13:9092"
-        //   KAFKA_TOPIC: "t.key-value-api"
-        //   KAFKA_CONSUMER_GROUP: "cg.key-value-api.0"
-        //   KAFKA_TRUST_STORE_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
-        //   KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION: "/kafka/secrets/key-value-api.lokalmaskin.crt"
-        //   KAFKA_CLIENT_KEY_PEM_LOCATION: "/kafka/secrets/key-value-api.lokalmaskin.key"
-        //   KAFKA_CLIENT_KEY_PASSWORD_LOCATION: "/kafka/secrets/key-value-api.lokalmaskin.password.txt"
-        var bootstrapServers = _envHelpers.GetEnvironmentVariableContent("KAFKA_BOOTSTRAP_SERVERS");
-        var consumerGroup = _envHelpers.GetEnvironmentVariableContent("KAFKA_CONSUMER_GROUP");
+        var bootstrapServers = _envHelpers.GetEnvironmentVariableContent(KAFKA_BOOTSTRAP_SERVERS);
+        var consumerGroup = _envHelpers.GetEnvironmentVariableContent(KAFKA_CONSUMER_GROUP);
 
-        // var sslKeystoreLocation = Environment.GetEnvironmentVariable("TODO");
-        // var sslKeystorePasswordLocation = Environment.GetEnvironmentVariable("TODO");
-
-        var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_TRUST_STORE_PEM_LOCATION");
-        var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION");
-        var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_CLIENT_KEY_PEM_LOCATION");
-        var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_CLIENT_KEY_PASSWORD_LOCATION");
+        var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_TRUST_STORE_PEM_LOCATION);
+        var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
+        var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PEM_LOCATION);
+        var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
 
         var consumerConfig = new ConsumerConfig
         {
@@ -119,12 +124,6 @@ public class KafkaConsumerService : BackgroundService
             // Set the security protocol to use SSL and certificate based authentication
             SecurityProtocol = SecurityProtocol.Ssl,
 
-            // Ssl settings
-            // Keystore files are used because Schema Registry client does not support PEM files
-            // SslKeystoreLocation = $"{RootFolder}/certificates/example-consumer.p12",
-            // SslKeystorePassword = "notsecret",
-            // EnableSslCertificateVerification = false,
-            // SslCaLocation = $"{RootFolder}/certificates/trustedCa.pem",
             SslCaPem = sslCaPem,
             SslCertificatePem = sslCertificatePem,
             SslKeyPem = sslKeyPem,
@@ -140,14 +139,53 @@ public class KafkaConsumerService : BackgroundService
         return consumerConfig;
     }
 
-    private bool TopicKeyHasSchema(KafkaTopic topic)
+    private async Task<bool> TopicKeyHasSchema(KafkaTopic topic, CancellationToken stoppingToken)
     {
-        throw new NotImplementedException();
+        // curl -X GET http://localhost:8081/subjects/Kafka-value/versions
+        var schemaRegistryAddress = GetSchemaRegistryAddress();
+        var keySchemaAddress = $"{schemaRegistryAddress}/subjects/{topic}-key/versions";
+        try
+        {
+            using HttpResponseMessage response = await _httpClient.GetAsync(keySchemaAddress,stoppingToken);
+            if(response.IsSuccessStatusCode && response.Content.ReadAsStringAsync(stoppingToken).Result.Length > 0)
+            {
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Got exception while checking if topic {topic} has schema by retrieving {keySchemaAddress}");
+        }
+        return false;
     }
 
-    private bool TopicValueHasSchema(KafkaTopic topic)
+    private async Task<bool> TopicValueHasSchema(KafkaTopic topic, CancellationToken stoppingToken)
     {
-        throw new NotImplementedException();
+        var schemaRegistryAddress = GetSchemaRegistryAddress();
+        var valueSchemaAddress = $"{schemaRegistryAddress}/subjects/{topic}-value/versions";
+        try
+        {
+            using HttpResponseMessage response = await _httpClient.GetAsync(valueSchemaAddress,stoppingToken);
+            if(response.IsSuccessStatusCode && response.Content.ReadAsStringAsync(stoppingToken).Result.Length > 0)
+            {
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Got exception while checking if topic {topic} has schema by retrieving {valueSchemaAddress}");
+        }
+        return false;
+    }
+
+    private string GetSchemaRegistryAddress()
+    {
+        var schemaRegistryAddress = _envHelpers.GetEnvironmentVariableContent("KAFKA_SCHEMA_REGISTRY_ADDRESS");
+        if(!schemaRegistryAddress.StartsWith("http"))
+        {
+            _logger.LogWarning($"Schema registry address found in env variable \"KAFKA_SCHEMA_REGISTRY_ADDRESS\" does not start with \"http\"/specify the protocol. It's value is \"{schemaRegistryAddress}\".");
+        }
+        return schemaRegistryAddress;
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)

@@ -10,9 +10,9 @@ public class KeyValueController : ControllerBase
 {
     private readonly ILogger<KeyValueController> _logger;
     private readonly KafkaProducerService _kafkaProducerService;
-    private readonly KeyValueStateService _keyValueStateService;
+    private readonly IKeyValueStateService _keyValueStateService;
 
-    public KeyValueController(ILogger<KeyValueController> logger, KafkaProducerService kafkaProducerService, KeyValueStateService keyValueStateService)
+    public KeyValueController(ILogger<KeyValueController> logger, KafkaProducerService kafkaProducerService, IKeyValueStateService keyValueStateService)
     {
         _logger = logger;
         _kafkaProducerService = kafkaProducerService;
@@ -28,14 +28,49 @@ public class KeyValueController : ControllerBase
     }
 
     [HttpPost]
-    public ApiRetrieveResult RetrieveValue(byte[] key, string? correlationId)
+    public IResult RetrieveValue(byte[] key, string? correlationId)
     {
-        if(string.IsNullOrEmpty(correlationId)) correlationId = System.Guid.NewGuid().ToString("D");
-        var messageValue = _keyValueStateService.GetValue(key);
-        // var ApiRetrieveResult = new ApiRetrieveResult {
-        //     ValueB64 = messageValue,
+        // if(string.IsNullOrEmpty(correlationId)) correlationId = System.Guid.NewGuid().ToString("D");
+        // var valueIsFound = _keyValueStateService.TryRetrieve(key, out byte[] valueRaw);
+        // // if(!valueIsFound)
+        // // {
+        // //     return Results.NoContent();
+        // // }
+        // var result = Results.Bytes(valueRaw, );
+        // // Results.
+        // return valueRaw;
+        // var valueEncoded = Convert.ToBase64String(valueRaw);
+        // return new ApiRetrieveResult
+        // {
         //     CorrelationId = correlationId,
+        //     ValueB64 = valueEncoded,
+        //     KafkaEventMetadata = new KafkaEventMetadata { Topic = }
         // };
+
+        // // var ApiRetrieveResult = new ApiRetrieveResult {
+        // //     ValueB64 = messageValue,
+        // //     CorrelationId = correlationId,
+        // // };
         throw new NotImplementedException();
     }
+
+    // [HttpPost]
+    // public ApiRetrieveResult RetrieveValue(byte[] key, string? correlationId)
+    // {
+    //     if(string.IsNullOrEmpty(correlationId)) correlationId = System.Guid.NewGuid().ToString("D");
+    //     var valueIsFound = _keyValueStateService.TryRetrieve(key, out byte[] valueRaw);
+    //     var valueEncoded = Convert.ToBase64String(valueRaw);
+    //     return new ApiRetrieveResult
+    //     {
+    //         CorrelationId = correlationId,
+    //         ValueB64 = valueEncoded,
+    //         KafkaEventMetadata = new KafkaEventMetadata { Topic = }
+    //     };
+
+    //     // var ApiRetrieveResult = new ApiRetrieveResult {
+    //     //     ValueB64 = messageValue,
+    //     //     CorrelationId = correlationId,
+    //     // };
+    //     throw new NotImplementedException();
+    // }
 }

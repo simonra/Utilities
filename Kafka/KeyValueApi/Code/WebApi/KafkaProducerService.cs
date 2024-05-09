@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using static EnvVarNames;
 
 using Confluent.Kafka;
 
@@ -7,27 +6,40 @@ public class KafkaProducerService
 {
     private readonly ILogger<KafkaConsumerService> _logger;
     private readonly EnvHelpers _envHelpers;
-    private IProducer<byte[], byte[]> Producer;
+    private readonly IProducer<byte[], byte[]> _producer;
     private readonly KafkaTopic _topic;
+    private readonly Func<byte[], byte[]> _encrypt;
+    private readonly Func<string, string> _encryptHeaderKey;
 
     public KafkaProducerService(ILogger<KafkaConsumerService> logger, EnvHelpers envHelpers)
     {
         _logger = logger;
         _envHelpers = envHelpers;
+        if (_envHelpers.GetEnvironmentVariableContent(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
+        {
+            var cryptoService = new CryptoService();
+            _encrypt = cryptoService.Encrypt;
+            _encryptHeaderKey = delegate(string input) { return Convert.ToBase64String(cryptoService.Encrypt(System.Text.Encoding.UTF8.GetBytes(input))); };
+        }
+        else
+        {
+            _encrypt = delegate(byte[] input) { return input; };
+            _encryptHeaderKey = delegate(string input) { return input; };
+        }
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         var config = GetProducerConfig();
-        Producer = new ProducerBuilder<byte[], byte[]>(config).Build();
-        _topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent("KAFKA_KEY_VALUE_TOPIC") };
+        _producer = new ProducerBuilder<byte[], byte[]>(config).Build();
+        _topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
     }
 
     private ProducerConfig GetProducerConfig()
     {
-        var bootstrapServers = _envHelpers.GetEnvironmentVariableContent("KAFKA_BOOTSTRAP_SERVERS");
+        var bootstrapServers = _envHelpers.GetEnvironmentVariableContent(KAFKA_BOOTSTRAP_SERVERS);
 
-        var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_TRUST_STORE_PEM_LOCATION");
-        var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION");
-        var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_CLIENT_KEY_PEM_LOCATION");
-        var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText("KAFKA_CLIENT_KEY_PASSWORD_LOCATION");
+        var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_TRUST_STORE_PEM_LOCATION);
+        var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
+        var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PEM_LOCATION);
+        var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
 
         var producerConfig = new ProducerConfig()
         {
@@ -58,16 +70,16 @@ public class KafkaProducerService
         _logger.LogInformation($"Producing message with correlation ID {correlationId.Value}");
         var message = new Message<byte[], byte[]>
         {
-            Key = key,
-            Value = value ?? []
+            Key = _encrypt(key),
+            Value = _encrypt(value ?? [])
         };
         foreach(var header in headers)
         {
-            message.Headers.Add(header.Key, header.Value);
+            message.Headers.Add(_encryptHeaderKey(header.Key), _encrypt(header.Value));
         }
         try
         {
-            Producer.Produce(_topic.Value, message);
+            _producer.Produce(_topic.Value, message);
         }
         catch(Exception ex)
         {
@@ -86,7 +98,7 @@ public class KafkaProducerService
         _logger.LogInformation("Kafka producer process exit event triggered.");
         try
         {
-            Producer.Flush();
+            _producer.Flush();
         }
         catch(Exception ex)
         {
@@ -99,7 +111,7 @@ public class KafkaProducerService
         _logger.LogInformation("Kafka producer finalizer called.");
         try
         {
-            Producer.Flush();
+            _producer.Flush();
         }
         catch(Exception ex)
         {

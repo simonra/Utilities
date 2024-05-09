@@ -1,15 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-public class KeyValesOnFileSystemService
+using static EnvVarNames;
+public class KeyValeStateOnFileSystemService : IKeyValueStateService
 {
-    private readonly ILogger<KeyValesOnFileSystemService> _logger;
+    private readonly ILogger<KeyValeStateOnFileSystemService> _logger;
     private readonly string _storageRootDirectoryPath;
-    public KeyValesOnFileSystemService(ILogger<KeyValesOnFileSystemService> logger)
+    private readonly Func<byte[], byte[]> _encrypt;
+    private readonly Func<byte[], byte[]> _decrypt;
+    public KeyValeStateOnFileSystemService(ILogger<KeyValeStateOnFileSystemService> logger)
     {
         _logger = logger;
-        var storageRootEnvVarName = "KEY_VALUE_STORE_ROOT_DIR";
+        var storageRootEnvVarName = KEY_VALUE_STORE_ROOT_DIR;
         var storageRoot = Environment.GetEnvironmentVariable(storageRootEnvVarName);
         if(string.IsNullOrWhiteSpace(storageRoot))
         {
@@ -21,13 +20,26 @@ public class KeyValesOnFileSystemService
             {
                 _logger.LogWarning($"Failed to read proper content of environment variable \"{storageRootEnvVarName}\", contained only whitespaces");
             }
-            storageRoot = string.Empty; // Remove possibility of null
+            storageRoot = "."; // Remove possibility of null, using . further reduces chances of doing weird stuff at root of file system
         }
         _storageRootDirectoryPath = storageRoot;
+        if (Environment.GetEnvironmentVariable(KV_API_ENCRYPT_DATA_IN_STATE_STORAGE) == "true")
+        {
+            var cryptoService = new CryptoService();
+            _encrypt = cryptoService.Encrypt;
+            _decrypt = cryptoService.Decrypt;
+        }
+        else
+        {
+            _encrypt = delegate(byte[] input) { return input; };
+            _decrypt = delegate(byte[] input) { return input; };
+        }
     }
 
-    public bool Store(byte[] key, byte[] value)
+    public bool Store(byte[] inputKey, byte[] inputValue)
     {
+        var key = _encrypt(inputKey);
+        var value = _encrypt(inputValue);
         var directory = GetDirectoryForKey(key);
         // For future me: Directory.CreateDirectory() handles the case where it already exists.
         // So same as with mkdir -p, call it just in case instead of bloating path with if()'s.
@@ -89,8 +101,9 @@ public class KeyValesOnFileSystemService
         return true;
     }
 
-    public bool TryRetrieve(byte[] key, out byte[] value)
+    public bool TryRetrieve(byte[] inputKey, out byte[] value)
     {
+        var key = _encrypt(inputKey);
         var directory = GetDirectoryForKey(key);
         if(!Directory.Exists(directory))
         {
@@ -106,7 +119,7 @@ public class KeyValesOnFileSystemService
                 var associatedValueFile = keyFile[0..^3] + "value";
                 if(File.Exists(associatedValueFile))
                 {
-                    value = File.ReadAllBytes(associatedValueFile);
+                    value = _decrypt(File.ReadAllBytes(associatedValueFile));
                     return true;
                 }
                 else
@@ -121,8 +134,9 @@ public class KeyValesOnFileSystemService
         return false;
     }
 
-    public bool Delete(byte[] key)
+    public bool Remove(byte[] inputKey)
     {
+        var key = _encrypt(inputKey);
         var directory = GetDirectoryForKey(key);
         if(!Directory.Exists(directory))
         {
