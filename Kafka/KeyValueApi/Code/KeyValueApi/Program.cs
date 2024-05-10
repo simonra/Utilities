@@ -1,4 +1,5 @@
 global using static EnvVarNames;
+
 using System.Net;
 using System.Text;
 
@@ -12,6 +13,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
+builder.Services.AddSingleton<EnvHelpers>();
+builder.Services.AddSingleton<KafkaAdminClient>();
 if(Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_TYPE) == "disk")
 {
     Console.WriteLine($"Setting up local state storage to use disk");
@@ -25,7 +28,6 @@ else
 }
 builder.Services.AddHostedService<KafkaConsumerService>();
 builder.Services.AddSingleton<KafkaProducerService>();
-builder.Services.AddSingleton<EnvHelpers>();
 
 var app = builder.Build();
 

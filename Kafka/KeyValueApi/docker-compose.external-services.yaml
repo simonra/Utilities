@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Depends on the core infrastructure compones in `docker-compose.yaml` running first.
 # For a more "day to day" scenario, rather than "see, it all works when you run `docker compose up -d`!", you probably want the other file to be the special file invoked with `docker compose --file filename.yaml up -d`, and this one to be the default docker-compose.yaml file.
 # If you do, beware that `docker compose up --remove-orpans` will take down the containers/services from the other compose.

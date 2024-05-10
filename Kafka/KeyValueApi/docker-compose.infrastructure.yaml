@@ -1,5 +1,3 @@
-version: '3.8'
-
 # ToDo:
 # - Replace this list of ToDo's with a readme?
 #   - Mention where to find the kafka UI (localhost:8081)
@@ -1260,7 +1258,7 @@ services:
         # blocks until kafka is reachable
         kafka-topics --bootstrap-server $$BOOTSTRAP_SERVERS --command-config 'adminclient-configs.conf' --list
 
-        echo '================ Creating Kafka Topics ========================='
+        echo '================ Creating Demo Topics ========================='
 
         kafka-topics \
           --bootstrap-server $$BOOTSTRAP_SERVERS \
@@ -1276,7 +1274,25 @@ services:
           --config 'retention.bytes=-1' \
           --config 'retention.ms=-1'
 
-        echo '================ Done Creating Kafka Topics ===================='
+        echo '================ Done Creating Demo Topics ===================='
+
+        # echo '================ Creating KvApi Topics ========================='
+
+        # kafka-topics \
+        #   --bootstrap-server $$BOOTSTRAP_SERVERS \
+        #   --command-config 'adminclient-configs.conf' \
+        #   --create \
+        #   --if-not-exists \
+        #   --topic 't.key-value-store' \
+        #   --replication-factor '3' \
+        #   --partitions '1' \
+        #   --config 'cleanup.policy=compact' \
+        #   --config 'max.message.bytes=1000012' \
+        #   --config 'min.insync.replicas=2' \
+        #   --config 'retention.bytes=-1' \
+        #   --config 'retention.ms=-1'
+
+        # echo '================ Done Creating KvApi Topics ===================='
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.3

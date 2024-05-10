@@ -9,12 +9,13 @@ public class KafkaConsumerService : BackgroundService
     private readonly Func<byte[], byte[]> _decrypt;
     private readonly Func<string, string> _decryptHeaderKey;
 
-    public KafkaConsumerService(ILogger<KafkaConsumerService> logger, IKeyValueStateService keyValueStateService, EnvHelpers envHelpers, HttpClient httpClient)
+    public KafkaConsumerService(ILogger<KafkaConsumerService> logger, IKeyValueStateService keyValueStateService, EnvHelpers envHelpers, HttpClient httpClient, KafkaAdminClient kafkaAdminClient)
     {
         _logger = logger;
         _keyValueStateService = keyValueStateService;
         _envHelpers = envHelpers;
         _httpClient = httpClient;
+        var topicsCreated = kafkaAdminClient.TryCreateTopics().GetAwaiter().GetResult();
         if (_envHelpers.GetEnvironmentVariableContent(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
         {
             var cryptoService = new CryptoService();

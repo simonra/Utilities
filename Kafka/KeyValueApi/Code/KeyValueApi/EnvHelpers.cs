@@ -30,7 +30,7 @@ public class EnvHelpers
         var location = GetEnvironmentVariableContent(environmentVariableName);
         if(!File.Exists(location))
         {
-            _logger.LogError($"Failed to read content of file at path \"{location}\" specified in environment variable \"{environmentVariableName}\", file doesnt exist");
+            _logger.LogError($"Failed to read content of file at path \"{location}\" specified in environment variable \"{environmentVariableName}\", file doesn't exist");
         }
         var resultingContent = File.ReadAllText(location);
         if(string.IsNullOrWhiteSpace(resultingContent))

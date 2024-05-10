@@ -165,7 +165,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
                 {
                     if(Directory.GetFiles(directory).Length == 0)
                     {
-                        var parentDirectory = Directory.GetParent(directory).FullName;
+                        var parentDirectory = Directory.GetParent(directory)!.FullName;
                         Directory.Delete(directory, false);
                         if(Directory.GetDirectories(parentDirectory).Length == 0)
                         {
