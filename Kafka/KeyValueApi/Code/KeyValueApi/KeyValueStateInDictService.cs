@@ -1,7 +1,7 @@
 public class KeyValueStateInDictService : IKeyValueStateService
 {
     private readonly ILogger<KeyValueStateInDictService> _logger;
-    private readonly Dictionary<byte[], List<KeyValue>> keyValueState;
+    private readonly Dictionary<string, List<KeyValue>> keyValueState;
     private readonly Func<byte[], byte[]> _encrypt;
     private readonly Func<byte[], byte[]> _decrypt;
     // private readonly ConsumerConfig _consumerConfig;
@@ -11,7 +11,7 @@ public class KeyValueStateInDictService : IKeyValueStateService
     public KeyValueStateInDictService(ILogger<KeyValueStateInDictService> logger)
     {
         _logger = logger;
-        keyValueState = new Dictionary<byte[], List<KeyValue>>();
+        keyValueState = new Dictionary<string, List<KeyValue>>();
         if (Environment.GetEnvironmentVariable(KV_API_ENCRYPT_DATA_IN_STATE_STORAGE) == "true")
         {
             // Why would you encrypt memory while the key has to reside plaintext in memory anyways?
@@ -34,45 +34,50 @@ public class KeyValueStateInDictService : IKeyValueStateService
         // https://docs.axual.io/axual/2022.1/getting_started/consumer/dotnet/dotnet-kafka-client-consumer.html
         // https://docs.axual.io/axual/2022.1/getting_started/producer/dotnet/dotnet-kafka-client-producer.html
         // https://docs.confluent.io/platform/current/clients/confluent-kafka-dotnet/_site/api/Confluent.Kafka.IConsumer-2.html
+
+        _logger.LogInformation($"{nameof(KeyValueStateInDictService)} initialized");
     }
 
-    public bool Store(byte[] inputKey, byte[] inputValue)
+    public bool Store(byte[] keyRaw, byte[] valueRaw)
     {
-        var key = _encrypt(inputKey);
-        var value = _encrypt(inputValue);
-        var keyHash = System.IO.Hashing.Crc32.Hash(key);
-        if(keyValueState.ContainsKey(keyHash))
+        _logger.LogInformation($"Storing key {keyRaw}");
+        var keyEncrypted = _encrypt(keyRaw);
+        var valueEncrypted = _encrypt(valueRaw);
+        var keyHash = Convert.ToHexString(System.IO.Hashing.Crc32.Hash(keyRaw)).ToLowerInvariant();
+        if(keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
-            for (int i = 0; i < keyValueState[keyHash].Count; i++)
+            for (int i = 0; i < pairsSharingHash.Count; i++)
             {
-                if(keyValueState[keyHash][i].Key.SequenceEqual(key))
+                if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
                 {
-                    keyValueState[keyHash][i] =  new KeyValue { Key = key, Value = value };
+                    pairsSharingHash[i] =  new KeyValue { Key = keyEncrypted, Value = valueEncrypted };
+                    keyValueState[keyHash] = pairsSharingHash;
                     return true;
                 }
             }
-            // This is an actual hash collision
-            keyValueState[keyHash].Add(new KeyValue { Key = key, Value = value });
+            pairsSharingHash.Add(new KeyValue { Key = keyEncrypted, Value = valueEncrypted });
+            keyValueState[keyHash] = pairsSharingHash;
             return true;
         }
         else
         {
-            keyValueState.Add(keyHash, new List<KeyValue> { new KeyValue { Key = key, Value = value } });
+            keyValueState.Add(keyHash, new List<KeyValue> { new KeyValue { Key = keyEncrypted, Value = valueEncrypted } });
             return true;
         }
     }
 
-    public bool TryRetrieve(byte[] inputKey, out byte[] value)
+    public bool TryRetrieve(byte[] keyRaw, out byte[] value)
     {
-        var key = _encrypt(inputKey);
-        var keyHash = System.IO.Hashing.Crc32.Hash(key);
-        if(keyValueState.ContainsKey(keyHash))
+        // var keyEncrypted = _encrypt(keyRaw);
+        // var keyHash = System.IO.Hashing.Crc32.Hash(keyRaw);
+        var keyHash = Convert.ToHexString(System.IO.Hashing.Crc32.Hash(keyRaw)).ToLowerInvariant();
+        if(keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
-            for (int i = 0; i < keyValueState[keyHash].Count; i++)
+            for (int i = 0; i < pairsSharingHash.Count; i++)
             {
-                if(keyValueState[keyHash][i].Key.SequenceEqual(key))
+                if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
                 {
-                    value = _decrypt(keyValueState[keyHash][i].Value);
+                    value = _decrypt(pairsSharingHash[i].Value);
                     return true;
                 }
             }
@@ -81,17 +86,18 @@ public class KeyValueStateInDictService : IKeyValueStateService
         return false;
     }
 
-    public bool Remove(byte[] inputKey)
+    public bool Remove(byte[] keyRaw)
     {
-        var key = _encrypt(inputKey);
-        var keyHash = System.IO.Hashing.Crc32.Hash(key);
-        if(keyValueState.ContainsKey(keyHash))
+        // var keyEncrypted = _encrypt(keyRaw);
+        // var keyHash = System.IO.Hashing.Crc32.Hash(keyRaw);
+        var keyHash = Convert.ToHexString(System.IO.Hashing.Crc32.Hash(keyRaw)).ToLowerInvariant();
+        if(keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
-            for (int i = 0; i < keyValueState[keyHash].Count; i++)
+            for (int i = 0; i < pairsSharingHash.Count; i++)
             {
-                if(keyValueState[keyHash][i].Key.SequenceEqual(key))
+                if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
                 {
-                    if(keyValueState[keyHash].Count == 1)
+                    if(pairsSharingHash.Count == 1)
                     {
                         keyValueState.Remove(keyHash);
                     }

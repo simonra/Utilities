@@ -28,6 +28,7 @@ public class KafkaProducerService
         var config = GetProducerConfig();
         _producer = new ProducerBuilder<byte[], byte[]>(config).Build();
         _topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
+        _logger.LogInformation($"{nameof(KafkaProducerService)} initialized");
     }
 
     private ProducerConfig GetProducerConfig()

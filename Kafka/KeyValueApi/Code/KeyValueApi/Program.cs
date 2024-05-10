@@ -78,10 +78,8 @@ app.MapPost("/retrieve", (ApiParamRetrieve postContent, IKeyValueStateService ke
     var correlationId = new CorrelationId { Value = correlationIdValue };
 
     var keyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
-    Console.WriteLine($"Retrieving value for key \"{postContent.Key}\"");
     var retrieveSuccess = keyValueStateService.TryRetrieve(keyBytes, out var valueBytes);
     var retrievedValueAsString = System.Text.Encoding.UTF8.GetString(valueBytes);
-    Console.WriteLine($"Retrieved value for key \"{postContent.Key}\" is \"{retrievedValueAsString}\"");
     return Results.Ok(retrievedValueAsString);
 });
 

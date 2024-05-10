@@ -33,6 +33,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
             _encrypt = delegate(byte[] input) { return input; };
             _decrypt = delegate(byte[] input) { return input; };
         }
+        _logger.LogInformation($"{nameof(KeyValeStateOnFileSystemService)} initialized");
     }
 
     public bool Store(byte[] keyRaw, byte[] valueRaw)
@@ -103,7 +104,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
 
     public bool TryRetrieve(byte[] keyRaw, out byte[] value)
     {
-        var keyEncrypted = _encrypt(keyRaw);
+        // var keyEncrypted = _encrypt(keyRaw);
         var directory = GetDirectoryForKey(keyRaw);
         if(!Directory.Exists(directory))
         {
@@ -136,7 +137,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
 
     public bool Remove(byte[] keyRaw)
     {
-        var keyEncrypted = _encrypt(keyRaw);
+        // var keyEncrypted = _encrypt(keyRaw);
         var directory = GetDirectoryForKey(keyRaw);
         if(!Directory.Exists(directory))
         {
@@ -147,7 +148,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         var keyFiles = preExistingFiles.Where(fileName => fileName.EndsWith(".key")).ToArray();
         foreach(var keyFile in keyFiles)
         {
-            if(File.ReadAllBytes(keyFile).SequenceEqual(keyEncrypted))
+            if(_decrypt(File.ReadAllBytes(keyFile)).SequenceEqual(keyRaw))
             {
                 var associatedValueFile = keyFile[0..^3] + "value";
                 if(File.Exists(associatedValueFile))

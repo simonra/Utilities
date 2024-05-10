@@ -16,7 +16,7 @@ Content-Type: application/json
         "be": "I can has value?",
         "optional": "truely"
     },
-    "CorrelationId": "optional"
+    "CorrelationId": "submitting correlation id should be optional"
 }
 
 ###

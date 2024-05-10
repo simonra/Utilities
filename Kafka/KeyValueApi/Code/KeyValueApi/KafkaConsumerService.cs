@@ -26,6 +26,7 @@ public class KafkaConsumerService : BackgroundService
             _decrypt = delegate(byte[] input) { return input; };
             _decryptHeaderKey = delegate(string input) { return input; };
         }
+        _logger.LogInformation($"{nameof(KafkaConsumerService)} initialized");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
