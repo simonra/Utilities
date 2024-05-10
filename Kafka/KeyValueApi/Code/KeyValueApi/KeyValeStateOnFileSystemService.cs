@@ -160,6 +160,23 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
                     _logger.LogWarning($"On delete request found matching key at path {keyFile}, but no corresponding file/path for the value as expected at {associatedValueFile}.");
                 }
                 File.Delete(keyFile);
+
+                try
+                {
+                    if(Directory.GetFiles(directory).Length == 0)
+                    {
+                        var parentDirectory = Directory.GetParent(directory).FullName;
+                        Directory.Delete(directory, false);
+                        if(Directory.GetDirectories(parentDirectory).Length == 0)
+                        {
+                            Directory.Delete(parentDirectory, false);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Got exception when trying to clean up directories that at the time were thought to be empty. Perhaps something new has been inserted? The directory in question/it's parent is/was \"{directory}\"");
+                }
                 return true;
             }
         }
