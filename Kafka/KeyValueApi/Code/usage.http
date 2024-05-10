@@ -36,7 +36,7 @@ Content-Type: application/json
 
 {
     "Key": "meny",
-    "Value": "Using crc32 \"meny\" should collide with \"menthols\""
+    "Value": "Using crc32 'meny' should collide with 'menthols'"
 }
 
 ###
@@ -46,7 +46,7 @@ Content-Type: application/json
 
 {
     "Key": "menthols",
-    "Value": "Using crc32 \"menthols\" should collide with \"meny\""
+    "Value": "Using crc32 'menthols' should collide with 'meny'"
 }
 
 ###
