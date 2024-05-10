@@ -83,6 +83,30 @@ app.MapPost("/retrieve", (ApiParamRetrieve postContent, IKeyValueStateService ke
     return Results.Ok(retrievedValueAsString);
 });
 
+app.MapPost("/remove", (ApiParamRemove postContent, KafkaProducerService kafkaProducerService) =>
+{
+    var correlationIdValue = System.Guid.NewGuid().ToString("D");
+    if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
+    var correlationId = new CorrelationId { Value = correlationIdValue };
+
+    var eventKeyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
+
+    Dictionary<string, byte[]> headers = [];
+    headers["correlationId"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
+
+    var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, null, headers, correlationId);
+    if(produceSuccess)
+    {
+        return Results.Ok($"{correlationId.Value}");
+    }
+    return Results.Text(
+        content: $"{correlationId.Value}",
+        contentType: "text/html",
+        contentEncoding: Encoding.UTF8,
+        statusCode: (int?) HttpStatusCode.InternalServerError);
+});
+
+
 app.MapPost("/store/b64", (ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
 {
     var correlationIdValue = System.Guid.NewGuid().ToString("D");

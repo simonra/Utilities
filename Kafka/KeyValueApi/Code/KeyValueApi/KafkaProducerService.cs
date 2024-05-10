@@ -4,7 +4,7 @@ public class KafkaProducerService
 {
     private readonly ILogger<KafkaConsumerService> _logger;
     private readonly EnvHelpers _envHelpers;
-    private readonly IProducer<byte[], byte[]> _producer;
+    private readonly IProducer<byte[], byte[]?> _producer;
     private readonly KafkaTopic _topic;
     private readonly Func<byte[], byte[]> _encrypt;
     private readonly Func<string, string> _encryptHeaderKey;
@@ -26,7 +26,7 @@ public class KafkaProducerService
         }
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         var config = GetProducerConfig();
-        _producer = new ProducerBuilder<byte[], byte[]>(config).Build();
+        _producer = new ProducerBuilder<byte[], byte[]?>(config).Build();
         _topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
         _logger.LogInformation($"{nameof(KafkaProducerService)} initialized");
     }
@@ -67,11 +67,13 @@ public class KafkaProducerService
     public bool Produce(byte[] key, byte[]? value, Dictionary<string, byte[]> headers, CorrelationId correlationId)
     {
         _logger.LogInformation($"Producing message with correlation ID {correlationId.Value}");
-        var message = new Message<byte[], byte[]>
+
+        var message = new Message<byte[], byte[]?>
         {
             Key = _encrypt(key),
-            Value = _encrypt(value ?? [])
+            Value = (value == null) ? null : _encrypt(value)
         };
+
         if(headers.Count > 0)
         {
             message.Headers = new Headers();

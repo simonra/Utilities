@@ -68,3 +68,30 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{baseurl}}/remove
+Content-Type: application/json
+
+{
+    "Key": "my first key!"
+}
+
+###
+
+POST {{baseurl}}/remove
+Content-Type: application/json
+
+{
+    "Key": "meny"
+}
+
+###
+
+POST {{baseurl}}/remove
+Content-Type: application/json
+
+{
+    "Key": "menthols"
+}
+
+###
