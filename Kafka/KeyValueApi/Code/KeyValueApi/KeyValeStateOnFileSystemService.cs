@@ -169,10 +169,11 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
     private string GetDirectoryForKey(byte[] key)
     {
         // Make directory for first 3 (16 ^ 3 = up to 4096 directories per level), then next 3, then dump files
-        var keyHash = System.IO.Hashing.Crc32.Hash(key);
-        var keyHashHex = Convert.ToHexString(keyHash).ToLowerInvariant();
-        var firstLevel = keyHashHex.Substring(0, 3);
-        var secondLevel = keyHashHex.Substring(3, 3);
-        return $"{_storageRootDirectoryPath}/{firstLevel}/{secondLevel}/{keyHashHex}";
+        // var keyHash = System.IO.Hashing.Crc32.Hash(key);
+        // var keyHashHex = Convert.ToHexString(keyHash).ToLowerInvariant();
+        var hash = key.GetHashString();
+        var firstLevel = hash.Substring(0, 3);
+        var secondLevel = hash.Substring(3, 3);
+        return $"{_storageRootDirectoryPath}/{firstLevel}/{secondLevel}";
     }
 }

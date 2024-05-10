@@ -28,3 +28,43 @@ Content-Type: application/json
     "Key": "my first key!",
     "CorrelationId": "nah"
 }
+
+###
+
+POST {{baseurl}}/store
+Content-Type: application/json
+
+{
+    "Key": "meny",
+    "Value": "Using crc32 \"meny\" should collide with \"menthols\""
+}
+
+###
+
+POST {{baseurl}}/store
+Content-Type: application/json
+
+{
+    "Key": "menthols",
+    "Value": "Using crc32 \"menthols\" should collide with \"meny\""
+}
+
+###
+
+POST {{baseurl}}/retrieve
+Content-Type: application/json
+
+{
+    "Key": "meny"
+}
+
+###
+
+POST {{baseurl}}/retrieve
+Content-Type: application/json
+
+{
+    "Key": "menthols"
+}
+
+###

@@ -1,7 +1,7 @@
 public class KeyValueStateInDictService : IKeyValueStateService
 {
     private readonly ILogger<KeyValueStateInDictService> _logger;
-    private readonly Dictionary<string, List<KeyValue>> keyValueState;
+    private readonly Dictionary<string, List<KeyValue>> _keyValueState;
     private readonly Func<byte[], byte[]> _encrypt;
     private readonly Func<byte[], byte[]> _decrypt;
     // private readonly ConsumerConfig _consumerConfig;
@@ -11,7 +11,7 @@ public class KeyValueStateInDictService : IKeyValueStateService
     public KeyValueStateInDictService(ILogger<KeyValueStateInDictService> logger)
     {
         _logger = logger;
-        keyValueState = new Dictionary<string, List<KeyValue>>();
+        _keyValueState = new Dictionary<string, List<KeyValue>>();
         if (Environment.GetEnvironmentVariable(KV_API_ENCRYPT_DATA_IN_STATE_STORAGE) == "true")
         {
             // Why would you encrypt memory while the key has to reside plaintext in memory anyways?
@@ -43,35 +43,33 @@ public class KeyValueStateInDictService : IKeyValueStateService
         _logger.LogInformation($"Storing key {keyRaw}");
         var keyEncrypted = _encrypt(keyRaw);
         var valueEncrypted = _encrypt(valueRaw);
-        var keyHash = Convert.ToHexString(System.IO.Hashing.Crc32.Hash(keyRaw)).ToLowerInvariant();
-        if(keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
+        var keyHash = keyRaw.GetHashString();
+        if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
             for (int i = 0; i < pairsSharingHash.Count; i++)
             {
                 if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
                 {
                     pairsSharingHash[i] =  new KeyValue { Key = keyEncrypted, Value = valueEncrypted };
-                    keyValueState[keyHash] = pairsSharingHash;
+                    _keyValueState[keyHash] = pairsSharingHash;
                     return true;
                 }
             }
             pairsSharingHash.Add(new KeyValue { Key = keyEncrypted, Value = valueEncrypted });
-            keyValueState[keyHash] = pairsSharingHash;
+            _keyValueState[keyHash] = pairsSharingHash;
             return true;
         }
         else
         {
-            keyValueState.Add(keyHash, new List<KeyValue> { new KeyValue { Key = keyEncrypted, Value = valueEncrypted } });
+            _keyValueState.Add(keyHash, [new() { Key = keyEncrypted, Value = valueEncrypted }]);
             return true;
         }
     }
 
     public bool TryRetrieve(byte[] keyRaw, out byte[] value)
     {
-        // var keyEncrypted = _encrypt(keyRaw);
-        // var keyHash = System.IO.Hashing.Crc32.Hash(keyRaw);
-        var keyHash = Convert.ToHexString(System.IO.Hashing.Crc32.Hash(keyRaw)).ToLowerInvariant();
-        if(keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
+        var keyHash = keyRaw.GetHashString();
+        if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
             for (int i = 0; i < pairsSharingHash.Count; i++)
             {
@@ -88,10 +86,8 @@ public class KeyValueStateInDictService : IKeyValueStateService
 
     public bool Remove(byte[] keyRaw)
     {
-        // var keyEncrypted = _encrypt(keyRaw);
-        // var keyHash = System.IO.Hashing.Crc32.Hash(keyRaw);
-        var keyHash = Convert.ToHexString(System.IO.Hashing.Crc32.Hash(keyRaw)).ToLowerInvariant();
-        if(keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
+        var keyHash = keyRaw.GetHashString();
+        if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
             for (int i = 0; i < pairsSharingHash.Count; i++)
             {
@@ -99,11 +95,11 @@ public class KeyValueStateInDictService : IKeyValueStateService
                 {
                     if(pairsSharingHash.Count == 1)
                     {
-                        keyValueState.Remove(keyHash);
+                        _keyValueState.Remove(keyHash);
                     }
                     else
                     {
-                        keyValueState[keyHash].RemoveAt(i);
+                        _keyValueState[keyHash].RemoveAt(i);
                     }
                     return true;
                 }
