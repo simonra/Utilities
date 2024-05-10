@@ -139,12 +139,12 @@ public class KafkaConsumerService : BackgroundService
 
     private async Task<bool> TopicKeyHasSchema(KafkaTopic topic, CancellationToken stoppingToken)
     {
-        // curl -X GET http://localhost:8081/subjects/topicname-key/versions
+        // curl -X GET http://localhost:8083/subjects/topicname-key/versions
         // If the above doesn't work, screw it, just go with
-        // curl -X GET http://localhost:8081/subjects
+        // curl -X GET http://localhost:8083/subjects
         // And grep for the expected name in the resulting array (should look like `["subject-1","subject-2",...,"last-subject"]`).
         // The proper
-        // curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\": \"string\"}"}' http://localhost:8081/subjects/topicname-key
+        // curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\": \"string\"}"}' http://localhost:8083/subjects/topicname-key
         // is too much work to stuff into the dotnet http client, and the answer is also more involved to parse than what I can be bothered with right now.
 
 
@@ -186,10 +186,10 @@ public class KafkaConsumerService : BackgroundService
 
     private string GetSchemaRegistryAddress()
     {
-        var schemaRegistryAddress = _envHelpers.GetEnvironmentVariableContent("KAFKA_SCHEMA_REGISTRY_ADDRESS");
+        var schemaRegistryAddress = _envHelpers.GetEnvironmentVariableContent(KAFKA_SCHEMA_REGISTRY_ADDRESS);
         if(!schemaRegistryAddress.StartsWith("http"))
         {
-            _logger.LogWarning($"Schema registry address found in env variable \"KAFKA_SCHEMA_REGISTRY_ADDRESS\" does not start with \"http\"/specify the protocol. It's value is \"{schemaRegistryAddress}\".");
+            _logger.LogWarning($"Schema registry address found in env variable \"{KAFKA_SCHEMA_REGISTRY_ADDRESS}\" does not start with \"http\"/specify the protocol. It's value is \"{schemaRegistryAddress}\".");
         }
         return schemaRegistryAddress;
     }

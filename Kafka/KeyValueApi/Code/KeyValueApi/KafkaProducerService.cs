@@ -71,9 +71,13 @@ public class KafkaProducerService
             Key = _encrypt(key),
             Value = _encrypt(value ?? [])
         };
-        foreach(var header in headers)
+        if(headers.Count > 0)
         {
-            message.Headers.Add(_encryptHeaderKey(header.Key), _encrypt(header.Value));
+            message.Headers = new Headers();
+            foreach(var header in headers)
+            {
+                message.Headers.Add(_encryptHeaderKey(header.Key), _encrypt(header.Value));
+            }
         }
         try
         {

@@ -11,17 +11,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-if(Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE) == "disk")
+builder.Services.AddHttpClient();
+if(Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_TYPE) == "disk")
 {
-    builder.Services.AddSingleton<KeyValeStateOnFileSystemService>();
+    Console.WriteLine($"Setting up local state storage to use disk");
+    builder.Services.AddSingleton<IKeyValueStateService,KeyValeStateOnFileSystemService>();
 }
 else
 {
     // Fall back to in memory storage
-    builder.Services.AddSingleton<KeyValueStateInDictService>();
+    Console.WriteLine($"Setting up local state storage to use in memory dict");
+    builder.Services.AddSingleton<IKeyValueStateService,KeyValueStateInDictService>();
 }
-builder.Services.AddSingleton<KafkaConsumerService>();
+builder.Services.AddHostedService<KafkaConsumerService>();
 builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddSingleton<EnvHelpers>();
 
 var app = builder.Build();
 
@@ -74,8 +78,10 @@ app.MapPost("/retrieve", (ApiParamRetrieve postContent, IKeyValueStateService ke
     var correlationId = new CorrelationId { Value = correlationIdValue };
 
     var keyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
+    Console.WriteLine($"Retrieving value for key \"{postContent.Key}\"");
     var retrieveSuccess = keyValueStateService.TryRetrieve(keyBytes, out var valueBytes);
     var retrievedValueAsString = System.Text.Encoding.UTF8.GetString(valueBytes);
+    Console.WriteLine($"Retrieved value for key \"{postContent.Key}\" is \"{retrievedValueAsString}\"");
     return Results.Ok(retrievedValueAsString);
 });
 

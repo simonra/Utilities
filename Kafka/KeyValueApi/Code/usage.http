@@ -1,0 +1,30 @@
+@baseurl=http://localhost:8080
+GET {{baseurl}} HTTP/1.1
+
+###
+
+POST {{baseurl}}/store
+Content-Type: application/json
+
+{
+    "Key": "my first key!",
+    "Value": "the very bestest first value",
+    "Headers": {
+        "these": "first value",
+        "values": "2nd value",
+        "should": "moaar",
+        "be": "I can has value?",
+        "optional": "truely"
+    },
+    "CorrelationId": "optional"
+}
+
+###
+
+POST {{baseurl}}/retrieve
+Content-Type: application/json
+
+{
+    "Key": "my first key!",
+    "CorrelationId": "nah"
+}
