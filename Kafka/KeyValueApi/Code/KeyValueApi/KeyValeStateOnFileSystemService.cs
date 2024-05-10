@@ -35,11 +35,12 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         }
     }
 
-    public bool Store(byte[] inputKey, byte[] inputValue)
+    public bool Store(byte[] keyRaw, byte[] valueRaw)
     {
-        var key = _encrypt(inputKey);
-        var value = _encrypt(inputValue);
-        var directory = GetDirectoryForKey(key);
+        var keyEncrypted = _encrypt(keyRaw);
+        var valueEncrypted = _encrypt(valueRaw);
+        // Because AES relies on prepending new random garbage every time anything is encrypted, all comparisons have to be against unencrypted.
+        var directory = GetDirectoryForKey(keyRaw);
         // For future me: Directory.CreateDirectory() handles the case where it already exists.
         // So same as with mkdir -p, call it just in case instead of bloating path with if()'s.
         Directory.CreateDirectory(directory); // Create if not exists
@@ -50,17 +51,17 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         {
             keyPath = $"{directory}/0.key";
             valuePath = $"{directory}/0.value";
-            File.WriteAllBytes(keyPath, key);
-            File.WriteAllBytes(valuePath, value);
+            File.WriteAllBytes(keyPath, keyEncrypted);
+            File.WriteAllBytes(valuePath, valueEncrypted);
             return true;
         }
         var keyFiles = preExistingFiles.Where(fileName => fileName.EndsWith(".key")).ToArray();
         foreach(var keyFile in keyFiles)
         {
-            if(File.ReadAllBytes(keyFile).SequenceEqual(key))
+            if(_decrypt(File.ReadAllBytes(keyFile)).SequenceEqual(keyRaw))
             {
                 var associatedValueFile = keyFile[0..^3] + "value";
-                File.WriteAllBytes(associatedValueFile, value);
+                File.WriteAllBytes(associatedValueFile, valueEncrypted);
                 return true;
             }
         }
@@ -95,15 +96,15 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         }
         keyPath = $"{directory}/{nextAvailableBaseName}.key";
         valuePath = $"{directory}/{nextAvailableBaseName}.value";
-        File.WriteAllBytes(keyPath, key);
-        File.WriteAllBytes(valuePath, value);
+        File.WriteAllBytes(keyPath, keyEncrypted);
+        File.WriteAllBytes(valuePath, valueEncrypted);
         return true;
     }
 
-    public bool TryRetrieve(byte[] inputKey, out byte[] value)
+    public bool TryRetrieve(byte[] keyRaw, out byte[] value)
     {
-        var key = _encrypt(inputKey);
-        var directory = GetDirectoryForKey(key);
+        var keyEncrypted = _encrypt(keyRaw);
+        var directory = GetDirectoryForKey(keyRaw);
         if(!Directory.Exists(directory))
         {
             value = [];
@@ -113,7 +114,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         var keyFiles = preExistingFiles.Where(fileName => fileName.EndsWith(".key")).ToArray();
         foreach(var keyFile in keyFiles)
         {
-            if(File.ReadAllBytes(keyFile).SequenceEqual(key))
+            if(_decrypt(File.ReadAllBytes(keyFile)).SequenceEqual(keyRaw))
             {
                 var associatedValueFile = keyFile[0..^3] + "value";
                 if(File.Exists(associatedValueFile))
@@ -133,10 +134,10 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         return false;
     }
 
-    public bool Remove(byte[] inputKey)
+    public bool Remove(byte[] keyRaw)
     {
-        var key = _encrypt(inputKey);
-        var directory = GetDirectoryForKey(key);
+        var keyEncrypted = _encrypt(keyRaw);
+        var directory = GetDirectoryForKey(keyRaw);
         if(!Directory.Exists(directory))
         {
             _logger.LogWarning($"Someone tried to delete {directory} which doesn't exist, weird");
@@ -146,7 +147,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         var keyFiles = preExistingFiles.Where(fileName => fileName.EndsWith(".key")).ToArray();
         foreach(var keyFile in keyFiles)
         {
-            if(File.ReadAllBytes(keyFile).SequenceEqual(key))
+            if(File.ReadAllBytes(keyFile).SequenceEqual(keyEncrypted))
             {
                 var associatedValueFile = keyFile[0..^3] + "value";
                 if(File.Exists(associatedValueFile))
