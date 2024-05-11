@@ -1,6 +1,4 @@
-using static KafkaClientConfigEnvVars;
-
-public static class KafkaClientConfigCreator
+public static class KafkaClientConfigGenerator
 {
     public static Confluent.Kafka.ClientConfig GetClientConfig()
     {
@@ -445,4 +443,83 @@ public static class KafkaClientConfigCreator
 
         return clientConfig;
     }
+
+    public const string KAFKA_ACKS = nameof(KAFKA_ACKS);
+    public const string KAFKA_ALLOW_AUTO_CREATE_TOPICS_VALUE = nameof(KAFKA_ALLOW_AUTO_CREATE_TOPICS_VALUE);
+    public const string KAFKA_API_VERSION_FALLBACK_MS = nameof(KAFKA_API_VERSION_FALLBACK_MS);
+    public const string KAFKA_API_VERSION_REQUEST = nameof(KAFKA_API_VERSION_REQUEST);
+    public const string KAFKA_API_VERSION_REQUEST_TIMEOUT_MS = nameof(KAFKA_API_VERSION_REQUEST_TIMEOUT_MS);
+    public const string KAFKA_BOOTSTRAP_SERVERS = nameof(KAFKA_BOOTSTRAP_SERVERS);
+    public const string KAFKA_BROKER_ADDRESS_FAMILY = nameof(KAFKA_BROKER_ADDRESS_FAMILY);
+    public const string KAFKA_BROKER_ADDRESS_TTL = nameof(KAFKA_BROKER_ADDRESS_TTL);
+    public const string KAFKA_BROKER_VERSION_FALLBACK = nameof(KAFKA_BROKER_VERSION_FALLBACK);
+    public const string KAFKA_CLIENT_DNS_LOOKUP = nameof(KAFKA_CLIENT_DNS_LOOKUP);
+    public const string KAFKA_CLIENT_ID = nameof(KAFKA_CLIENT_ID);
+    public const string KAFKA_CLIENT_RACK = nameof(KAFKA_CLIENT_RACK);
+    public const string KAFKA_CONNECTIONS_MAX_IDLE_MS = nameof(KAFKA_CONNECTIONS_MAX_IDLE_MS);
+    public const string KAFKA_DEBUG = nameof(KAFKA_DEBUG);
+    public const string KAFKA_ENABLE_RANDOM_SEED = nameof(KAFKA_ENABLE_RANDOM_SEED);
+    public const string KAFKA_ENABLE_SASL_OAUTHBEARER_UNSECURE_JWT = nameof(KAFKA_ENABLE_SASL_OAUTHBEARER_UNSECURE_JWT);
+    public const string KAFKA_ENABLE_SSL_CERTIFICATE_VERIFICATION = nameof(KAFKA_ENABLE_SSL_CERTIFICATE_VERIFICATION);
+    public const string KAFKA_INTERNAL_TERMINATION_SIGNAL = nameof(KAFKA_INTERNAL_TERMINATION_SIGNAL);
+    public const string KAFKA_LOG_CONNECTION_CLOSE = nameof(KAFKA_LOG_CONNECTION_CLOSE);
+    public const string KAFKA_LOG_QUEUE = nameof(KAFKA_LOG_QUEUE);
+    public const string KAFKA_LOG_THREAD_NAME = nameof(KAFKA_LOG_THREAD_NAME);
+    public const string KAFKA_MAX_IN_FLIGHT = nameof(KAFKA_MAX_IN_FLIGHT);
+    public const string KAFKA_MESSAGE_COPY_MAX_BYTES = nameof(KAFKA_MESSAGE_COPY_MAX_BYTES);
+    public const string KAFKA_MESSAGE_MAX_BYTES = nameof(KAFKA_MESSAGE_MAX_BYTES);
+    public const string KAFKA_METADATA_MAX_AGE_MS = nameof(KAFKA_METADATA_MAX_AGE_MS);
+    public const string KAFKA_PLUGIN_LIBRARY_PATHS = nameof(KAFKA_PLUGIN_LIBRARY_PATHS);
+    public const string KAFKA_RECEIVE_MESSAGE_MAX_BYTES = nameof(KAFKA_RECEIVE_MESSAGE_MAX_BYTES);
+    public const string KAFKA_RECONNECT_BACKOFF_MAX_MS = nameof(KAFKA_RECONNECT_BACKOFF_MAX_MS);
+    public const string KAFKA_RECONNECT_BACKOFF_MS = nameof(KAFKA_RECONNECT_BACKOFF_MS);
+    public const string KAFKA_SASL_KERBEROS_KEYTAB = nameof(KAFKA_SASL_KERBEROS_KEYTAB);
+    public const string KAFKA_SASL_KERBEROS_KINIT_CMD = nameof(KAFKA_SASL_KERBEROS_KINIT_CMD);
+    public const string KAFKA_SASL_KERBEROS_MIN_TIME_BEFORE_RELOGIN = nameof(KAFKA_SASL_KERBEROS_MIN_TIME_BEFORE_RELOGIN);
+    public const string KAFKA_SASL_KERBEROS_PRINCIPAL = nameof(KAFKA_SASL_KERBEROS_PRINCIPAL);
+    public const string KAFKA_SASL_KERBEROS_SERVICE_NAME = nameof(KAFKA_SASL_KERBEROS_SERVICE_NAME);
+    public const string KAFKA_SASL_MECHANISM = nameof(KAFKA_SASL_MECHANISM);
+    public const string KAFKA_SASL_OAUTHBEARER_CLIENT_ID = nameof(KAFKA_SASL_OAUTHBEARER_CLIENT_ID);
+    public const string KAFKA_SASL_OAUTHBEARER_CLIENT_SECRET = nameof(KAFKA_SASL_OAUTHBEARER_CLIENT_SECRET);
+    public const string KAFKA_SASL_OAUTHBEARER_CONFIG = nameof(KAFKA_SASL_OAUTHBEARER_CONFIG);
+    public const string KAFKA_SASL_OAUTHBEARER_EXTENSIONS = nameof(KAFKA_SASL_OAUTHBEARER_EXTENSIONS);
+    public const string KAFKA_SASL_OAUTHBEARER_METHOD = nameof(KAFKA_SASL_OAUTHBEARER_METHOD);
+    public const string KAFKA_SASL_OAUTHBEARER_SCOPE = nameof(KAFKA_SASL_OAUTHBEARER_SCOPE);
+    public const string KAFKA_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL = nameof(KAFKA_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL);
+    public const string KAFKA_SASL_PASSWORD = nameof(KAFKA_SASL_PASSWORD);
+    public const string KAFKA_SASL_USERNAME = nameof(KAFKA_SASL_USERNAME);
+    public const string KAFKA_SECURITY_PROTOCOL = nameof(KAFKA_SECURITY_PROTOCOL);
+    public const string KAFKA_SOCKET_CONNECTION_SETUP_TIMEOUT_MS = nameof(KAFKA_SOCKET_CONNECTION_SETUP_TIMEOUT_MS);
+    public const string KAFKA_SOCKET_KEEPALIVE_ENABLE = nameof(KAFKA_SOCKET_KEEPALIVE_ENABLE);
+    public const string KAFKA_SOCKET_MAX_FAILS = nameof(KAFKA_SOCKET_MAX_FAILS);
+    public const string KAFKA_SOCKET_NAGLE_DISABLE = nameof(KAFKA_SOCKET_NAGLE_DISABLE);
+    public const string KAFKA_SOCKET_RECEIVE_BUFFER_BYTES = nameof(KAFKA_SOCKET_RECEIVE_BUFFER_BYTES);
+    public const string KAFKA_SOCKET_SEND_BUFFER_BYTES = nameof(KAFKA_SOCKET_SEND_BUFFER_BYTES);
+    public const string KAFKA_SOCKET_TIMEOUT_MS = nameof(KAFKA_SOCKET_TIMEOUT_MS);
+    public const string KAFKA_SSL_CA_CERTIFICATE_STORES = nameof(KAFKA_SSL_CA_CERTIFICATE_STORES);
+    public const string KAFKA_SSL_CA_LOCATION = nameof(KAFKA_SSL_CA_LOCATION);
+    public const string KAFKA_SSL_CA_PEM = nameof(KAFKA_SSL_CA_PEM);
+    public const string KAFKA_SSL_CA_PEM_LOCATION = nameof(KAFKA_SSL_CA_PEM_LOCATION);
+    public const string KAFKA_SSL_CERTIFICATE_LOCATION = nameof(KAFKA_SSL_CERTIFICATE_LOCATION);
+    public const string KAFKA_SSL_CERTIFICATE_PEM = nameof(KAFKA_SSL_CERTIFICATE_PEM);
+    public const string KAFKA_SSL_CIPHER_SUITES = nameof(KAFKA_SSL_CIPHER_SUITES);
+    public const string KAFKA_SSL_CRL_LOCATION = nameof(KAFKA_SSL_CRL_LOCATION);
+    public const string KAFKA_SSL_CURVES_LIST = nameof(KAFKA_SSL_CURVES_LIST);
+    public const string KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM = nameof(KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM);
+    public const string KAFKA_SSL_ENGINE_ID = nameof(KAFKA_SSL_ENGINE_ID);
+    public const string KAFKA_SSL_ENGINE_LOCATION = nameof(KAFKA_SSL_ENGINE_LOCATION);
+    public const string KAFKA_SSL_KEY_LOCATION = nameof(KAFKA_SSL_KEY_LOCATION);
+    public const string KAFKA_SSL_KEY_PASSWORD = nameof(KAFKA_SSL_KEY_PASSWORD);
+    public const string KAFKA_SSL_KEY_PASSWORD_LOCATION = nameof(KAFKA_SSL_KEY_PASSWORD_LOCATION);
+    public const string KAFKA_SSL_KEY_PEM = nameof(KAFKA_SSL_KEY_PEM);
+    public const string KAFKA_SSL_KEYSTORE_LOCATION = nameof(KAFKA_SSL_KEYSTORE_LOCATION);
+    public const string KAFKA_SSL_KEYSTORE_PASSWORD = nameof(KAFKA_SSL_KEYSTORE_PASSWORD);
+    public const string KAFKA_SSL_PROVIDERS = nameof(KAFKA_SSL_PROVIDERS);
+    public const string KAFKA_SSL_SIGALGS_LIST = nameof(KAFKA_SSL_SIGALGS_LIST);
+    public const string KAFKA_STATISTICS_INTERVAL_MS = nameof(KAFKA_STATISTICS_INTERVAL_MS);
+    public const string KAFKA_TOPIC_BLACKLIST = nameof(KAFKA_TOPIC_BLACKLIST);
+    public const string KAFKA_TOPIC_METADATA_PROPAGATION_MAX_MS = nameof(KAFKA_TOPIC_METADATA_PROPAGATION_MAX_MS);
+    public const string KAFKA_TOPIC_METADATA_REFRESH_FAST_INTERVAL_MS = nameof(KAFKA_TOPIC_METADATA_REFRESH_FAST_INTERVAL_MS);
+    public const string KAFKA_TOPIC_METADATA_REFRESH_INTERVAL_MS = nameof(KAFKA_TOPIC_METADATA_REFRESH_INTERVAL_MS);
+    public const string KAFKA_TOPIC_METADATA_REFRESH_SPARSE = nameof(KAFKA_TOPIC_METADATA_REFRESH_SPARSE);
 }

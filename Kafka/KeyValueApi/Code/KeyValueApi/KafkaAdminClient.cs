@@ -15,32 +15,8 @@ public class KafkaAdminClient
 
     public async Task<bool> TryCreateTopics()
     {
-
-        // var bootstrapServers = _envHelpers.GetEnvironmentVariableContent(KAFKA_BOOTSTRAP_SERVERS);
-        // var consumerGroup = _envHelpers.GetEnvironmentVariableContent(KAFKA_CONSUMER_GROUP);
-
-        // var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_TRUST_STORE_PEM_LOCATION);
-        // var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
-        // var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PEM_LOCATION);
-        // var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
-
-        // var adminClientConfig = new AdminClientConfig
-        // {
-        //     // Connect to the SSL listener of the local platform
-        //     BootstrapServers = bootstrapServers,
-
-        //     // Set the security protocol to use SSL and certificate based authentication
-        //     SecurityProtocol = SecurityProtocol.Ssl,
-
-        //     SslCaPem = sslCaPem,
-        //     SslCertificatePem = sslCertificatePem,
-        //     SslKeyPem = sslKeyPem,
-        //     SslKeyPassword = sslKeyPassword
-        // };
-
-        var adminClientConfig = KafkaAdminClientConfigCreator.GetAdminClientConfig();
+        var adminClientConfig = KafkaAdminClientConfigGenerator.GetAdminClientConfig();
         var topic = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC);
-
 
         using (var adminClient = new AdminClientBuilder(adminClientConfig).Build())
         {

@@ -22,12 +22,6 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
 
-      # KAFKA_BOOTSTRAP_SERVERS: "broker1:9092,broker2:9092,broker3:9092"
-      # KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION: "/kafka/secrets/admin.lokalmaskin.crt"
-      # KAFKA_CLIENT_KEY_PASSWORD_LOCATION: "/kafka/secrets/admin.lokalmaskin.password.txt"
-      # KAFKA_CLIENT_KEY_PEM_LOCATION: "/kafka/secrets/admin.lokalmaskin.key"
-      # KAFKA_TRUST_STORE_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
-
       # kafkal client config
       KAFKA_BOOTSTRAP_SERVERS: "broker1:9092,broker2:9092,broker3:9092"
       KAFKA_SECURITY_PROTOCOL: "ssl"

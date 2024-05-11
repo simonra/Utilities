@@ -41,7 +41,7 @@ public class KafkaConsumerService : BackgroundService
     {
         _logger.LogInformation("Kafka consumer service background task started.");
 
-        var consumerConfig = KafkaConsumerConfigCreator.GetConsumerConfig();
+        var consumerConfig = KafkaConsumerConfigGenerator.GetConsumerConfig();
         var consumer = new ConsumerBuilder<byte[], byte[]>(consumerConfig)
             .SetPartitionsAssignedHandler((c, partitions) =>
             {
@@ -106,39 +106,6 @@ public class KafkaConsumerService : BackgroundService
         }
     }
 
-    // private ConsumerConfig GetConsumerConfig()
-    // {
-    //     var bootstrapServers = _envHelpers.GetEnvironmentVariableContent(KAFKA_BOOTSTRAP_SERVERS);
-    //     var consumerGroup = _envHelpers.GetEnvironmentVariableContent(KAFKA_CONSUMER_GROUP);
-
-    //     var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_TRUST_STORE_PEM_LOCATION);
-    //     var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
-    //     var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PEM_LOCATION);
-    //     var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
-
-    //     var consumerConfig = new ConsumerConfig
-    //     {
-    //         // Connect to the SSL listener of the local platform
-    //         BootstrapServers = bootstrapServers,
-
-    //         // Set the security protocol to use SSL and certificate based authentication
-    //         SecurityProtocol = SecurityProtocol.Ssl,
-
-    //         SslCaPem = sslCaPem,
-    //         SslCertificatePem = sslCertificatePem,
-    //         SslKeyPem = sslKeyPem,
-    //         SslKeyPassword = sslKeyPassword,
-
-    //         // Specify the Kafka delivery settings
-    //         GroupId = consumerGroup,
-    //         EnableAutoCommit = true,
-    //         AutoCommitIntervalMs = 200,
-    //         AutoOffsetReset = AutoOffsetReset.Earliest
-    //     };
-
-    //     return consumerConfig;
-    // }
-
     private async Task<bool> TopicKeyHasSchema(KafkaTopic topic, CancellationToken stoppingToken)
     {
         // curl -X GET http://localhost:8083/subjects/topicname-key/versions
@@ -148,7 +115,6 @@ public class KafkaConsumerService : BackgroundService
         // The proper
         // curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\": \"string\"}"}' http://localhost:8083/subjects/topicname-key
         // is too much work to stuff into the dotnet http client, and the answer is also more involved to parse than what I can be bothered with right now.
-
 
         var schemaRegistryAddress = GetSchemaRegistryAddress();
         var keySchemaAddress = $"{schemaRegistryAddress}/subjects/{topic}-key/versions";
