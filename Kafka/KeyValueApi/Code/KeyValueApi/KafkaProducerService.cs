@@ -25,44 +25,44 @@ public class KafkaProducerService
             _encryptHeaderKey = delegate(string input) { return input; };
         }
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
-        var config = GetProducerConfig();
+        var config = KafkaProducerConfigCreator.GetProducerConfig();
         _producer = new ProducerBuilder<byte[], byte[]?>(config).Build();
         _topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
         _logger.LogInformation($"{nameof(KafkaProducerService)} initialized");
     }
 
-    private ProducerConfig GetProducerConfig()
-    {
-        var bootstrapServers = _envHelpers.GetEnvironmentVariableContent(KAFKA_BOOTSTRAP_SERVERS);
+    // private ProducerConfig GetProducerConfig()
+    // {
+    //     var bootstrapServers = _envHelpers.GetEnvironmentVariableContent(KAFKA_BOOTSTRAP_SERVERS);
 
-        var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_TRUST_STORE_PEM_LOCATION);
-        var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
-        var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PEM_LOCATION);
-        var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
+    //     var sslCaPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_TRUST_STORE_PEM_LOCATION);
+    //     var sslCertificatePem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
+    //     var sslKeyPem = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PEM_LOCATION);
+    //     var sslKeyPassword = _envHelpers.GetContentOfFileReferencedByEnvironmentVariableAsText(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
 
-        var producerConfig = new ProducerConfig()
-        {
-            // Connect to the SSL listener of the local platform
-            BootstrapServers = bootstrapServers,
+    //     var producerConfig = new ProducerConfig()
+    //     {
+    //         // Connect to the SSL listener of the local platform
+    //         BootstrapServers = bootstrapServers,
 
-            // Set the security protocol to use SSL and certificate based authentication
-            SecurityProtocol = SecurityProtocol.Ssl,
+    //         // Set the security protocol to use SSL and certificate based authentication
+    //         SecurityProtocol = SecurityProtocol.Ssl,
 
-            // Ssl settings
-            SslCaPem = sslCaPem,
-            SslCertificatePem = sslCertificatePem,
-            SslKeyPem = sslKeyPem,
-            SslKeyPassword = sslKeyPassword,
+    //         // Ssl settings
+    //         SslCaPem = sslCaPem,
+    //         SslCertificatePem = sslCertificatePem,
+    //         SslKeyPem = sslKeyPem,
+    //         SslKeyPassword = sslKeyPassword,
 
-            // Specify the Kafka delivery settings
-            Acks = Acks.All,
-            LingerMs = 10,
+    //         // Specify the Kafka delivery settings
+    //         Acks = Acks.All,
+    //         LingerMs = 10,
 
-            //Debug = "all"
-        };
+    //         //Debug = "all"
+    //     };
 
-        return producerConfig;
-    }
+    //     return producerConfig;
+    // }
 
     public bool Produce(byte[] key, byte[]? value, Dictionary<string, byte[]> headers, CorrelationId correlationId)
     {

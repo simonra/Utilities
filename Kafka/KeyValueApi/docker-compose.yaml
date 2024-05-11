@@ -21,12 +21,31 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
+
+      # KAFKA_BOOTSTRAP_SERVERS: "broker1:9092,broker2:9092,broker3:9092"
+      # KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION: "/kafka/secrets/admin.lokalmaskin.crt"
+      # KAFKA_CLIENT_KEY_PASSWORD_LOCATION: "/kafka/secrets/admin.lokalmaskin.password.txt"
+      # KAFKA_CLIENT_KEY_PEM_LOCATION: "/kafka/secrets/admin.lokalmaskin.key"
+      # KAFKA_TRUST_STORE_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
+
+      # kafkal client config
       KAFKA_BOOTSTRAP_SERVERS: "broker1:9092,broker2:9092,broker3:9092"
-      KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION: "/kafka/secrets/admin.lokalmaskin.crt"
-      KAFKA_CLIENT_KEY_PASSWORD_LOCATION: "/kafka/secrets/admin.lokalmaskin.password.txt"
-      KAFKA_CLIENT_KEY_PEM_LOCATION: "/kafka/secrets/admin.lokalmaskin.key"
-      KAFKA_TRUST_STORE_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
-      KAFKA_CONSUMER_GROUP: "cg.experimental"
+      KAFKA_SECURITY_PROTOCOL: "ssl"
+      KAFKA_SSL_CA_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
+      KAFKA_SSL_CERTIFICATE_LOCATION: "/kafka/secrets/admin.lokalmaskin.crt"
+      KAFKA_SSL_KEY_LOCATION: "/kafka/secrets/admin.lokalmaskin.key"
+      KAFKA_SSL_KEY_PASSWORD: "/kafka/secrets/admin.lokalmaskin.password.txt"
+      KAFKA_ACKS: "all"
+
+      # Consumer config
+      KAFKA_GROUP_ID: "cg.experimental"
+      KAFKA_ENABLE_AUTO_COMMIT: "true"
+      KAFKA_AUTO_COMMIT_INTERVAL_MS: "200"
+      KAFKA_AUTO_OFFSET_RESET: "Earliest"
+
+      # Producer config
+      KAFKA_LINGER_MS: "10"
+
       KAFKA_KEY_VALUE_TOPIC: "t.key-value-store"
       KAFKA_SCHEMA_REGISTRY_ADDRESS: "http://schema-registry:8083"
       KEY_VALUE_STORE_ROOT_DIR: "/ContainerData/KeyValueApi/LocalState"

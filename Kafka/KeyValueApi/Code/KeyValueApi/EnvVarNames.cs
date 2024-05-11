@@ -1,6 +1,6 @@
 public static class EnvVarNames
 {
-    public const string KAFKA_BOOTSTRAP_SERVERS = nameof(KAFKA_BOOTSTRAP_SERVERS);
+    // public const string KAFKA_BOOTSTRAP_SERVERS = nameof(KAFKA_BOOTSTRAP_SERVERS);
     public const string KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION = nameof(KAFKA_CLIENT_CERTIFICATE_PEM_LOCATION);
     public const string KAFKA_CLIENT_KEY_PASSWORD_LOCATION = nameof(KAFKA_CLIENT_KEY_PASSWORD_LOCATION);
     public const string KAFKA_CLIENT_KEY_PEM_LOCATION = nameof(KAFKA_CLIENT_KEY_PEM_LOCATION);
