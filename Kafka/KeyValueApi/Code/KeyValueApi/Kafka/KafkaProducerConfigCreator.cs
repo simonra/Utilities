@@ -5,11 +5,11 @@ public static class KafkaProducerConfigGenerator
         var clientConfig = KafkaClientConfigGenerator.GetClientConfig();
         var producerConfig = new Confluent.Kafka.ProducerConfig(clientConfig);
 
-        var BatchNumMessages = Environment.GetEnvironmentVariable(KAFKA_BATCH_NUM_MESSAGES);
-        if(!string.IsNullOrEmpty(BatchNumMessages)) producerConfig.BatchNumMessages = int.Parse(BatchNumMessages);
+        var batchNumMessages = Environment.GetEnvironmentVariable(KAFKA_BATCH_NUM_MESSAGES);
+        if(!string.IsNullOrEmpty(batchNumMessages)) producerConfig.BatchNumMessages = int.Parse(batchNumMessages);
 
-        var CompressionType = Environment.GetEnvironmentVariable(KAFKA_COMPRESSION_TYPE);
-        switch (CompressionType?.ToLowerInvariant())
+        var compressionType = Environment.GetEnvironmentVariable(KAFKA_COMPRESSION_TYPE);
+        switch (compressionType?.ToLowerInvariant())
         {
             case "gzip":
                 producerConfig.CompressionType = Confluent.Kafka.CompressionType.Gzip;
@@ -30,26 +30,26 @@ public static class KafkaProducerConfigGenerator
                 break;
         }
 
-        var QueueBufferingBackpressureThreshold = Environment.GetEnvironmentVariable(KAFKA_QUEUE_BUFFERING_BACKPRESSURE_THRESHOLD);
-        if(!string.IsNullOrEmpty(QueueBufferingBackpressureThreshold)) producerConfig.QueueBufferingBackpressureThreshold = int.Parse(QueueBufferingBackpressureThreshold);
+        var queueBufferingBackpressureThreshold = Environment.GetEnvironmentVariable(KAFKA_QUEUE_BUFFERING_BACKPRESSURE_THRESHOLD);
+        if(!string.IsNullOrEmpty(queueBufferingBackpressureThreshold)) producerConfig.QueueBufferingBackpressureThreshold = int.Parse(queueBufferingBackpressureThreshold);
 
-        var RetryBackoffMs = Environment.GetEnvironmentVariable(KAFKA_RETRY_BACKOFF_MS);
-        if(!string.IsNullOrEmpty(RetryBackoffMs)) producerConfig.RetryBackoffMs = int.Parse(RetryBackoffMs);
+        var retryBackoffMs = Environment.GetEnvironmentVariable(KAFKA_RETRY_BACKOFF_MS);
+        if(!string.IsNullOrEmpty(retryBackoffMs)) producerConfig.RetryBackoffMs = int.Parse(retryBackoffMs);
 
-        var MessageSendMaxRetries = Environment.GetEnvironmentVariable(KAFKA_MESSAGE_SEND_MAX_RETRIES);
-        if(!string.IsNullOrEmpty(MessageSendMaxRetries)) producerConfig.MessageSendMaxRetries = int.Parse(MessageSendMaxRetries);
+        var messageSendMaxRetries = Environment.GetEnvironmentVariable(KAFKA_MESSAGE_SEND_MAX_RETRIES);
+        if(!string.IsNullOrEmpty(messageSendMaxRetries)) producerConfig.MessageSendMaxRetries = int.Parse(messageSendMaxRetries);
 
-        var LingerMs = Environment.GetEnvironmentVariable(KAFKA_LINGER_MS);
-        if(!string.IsNullOrEmpty(LingerMs)) producerConfig.LingerMs = double.Parse(LingerMs);
+        var lingerMs = Environment.GetEnvironmentVariable(KAFKA_LINGER_MS);
+        if(!string.IsNullOrEmpty(lingerMs)) producerConfig.LingerMs = double.Parse(lingerMs);
 
-        var QueueBufferingMaxKbytes = Environment.GetEnvironmentVariable(KAFKA_QUEUE_BUFFERING_MAX_KBYTES);
-        if(!string.IsNullOrEmpty(QueueBufferingMaxKbytes)) producerConfig.QueueBufferingMaxKbytes = int.Parse(QueueBufferingMaxKbytes);
+        var queueBufferingMaxKbytes = Environment.GetEnvironmentVariable(KAFKA_QUEUE_BUFFERING_MAX_KBYTES);
+        if(!string.IsNullOrEmpty(queueBufferingMaxKbytes)) producerConfig.QueueBufferingMaxKbytes = int.Parse(queueBufferingMaxKbytes);
 
-        var QueueBufferingMaxMessages = Environment.GetEnvironmentVariable(KAFKA_QUEUE_BUFFERING_MAX_MESSAGES);
-        if(!string.IsNullOrEmpty(QueueBufferingMaxMessages)) producerConfig.QueueBufferingMaxMessages = int.Parse(QueueBufferingMaxMessages);
+        var queueBufferingMaxMessages = Environment.GetEnvironmentVariable(KAFKA_QUEUE_BUFFERING_MAX_MESSAGES);
+        if(!string.IsNullOrEmpty(queueBufferingMaxMessages)) producerConfig.QueueBufferingMaxMessages = int.Parse(queueBufferingMaxMessages);
 
-        var EnableGaplessGuarantee = Environment.GetEnvironmentVariable(KAFKA_ENABLE_GAPLESS_GUARANTEE);
-        switch (EnableGaplessGuarantee?.ToLowerInvariant())
+        var enableGaplessGuarantee = Environment.GetEnvironmentVariable(KAFKA_ENABLE_GAPLESS_GUARANTEE);
+        switch (enableGaplessGuarantee?.ToLowerInvariant())
         {
             case "true":
                 producerConfig.EnableGaplessGuarantee = true;
@@ -61,8 +61,8 @@ public static class KafkaProducerConfigGenerator
                 break;
         }
 
-        var EnableIdempotence = Environment.GetEnvironmentVariable(KAFKA_ENABLE_IDEMPOTENCE);
-        switch (EnableIdempotence?.ToLowerInvariant())
+        var enableIdempotence = Environment.GetEnvironmentVariable(KAFKA_ENABLE_IDEMPOTENCE);
+        switch (enableIdempotence?.ToLowerInvariant())
         {
             case "true":
                 producerConfig.EnableIdempotence = true;
@@ -74,17 +74,17 @@ public static class KafkaProducerConfigGenerator
                 break;
         }
 
-        var TransactionTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_TRANSACTION_TIMEOUT_MS);
-        if(!string.IsNullOrEmpty(TransactionTimeoutMs)) producerConfig.TransactionTimeoutMs = int.Parse(TransactionTimeoutMs);
+        var transactionTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_TRANSACTION_TIMEOUT_MS);
+        if(!string.IsNullOrEmpty(transactionTimeoutMs)) producerConfig.TransactionTimeoutMs = int.Parse(transactionTimeoutMs);
 
-        var TransactionalId = Environment.GetEnvironmentVariable(KAFKA_TRANSACTIONAL_ID);
-        if(!string.IsNullOrEmpty(TransactionalId)) producerConfig.TransactionalId = TransactionalId;
+        var transactionalId = Environment.GetEnvironmentVariable(KAFKA_TRANSACTIONAL_ID);
+        if(!string.IsNullOrEmpty(transactionalId)) producerConfig.TransactionalId = transactionalId;
 
-        var CompressionLevel = Environment.GetEnvironmentVariable(KAFKA_COMPRESSION_LEVEL);
-        if(!string.IsNullOrEmpty(CompressionLevel)) producerConfig.CompressionLevel = int.Parse(CompressionLevel);
+        var compressionLevel = Environment.GetEnvironmentVariable(KAFKA_COMPRESSION_LEVEL);
+        if(!string.IsNullOrEmpty(compressionLevel)) producerConfig.CompressionLevel = int.Parse(compressionLevel);
 
-        var Partitioner = Environment.GetEnvironmentVariable(KAFKA_PARTITIONER);
-        switch (Partitioner?.ToLowerInvariant())
+        var partitioner = Environment.GetEnvironmentVariable(KAFKA_PARTITIONER);
+        switch (partitioner?.ToLowerInvariant())
         {
             case "consistent":
                 producerConfig.Partitioner = Confluent.Kafka.Partitioner.Consistent;
@@ -105,17 +105,17 @@ public static class KafkaProducerConfigGenerator
                 break;
         }
 
-        var MessageTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_MESSAGE_TIMEOUT_MS);
-        if(!string.IsNullOrEmpty(MessageTimeoutMs)) producerConfig.MessageTimeoutMs = int.Parse(MessageTimeoutMs);
+        var messageTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_MESSAGE_TIMEOUT_MS);
+        if(!string.IsNullOrEmpty(messageTimeoutMs)) producerConfig.MessageTimeoutMs = int.Parse(messageTimeoutMs);
 
-        var RequestTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_REQUEST_TIMEOUT_MS);
-        if(!string.IsNullOrEmpty(RequestTimeoutMs)) producerConfig.RequestTimeoutMs = int.Parse(RequestTimeoutMs);
+        var requestTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_REQUEST_TIMEOUT_MS);
+        if(!string.IsNullOrEmpty(requestTimeoutMs)) producerConfig.RequestTimeoutMs = int.Parse(requestTimeoutMs);
 
-        var DeliveryReportFields = Environment.GetEnvironmentVariable(KAFKA_DELIVERY_REPORT_FIELDS);
-        if(!string.IsNullOrEmpty(DeliveryReportFields)) producerConfig.DeliveryReportFields = DeliveryReportFields;
+        var deliveryReportFields = Environment.GetEnvironmentVariable(KAFKA_DELIVERY_REPORT_FIELDS);
+        if(!string.IsNullOrEmpty(deliveryReportFields)) producerConfig.DeliveryReportFields = deliveryReportFields;
 
-        var EnableDeliveryReports = Environment.GetEnvironmentVariable(KAFKA_ENABLE_DELIVERY_REPORTS);
-        switch (EnableDeliveryReports?.ToLowerInvariant())
+        var enableDeliveryReports = Environment.GetEnvironmentVariable(KAFKA_ENABLE_DELIVERY_REPORTS);
+        switch (enableDeliveryReports?.ToLowerInvariant())
         {
             case "true":
                 producerConfig.EnableDeliveryReports = true;
@@ -127,8 +127,8 @@ public static class KafkaProducerConfigGenerator
                 break;
         }
 
-        var EnableBackgroundPoll = Environment.GetEnvironmentVariable(KAFKA_ENABLE_BACKGROUND_POLL);
-        switch (EnableBackgroundPoll?.ToLowerInvariant())
+        var enableBackgroundPoll = Environment.GetEnvironmentVariable(KAFKA_ENABLE_BACKGROUND_POLL);
+        switch (enableBackgroundPoll?.ToLowerInvariant())
         {
             case "true":
                 producerConfig.EnableBackgroundPoll = true;
@@ -140,11 +140,11 @@ public static class KafkaProducerConfigGenerator
                 break;
         }
 
-        var BatchSize = Environment.GetEnvironmentVariable(KAFKA_BATCH_SIZE);
-        if(!string.IsNullOrEmpty(BatchSize)) producerConfig.BatchSize = int.Parse(BatchSize);
+        var batchSize = Environment.GetEnvironmentVariable(KAFKA_BATCH_SIZE);
+        if(!string.IsNullOrEmpty(batchSize)) producerConfig.BatchSize = int.Parse(batchSize);
 
-        var StickyPartitioningLingerMs = Environment.GetEnvironmentVariable(KAFKA_STICKY_PARTITIONING_LINGER_MS);
-        if(!string.IsNullOrEmpty(StickyPartitioningLingerMs)) producerConfig.StickyPartitioningLingerMs = int.Parse(StickyPartitioningLingerMs);
+        var stickyPartitioningLingerMs = Environment.GetEnvironmentVariable(KAFKA_STICKY_PARTITIONING_LINGER_MS);
+        if(!string.IsNullOrEmpty(stickyPartitioningLingerMs)) producerConfig.StickyPartitioningLingerMs = int.Parse(stickyPartitioningLingerMs);
 
         return producerConfig;
     }

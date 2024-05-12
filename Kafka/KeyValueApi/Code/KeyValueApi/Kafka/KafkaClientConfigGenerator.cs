@@ -16,55 +16,54 @@ public static class KafkaClientConfigGenerator
         var sslCrlLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CRL_LOCATION);
         if(!string.IsNullOrEmpty(sslCrlLocation)) clientConfig.SslCrlLocation = sslCrlLocation;
 
-        var SslCaCertificateStores = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_CERTIFICATE_STORES);
-        if(!string.IsNullOrEmpty(SslCaCertificateStores)) clientConfig.SslCaCertificateStores = SslCaCertificateStores;
+        var sslCaCertificateStores = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_CERTIFICATE_STORES);
+        if(!string.IsNullOrEmpty(sslCaCertificateStores)) clientConfig.SslCaCertificateStores = sslCaCertificateStores;
 
         // ToDo: Get from location?
-        var SslCaPem = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_PEM);
-        if(!string.IsNullOrEmpty(SslCaPem)) clientConfig.SslCaPem = SslCaPem;
+        var sslCaPem = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_PEM);
+        if(!string.IsNullOrEmpty(sslCaPem)) clientConfig.SslCaPem = sslCaPem;
 
-        var SslCaPemLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_PEM_LOCATION);
-        if(!string.IsNullOrEmpty(SslCaPemLocation)) clientConfig.SslCaPem = File.ReadAllText(SslCaPemLocation);
+        var sslCaPemLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_PEM_LOCATION);
+        if(!string.IsNullOrEmpty(sslCaPemLocation)) clientConfig.SslCaPem = File.ReadAllText(sslCaPemLocation);
 
-        var SslCaLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_LOCATION);
-        if(!string.IsNullOrEmpty(SslCaLocation)) clientConfig.SslCaLocation = SslCaLocation;
+        var sslCaLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_LOCATION);
+        if(!string.IsNullOrEmpty(sslCaLocation)) clientConfig.SslCaLocation = sslCaLocation;
 
-        var SslCertificateLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CERTIFICATE_LOCATION);
-        if(!string.IsNullOrEmpty(SslCertificateLocation)) clientConfig.SslCertificateLocation = SslCertificateLocation;
+        var sslCertificateLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_CERTIFICATE_LOCATION);
+        if(!string.IsNullOrEmpty(sslCertificateLocation)) clientConfig.SslCertificateLocation = sslCertificateLocation;
 
-        var SslEngineLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_ENGINE_LOCATION);
-        if(!string.IsNullOrEmpty(SslEngineLocation)) clientConfig.SslEngineLocation = SslEngineLocation;
+        var sslEngineLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_ENGINE_LOCATION);
+        if(!string.IsNullOrEmpty(sslEngineLocation)) clientConfig.SslEngineLocation = sslEngineLocation;
 
-        var SslKeyPem = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PEM);
-        if(!string.IsNullOrEmpty(SslKeyPem)) clientConfig.SslKeyPem = SslKeyPem;
+        var sslKeyPem = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PEM);
+        if(!string.IsNullOrEmpty(sslKeyPem)) clientConfig.SslKeyPem = sslKeyPem;
 
-        var SslKeyPassword = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PASSWORD);
-        if(!string.IsNullOrEmpty(SslKeyPassword)) clientConfig.SslKeyPassword = SslKeyPassword;
+        var sslKeyPassword = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PASSWORD);
+        if(!string.IsNullOrEmpty(sslKeyPassword)) clientConfig.SslKeyPassword = sslKeyPassword;
 
-        var SslKeyPasswordLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PASSWORD_LOCATION);
-        if(!string.IsNullOrEmpty(SslKeyPasswordLocation)) clientConfig.SslCaPem = File.ReadAllText(SslKeyPasswordLocation);
+        var sslKeyPasswordLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PASSWORD_LOCATION);
+        if(!string.IsNullOrEmpty(sslKeyPasswordLocation)) clientConfig.SslCaPem = File.ReadAllText(sslKeyPasswordLocation);
 
-        var SslKeyLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_LOCATION);
-        if(!string.IsNullOrEmpty(SslKeyLocation)) clientConfig.SslKeyLocation = SslKeyLocation;
+        var sslKeyLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_LOCATION);
+        if(!string.IsNullOrEmpty(sslKeyLocation)) clientConfig.SslKeyLocation = sslKeyLocation;
 
-        var SslSigalgsList = Environment.GetEnvironmentVariable(KAFKA_SSL_SIGALGS_LIST);
-        if(!string.IsNullOrEmpty(SslSigalgsList)) clientConfig.SslSigalgsList = SslSigalgsList;
+        var sslSigalgsList = Environment.GetEnvironmentVariable(KAFKA_SSL_SIGALGS_LIST);
+        if(!string.IsNullOrEmpty(sslSigalgsList)) clientConfig.SslSigalgsList = sslSigalgsList;
 
-        var SslCurvesList = Environment.GetEnvironmentVariable(KAFKA_SSL_CURVES_LIST);
-        if(!string.IsNullOrEmpty(SslCurvesList)) clientConfig.SslCurvesList = SslCurvesList;
+        var sslCurvesList = Environment.GetEnvironmentVariable(KAFKA_SSL_CURVES_LIST);
+        if(!string.IsNullOrEmpty(sslCurvesList)) clientConfig.SslCurvesList = sslCurvesList;
 
-        var SslCipherSuites = Environment.GetEnvironmentVariable(KAFKA_SSL_CIPHER_SUITES);
-        if(!string.IsNullOrEmpty(SslCipherSuites)) clientConfig.SslCipherSuites = SslCipherSuites;
+        var sslCipherSuites = Environment.GetEnvironmentVariable(KAFKA_SSL_CIPHER_SUITES);
+        if(!string.IsNullOrEmpty(sslCipherSuites)) clientConfig.SslCipherSuites = sslCipherSuites;
 
-        // ToDo: Use location?
-        var SslCertificatePem = Environment.GetEnvironmentVariable(KAFKA_SSL_CERTIFICATE_PEM);
-        if(!string.IsNullOrEmpty(SslCertificatePem)) clientConfig.SslCertificatePem = SslCertificatePem;
+        var sslCertificatePem = Environment.GetEnvironmentVariable(KAFKA_SSL_CERTIFICATE_PEM);
+        if(!string.IsNullOrEmpty(sslCertificatePem)) clientConfig.SslCertificatePem = sslCertificatePem;
 
-        var SslEngineId = Environment.GetEnvironmentVariable(KAFKA_SSL_ENGINE_ID);
-        if(!string.IsNullOrEmpty(SslEngineId)) clientConfig.SslEngineId = SslEngineId;
+        var sslEngineId = Environment.GetEnvironmentVariable(KAFKA_SSL_ENGINE_ID);
+        if(!string.IsNullOrEmpty(sslEngineId)) clientConfig.SslEngineId = sslEngineId;
 
-        var SslEndpointIdentificationAlgorithm = Environment.GetEnvironmentVariable(KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM);
-        switch (SslEndpointIdentificationAlgorithm?.ToLowerInvariant())
+        var sslEndpointIdentificationAlgorithm = Environment.GetEnvironmentVariable(KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM);
+        switch (sslEndpointIdentificationAlgorithm?.ToLowerInvariant())
         {
             case "none":
                 clientConfig.SslEndpointIdentificationAlgorithm = Confluent.Kafka.SslEndpointIdentificationAlgorithm.None;
@@ -76,8 +75,8 @@ public static class KafkaClientConfigGenerator
                 break;
         }
 
-        var SecurityProtocol = Environment.GetEnvironmentVariable(KAFKA_SECURITY_PROTOCOL);
-        switch (SecurityProtocol?.ToLowerInvariant())
+        var securityProtocol = Environment.GetEnvironmentVariable(KAFKA_SECURITY_PROTOCOL);
+        switch (securityProtocol?.ToLowerInvariant())
         {
             case "plaintext":
                 clientConfig.SecurityProtocol = Confluent.Kafka.SecurityProtocol.Plaintext;
@@ -95,26 +94,26 @@ public static class KafkaClientConfigGenerator
                 break;
         }
 
-        var PluginLibraryPaths = Environment.GetEnvironmentVariable(KAFKA_PLUGIN_LIBRARY_PATHS);
-        if(!string.IsNullOrEmpty(PluginLibraryPaths)) clientConfig.PluginLibraryPaths = PluginLibraryPaths;
+        var pluginLibraryPaths = Environment.GetEnvironmentVariable(KAFKA_PLUGIN_LIBRARY_PATHS);
+        if(!string.IsNullOrEmpty(pluginLibraryPaths)) clientConfig.PluginLibraryPaths = pluginLibraryPaths;
 
-        var SaslOauthbearerTokenEndpointUrl = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL);
-        if(!string.IsNullOrEmpty(SaslOauthbearerTokenEndpointUrl)) clientConfig.SaslOauthbearerTokenEndpointUrl = SaslOauthbearerTokenEndpointUrl;
+        var saslOauthbearerTokenEndpointUrl = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL);
+        if(!string.IsNullOrEmpty(saslOauthbearerTokenEndpointUrl)) clientConfig.SaslOauthbearerTokenEndpointUrl = saslOauthbearerTokenEndpointUrl;
 
-        var SaslOauthbearerExtensions = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_EXTENSIONS);
-        if(!string.IsNullOrEmpty(SaslOauthbearerExtensions)) clientConfig.SaslOauthbearerExtensions = SaslOauthbearerExtensions;
+        var saslOauthbearerExtensions = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_EXTENSIONS);
+        if(!string.IsNullOrEmpty(saslOauthbearerExtensions)) clientConfig.SaslOauthbearerExtensions = saslOauthbearerExtensions;
 
-        var SaslOauthbearerScope = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_SCOPE);
-        if(!string.IsNullOrEmpty(SaslOauthbearerScope)) clientConfig.SaslOauthbearerScope = SaslOauthbearerScope;
+        var saslOauthbearerScope = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_SCOPE);
+        if(!string.IsNullOrEmpty(saslOauthbearerScope)) clientConfig.SaslOauthbearerScope = saslOauthbearerScope;
 
-        var SaslOauthbearerClientSecret = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_CLIENT_SECRET);
-        if(!string.IsNullOrEmpty(SaslOauthbearerClientSecret)) clientConfig.SaslOauthbearerClientSecret = SaslOauthbearerClientSecret;
+        var saslOauthbearerClientSecret = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_CLIENT_SECRET);
+        if(!string.IsNullOrEmpty(saslOauthbearerClientSecret)) clientConfig.SaslOauthbearerClientSecret = saslOauthbearerClientSecret;
 
-        var SaslOauthbearerClientId = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_CLIENT_ID);
-        if(!string.IsNullOrEmpty(SaslOauthbearerClientId)) clientConfig.SaslOauthbearerClientId = SaslOauthbearerClientId;
+        var saslOauthbearerClientId = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_CLIENT_ID);
+        if(!string.IsNullOrEmpty(saslOauthbearerClientId)) clientConfig.SaslOauthbearerClientId = saslOauthbearerClientId;
 
-        var SaslOauthbearerMethod = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_METHOD);
-        switch (SaslOauthbearerMethod?.ToLowerInvariant())
+        var saslOauthbearerMethod = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_METHOD);
+        switch (saslOauthbearerMethod?.ToLowerInvariant())
         {
             case "default":
                 clientConfig.SaslOauthbearerMethod = Confluent.Kafka.SaslOauthbearerMethod.Default;
@@ -126,8 +125,8 @@ public static class KafkaClientConfigGenerator
                 break;
         }
 
-        var EnableSslCertificateVerification = Environment.GetEnvironmentVariable(KAFKA_ENABLE_SSL_CERTIFICATE_VERIFICATION);
-        switch (EnableSslCertificateVerification?.ToLowerInvariant())
+        var enableSslCertificateVerification = Environment.GetEnvironmentVariable(KAFKA_ENABLE_SSL_CERTIFICATE_VERIFICATION);
+        switch (enableSslCertificateVerification?.ToLowerInvariant())
         {
             case "true":
                 clientConfig.EnableSslCertificateVerification = true;
@@ -139,8 +138,8 @@ public static class KafkaClientConfigGenerator
                 break;
         }
 
-        var EnableSaslOauthbearerUnsecureJwt = Environment.GetEnvironmentVariable(KAFKA_ENABLE_SASL_OAUTHBEARER_UNSECURE_JWT);
-        switch (EnableSaslOauthbearerUnsecureJwt?.ToLowerInvariant())
+        var enableSaslOauthbearerUnsecureJwt = Environment.GetEnvironmentVariable(KAFKA_ENABLE_SASL_OAUTHBEARER_UNSECURE_JWT);
+        switch (enableSaslOauthbearerUnsecureJwt?.ToLowerInvariant())
         {
             case "true":
                 clientConfig.EnableSaslOauthbearerUnsecureJwt = true;
@@ -152,32 +151,32 @@ public static class KafkaClientConfigGenerator
                 break;
         }
 
-        var SaslPassword = Environment.GetEnvironmentVariable(KAFKA_SASL_PASSWORD);
-        if(!string.IsNullOrEmpty(SaslPassword)) clientConfig.SaslPassword = SaslPassword;
+        var saslPassword = Environment.GetEnvironmentVariable(KAFKA_SASL_PASSWORD);
+        if(!string.IsNullOrEmpty(saslPassword)) clientConfig.SaslPassword = saslPassword;
 
-        var SaslUsername = Environment.GetEnvironmentVariable(KAFKA_SASL_USERNAME);
-        if(!string.IsNullOrEmpty(SaslUsername)) clientConfig.SaslUsername = SaslUsername;
+        var saslUsername = Environment.GetEnvironmentVariable(KAFKA_SASL_USERNAME);
+        if(!string.IsNullOrEmpty(saslUsername)) clientConfig.SaslUsername = saslUsername;
 
-        var SaslKerberosMinTimeBeforeRelogin = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_MIN_TIME_BEFORE_RELOGIN);
-        if(!string.IsNullOrEmpty(SaslKerberosMinTimeBeforeRelogin)) clientConfig.SaslKerberosMinTimeBeforeRelogin = int.Parse(SaslKerberosMinTimeBeforeRelogin);
+        var saslKerberosMinTimeBeforeRelogin = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_MIN_TIME_BEFORE_RELOGIN);
+        if(!string.IsNullOrEmpty(saslKerberosMinTimeBeforeRelogin)) clientConfig.SaslKerberosMinTimeBeforeRelogin = int.Parse(saslKerberosMinTimeBeforeRelogin);
 
-        var SaslKerberosKeytab = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_KEYTAB);
-        if(!string.IsNullOrEmpty(SaslKerberosKeytab)) clientConfig.SaslKerberosKeytab = SaslKerberosKeytab;
+        var saslKerberosKeytab = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_KEYTAB);
+        if(!string.IsNullOrEmpty(saslKerberosKeytab)) clientConfig.SaslKerberosKeytab = saslKerberosKeytab;
 
-        var SaslKerberosKinitCmd = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_KINIT_CMD);
-        if(!string.IsNullOrEmpty(SaslKerberosKinitCmd)) clientConfig.SaslKerberosKinitCmd = SaslKerberosKinitCmd;
+        var saslKerberosKinitCmd = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_KINIT_CMD);
+        if(!string.IsNullOrEmpty(saslKerberosKinitCmd)) clientConfig.SaslKerberosKinitCmd = saslKerberosKinitCmd;
 
-        var SaslKerberosPrincipal = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_PRINCIPAL);
-        if(!string.IsNullOrEmpty(SaslKerberosPrincipal)) clientConfig.SaslKerberosPrincipal = SaslKerberosPrincipal;
+        var saslKerberosPrincipal = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_PRINCIPAL);
+        if(!string.IsNullOrEmpty(saslKerberosPrincipal)) clientConfig.SaslKerberosPrincipal = saslKerberosPrincipal;
 
-        var SaslKerberosServiceName = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_SERVICE_NAME);
-        if(!string.IsNullOrEmpty(SaslKerberosServiceName)) clientConfig.SaslKerberosServiceName = SaslKerberosServiceName;
+        var saslKerberosServiceName = Environment.GetEnvironmentVariable(KAFKA_SASL_KERBEROS_SERVICE_NAME);
+        if(!string.IsNullOrEmpty(saslKerberosServiceName)) clientConfig.SaslKerberosServiceName = saslKerberosServiceName;
 
-        var SaslOauthbearerConfig = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_CONFIG);
-        if(!string.IsNullOrEmpty(SaslOauthbearerConfig)) clientConfig.SaslOauthbearerConfig = SaslOauthbearerConfig;
+        var saslOauthbearerConfig = Environment.GetEnvironmentVariable(KAFKA_SASL_OAUTHBEARER_CONFIG);
+        if(!string.IsNullOrEmpty(saslOauthbearerConfig)) clientConfig.SaslOauthbearerConfig = saslOauthbearerConfig;
 
-        var AllowAutoCreateTopics = Environment.GetEnvironmentVariable(KAFKA_ALLOW_AUTO_CREATE_TOPICS_VALUE);
-        switch (AllowAutoCreateTopics?.ToLowerInvariant())
+        var allowAutoCreateTopics = Environment.GetEnvironmentVariable(KAFKA_ALLOW_AUTO_CREATE_TOPICS_VALUE);
+        switch (allowAutoCreateTopics?.ToLowerInvariant())
         {
             case "true":
                 clientConfig.AllowAutoCreateTopics = true;
@@ -189,8 +188,8 @@ public static class KafkaClientConfigGenerator
                 break;
         }
 
-        var BrokerVersionFallback = Environment.GetEnvironmentVariable(KAFKA_BROKER_VERSION_FALLBACK);
-        if(!string.IsNullOrEmpty(BrokerVersionFallback)) clientConfig.BrokerVersionFallback = BrokerVersionFallback;
+        var brokerVersionFallback = Environment.GetEnvironmentVariable(KAFKA_BROKER_VERSION_FALLBACK);
+        if(!string.IsNullOrEmpty(brokerVersionFallback)) clientConfig.BrokerVersionFallback = brokerVersionFallback;
 
         var apiVersionFallbackMs = Environment.GetEnvironmentVariable(KAFKA_API_VERSION_FALLBACK_MS);
         if(!string.IsNullOrEmpty(apiVersionFallbackMs)) clientConfig.ApiVersionFallbackMs = int.Parse(apiVersionFallbackMs);
@@ -390,8 +389,8 @@ public static class KafkaClientConfigGenerator
         var socketConnectionSetupTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_SOCKET_CONNECTION_SETUP_TIMEOUT_MS);
         if(!string.IsNullOrEmpty(socketConnectionSetupTimeoutMs)) clientConfig.SocketConnectionSetupTimeoutMs = int.Parse(socketConnectionSetupTimeoutMs);
 
-        var BrokerAddressFamily = Environment.GetEnvironmentVariable(KAFKA_BROKER_ADDRESS_FAMILY);
-        switch (BrokerAddressFamily?.ToLowerInvariant())
+        var brokerAddressFamily = Environment.GetEnvironmentVariable(KAFKA_BROKER_ADDRESS_FAMILY);
+        switch (brokerAddressFamily?.ToLowerInvariant())
         {
             case "any":
                 clientConfig.BrokerAddressFamily = Confluent.Kafka.BrokerAddressFamily.Any;
@@ -428,8 +427,8 @@ public static class KafkaClientConfigGenerator
         var reconnectBackoffMaxMs = Environment.GetEnvironmentVariable(KAFKA_RECONNECT_BACKOFF_MAX_MS);
         if(!string.IsNullOrEmpty(reconnectBackoffMaxMs)) clientConfig.ReconnectBackoffMaxMs = int.Parse(reconnectBackoffMaxMs);
 
-        var ClientDnsLookup = Environment.GetEnvironmentVariable(KAFKA_CLIENT_DNS_LOOKUP);
-        switch (ClientDnsLookup?.ToLowerInvariant())
+        var clientDnsLookup = Environment.GetEnvironmentVariable(KAFKA_CLIENT_DNS_LOOKUP);
+        switch (clientDnsLookup?.ToLowerInvariant())
         {
             case "resolvecanonicalbootstrapserversonly":
                 clientConfig.ClientDnsLookup = Confluent.Kafka.ClientDnsLookup.ResolveCanonicalBootstrapServersOnly;

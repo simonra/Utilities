@@ -18,32 +18,32 @@ public static class KafkaConsumerConfigGenerator
                 break;
         }
 
-        var FetchErrorBackoffMs = Environment.GetEnvironmentVariable(KAFKA_FETCH_ERROR_BACKOFF_MS);
-        if(!string.IsNullOrEmpty(FetchErrorBackoffMs)) consumerConfig.FetchErrorBackoffMs = int.Parse(FetchErrorBackoffMs);
+        var fetchErrorBackoffMs = Environment.GetEnvironmentVariable(KAFKA_FETCH_ERROR_BACKOFF_MS);
+        if(!string.IsNullOrEmpty(fetchErrorBackoffMs)) consumerConfig.FetchErrorBackoffMs = int.Parse(fetchErrorBackoffMs);
 
-        var FetchMinBytes = Environment.GetEnvironmentVariable(KAFKA_FETCH_MIN_BYTES);
-        if(!string.IsNullOrEmpty(FetchMinBytes)) consumerConfig.FetchMinBytes = int.Parse(FetchMinBytes);
+        var fetchMinBytes = Environment.GetEnvironmentVariable(KAFKA_FETCH_MIN_BYTES);
+        if(!string.IsNullOrEmpty(fetchMinBytes)) consumerConfig.FetchMinBytes = int.Parse(fetchMinBytes);
 
-        var FetchMaxBytes = Environment.GetEnvironmentVariable(KAFKA_FETCH_MAX_BYTES);
-        if(!string.IsNullOrEmpty(FetchMaxBytes)) consumerConfig.FetchMaxBytes = int.Parse(FetchMaxBytes);
+        var fetchMaxBytes = Environment.GetEnvironmentVariable(KAFKA_FETCH_MAX_BYTES);
+        if(!string.IsNullOrEmpty(fetchMaxBytes)) consumerConfig.FetchMaxBytes = int.Parse(fetchMaxBytes);
 
-        var MaxPartitionFetchBytes = Environment.GetEnvironmentVariable(KAFKA_MAX_PARTITION_FETCH_BYTES);
-        if(!string.IsNullOrEmpty(MaxPartitionFetchBytes)) consumerConfig.MaxPartitionFetchBytes = int.Parse(MaxPartitionFetchBytes);
+        var maxPartitionFetchBytes = Environment.GetEnvironmentVariable(KAFKA_MAX_PARTITION_FETCH_BYTES);
+        if(!string.IsNullOrEmpty(maxPartitionFetchBytes)) consumerConfig.MaxPartitionFetchBytes = int.Parse(maxPartitionFetchBytes);
 
-        var FetchQueueBackoffMs = Environment.GetEnvironmentVariable(KAFKA_FETCH_QUEUE_BACKOFF_MS);
-        if(!string.IsNullOrEmpty(FetchQueueBackoffMs)) consumerConfig.FetchQueueBackoffMs = int.Parse(FetchQueueBackoffMs);
+        var fetchQueueBackoffMs = Environment.GetEnvironmentVariable(KAFKA_FETCH_QUEUE_BACKOFF_MS);
+        if(!string.IsNullOrEmpty(fetchQueueBackoffMs)) consumerConfig.FetchQueueBackoffMs = int.Parse(fetchQueueBackoffMs);
 
-        var FetchWaitMaxMs = Environment.GetEnvironmentVariable(KAFKA_FETCH_WAIT_MAX_MS);
-        if(!string.IsNullOrEmpty(FetchWaitMaxMs)) consumerConfig.FetchWaitMaxMs = int.Parse(FetchWaitMaxMs);
+        var fetchWaitMaxMs = Environment.GetEnvironmentVariable(KAFKA_FETCH_WAIT_MAX_MS);
+        if(!string.IsNullOrEmpty(fetchWaitMaxMs)) consumerConfig.FetchWaitMaxMs = int.Parse(fetchWaitMaxMs);
 
-        var QueuedMaxMessagesKbytes = Environment.GetEnvironmentVariable(KAFKA_QUEUED_MAX_MESSAGES_KBYTES);
-        if(!string.IsNullOrEmpty(QueuedMaxMessagesKbytes)) consumerConfig.QueuedMaxMessagesKbytes = int.Parse(QueuedMaxMessagesKbytes);
+        var queuedMaxMessagesKbytes = Environment.GetEnvironmentVariable(KAFKA_QUEUED_MAX_MESSAGES_KBYTES);
+        if(!string.IsNullOrEmpty(queuedMaxMessagesKbytes)) consumerConfig.QueuedMaxMessagesKbytes = int.Parse(queuedMaxMessagesKbytes);
 
-        var QueuedMinMessages = Environment.GetEnvironmentVariable(KAFKA_QUEUED_MIN_MESSAGES);
-        if(!string.IsNullOrEmpty(QueuedMinMessages)) consumerConfig.QueuedMinMessages = int.Parse(QueuedMinMessages);
+        var queuedMinMessages = Environment.GetEnvironmentVariable(KAFKA_QUEUED_MIN_MESSAGES);
+        if(!string.IsNullOrEmpty(queuedMinMessages)) consumerConfig.QueuedMinMessages = int.Parse(queuedMinMessages);
 
-        var EnableAutoOffsetStore = Environment.GetEnvironmentVariable(KAFKA_ENABLE_AUTO_OFFSET_STORE);
-        switch (EnableAutoOffsetStore?.ToLowerInvariant())
+        var enableAutoOffsetStore = Environment.GetEnvironmentVariable(KAFKA_ENABLE_AUTO_OFFSET_STORE);
+        switch (enableAutoOffsetStore?.ToLowerInvariant())
         {
             case "true":
                 consumerConfig.EnableAutoOffsetStore = true;
@@ -55,14 +55,14 @@ public static class KafkaConsumerConfigGenerator
                 break;
         }
 
-        var AutoCommitIntervalMs = Environment.GetEnvironmentVariable(KAFKA_AUTO_COMMIT_INTERVAL_MS);
-        if(!string.IsNullOrEmpty(AutoCommitIntervalMs)) consumerConfig.AutoCommitIntervalMs = int.Parse(AutoCommitIntervalMs);
+        var autoCommitIntervalMs = Environment.GetEnvironmentVariable(KAFKA_AUTO_COMMIT_INTERVAL_MS);
+        if(!string.IsNullOrEmpty(autoCommitIntervalMs)) consumerConfig.AutoCommitIntervalMs = int.Parse(autoCommitIntervalMs);
 
-        var MaxPollIntervalMs = Environment.GetEnvironmentVariable(KAFKA_MAX_POLL_INTERVAL_MS);
-        if(!string.IsNullOrEmpty(MaxPollIntervalMs)) consumerConfig.MaxPollIntervalMs = int.Parse(MaxPollIntervalMs);
+        var maxPollIntervalMs = Environment.GetEnvironmentVariable(KAFKA_MAX_POLL_INTERVAL_MS);
+        if(!string.IsNullOrEmpty(maxPollIntervalMs)) consumerConfig.MaxPollIntervalMs = int.Parse(maxPollIntervalMs);
 
-        var EnablePartitionEof = Environment.GetEnvironmentVariable(KAFKA_ENABLE_PARTITION_EOF);
-        switch (EnablePartitionEof?.ToLowerInvariant())
+        var enablePartitionEof = Environment.GetEnvironmentVariable(KAFKA_ENABLE_PARTITION_EOF);
+        switch (enablePartitionEof?.ToLowerInvariant())
         {
             case "true":
                 consumerConfig.EnablePartitionEof = true;
@@ -74,20 +74,20 @@ public static class KafkaConsumerConfigGenerator
                 break;
         }
 
-        var CoordinatorQueryIntervalMs = Environment.GetEnvironmentVariable(KAFKA_COORDINATOR_QUERY_INTERVAL_MS);
-        if(!string.IsNullOrEmpty(CoordinatorQueryIntervalMs)) consumerConfig.CoordinatorQueryIntervalMs = int.Parse(CoordinatorQueryIntervalMs);
+        var coordinatorQueryIntervalMs = Environment.GetEnvironmentVariable(KAFKA_COORDINATOR_QUERY_INTERVAL_MS);
+        if(!string.IsNullOrEmpty(coordinatorQueryIntervalMs)) consumerConfig.CoordinatorQueryIntervalMs = int.Parse(coordinatorQueryIntervalMs);
 
-        var GroupProtocolType = Environment.GetEnvironmentVariable(KAFKA_GROUP_PROTOCOL_TYPE);
-        if(!string.IsNullOrEmpty(GroupProtocolType)) consumerConfig.GroupProtocolType = GroupProtocolType;
+        var groupProtocolType = Environment.GetEnvironmentVariable(KAFKA_GROUP_PROTOCOL_TYPE);
+        if(!string.IsNullOrEmpty(groupProtocolType)) consumerConfig.GroupProtocolType = groupProtocolType;
 
-        var HeartbeatIntervalMs = Environment.GetEnvironmentVariable(KAFKA_HEARTBEAT_INTERVAL_MS);
-        if(!string.IsNullOrEmpty(HeartbeatIntervalMs)) consumerConfig.HeartbeatIntervalMs = int.Parse(HeartbeatIntervalMs);
+        var heartbeatIntervalMs = Environment.GetEnvironmentVariable(KAFKA_HEARTBEAT_INTERVAL_MS);
+        if(!string.IsNullOrEmpty(heartbeatIntervalMs)) consumerConfig.HeartbeatIntervalMs = int.Parse(heartbeatIntervalMs);
 
-        var SessionTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_SESSION_TIMEOUT_MS);
-        if(!string.IsNullOrEmpty(SessionTimeoutMs)) consumerConfig.SessionTimeoutMs = int.Parse(SessionTimeoutMs);
+        var sessionTimeoutMs = Environment.GetEnvironmentVariable(KAFKA_SESSION_TIMEOUT_MS);
+        if(!string.IsNullOrEmpty(sessionTimeoutMs)) consumerConfig.SessionTimeoutMs = int.Parse(sessionTimeoutMs);
 
-        var PartitionAssignmentStrategy = Environment.GetEnvironmentVariable(KAFKA_PARTITION_ASSIGNMENT_STRATEGY);
-        switch (PartitionAssignmentStrategy?.ToLowerInvariant())
+        var partitionAssignmentStrategy = Environment.GetEnvironmentVariable(KAFKA_PARTITION_ASSIGNMENT_STRATEGY);
+        switch (partitionAssignmentStrategy?.ToLowerInvariant())
         {
             case "cooperativesticky":
                 consumerConfig.PartitionAssignmentStrategy = Confluent.Kafka.PartitionAssignmentStrategy.CooperativeSticky;
@@ -102,14 +102,14 @@ public static class KafkaConsumerConfigGenerator
                 break;
         }
 
-        var GroupInstanceId = Environment.GetEnvironmentVariable(KAFKA_GROUP_INSTANCE_ID);
-        if(!string.IsNullOrEmpty(GroupInstanceId)) consumerConfig.GroupInstanceId = GroupInstanceId;
+        var groupInstanceId = Environment.GetEnvironmentVariable(KAFKA_GROUP_INSTANCE_ID);
+        if(!string.IsNullOrEmpty(groupInstanceId)) consumerConfig.GroupInstanceId = groupInstanceId;
 
-        var GroupId = Environment.GetEnvironmentVariable(KAFKA_GROUP_ID);
-        if(!string.IsNullOrEmpty(GroupId)) consumerConfig.GroupId = GroupId;
+        var groupId = Environment.GetEnvironmentVariable(KAFKA_GROUP_ID);
+        if(!string.IsNullOrEmpty(groupId)) consumerConfig.GroupId = groupId;
 
-        var AutoOffsetReset = Environment.GetEnvironmentVariable(KAFKA_AUTO_OFFSET_RESET);
-        switch (AutoOffsetReset?.ToLowerInvariant())
+        var autoOffsetReset = Environment.GetEnvironmentVariable(KAFKA_AUTO_OFFSET_RESET);
+        switch (autoOffsetReset?.ToLowerInvariant())
         {
             case "earliest":
                 consumerConfig.AutoOffsetReset = Confluent.Kafka.AutoOffsetReset.Earliest;
@@ -124,11 +124,11 @@ public static class KafkaConsumerConfigGenerator
                 break;
         }
 
-        var ConsumeResultFields = Environment.GetEnvironmentVariable(KAFKA_CONSUME_RESULT_FIELDS);
-        if(!string.IsNullOrEmpty(ConsumeResultFields)) consumerConfig.ConsumeResultFields = ConsumeResultFields;
+        var consumeResultFields = Environment.GetEnvironmentVariable(KAFKA_CONSUME_RESULT_FIELDS);
+        if(!string.IsNullOrEmpty(consumeResultFields)) consumerConfig.ConsumeResultFields = consumeResultFields;
 
-        var EnableAutoCommit = Environment.GetEnvironmentVariable(KAFKA_ENABLE_AUTO_COMMIT);
-        switch (EnableAutoCommit?.ToLowerInvariant())
+        var enableAutoCommit = Environment.GetEnvironmentVariable(KAFKA_ENABLE_AUTO_COMMIT);
+        switch (enableAutoCommit?.ToLowerInvariant())
         {
             case "true":
                 consumerConfig.EnableAutoCommit = true;
@@ -140,8 +140,8 @@ public static class KafkaConsumerConfigGenerator
                 break;
         }
 
-        var CheckCrcs = Environment.GetEnvironmentVariable(KAFKA_CHECK_CRCS);
-        switch (CheckCrcs?.ToLowerInvariant())
+        var checkCrcs = Environment.GetEnvironmentVariable(KAFKA_CHECK_CRCS);
+        switch (checkCrcs?.ToLowerInvariant())
         {
             case "true":
                 consumerConfig.CheckCrcs = true;
