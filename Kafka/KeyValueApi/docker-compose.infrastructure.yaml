@@ -545,23 +545,25 @@ services:
         echo '================ Done Creating Certs for Broker3 ==============='
 
         echo '================ Creating Certs for Kafka UI ==================='
+        USER_CN=kafka-ui
+        USER_OUTPUT_DIR=/ContainerData/GeneratedCerts/Kafka/Users/KafkaUi
         echo 'Cleaning and setting up folder structure for Kafka UI certificate'
-        rm -rf /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi
-        mkdir -p /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi
-        cd /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi
+        rm -rf $$USER_OUTPUT_DIR
+        mkdir -p $$USER_OUTPUT_DIR
+        cd $$USER_OUTPUT_DIR
 
         echo 'Setting up password for Kafka UI certificate'
-        KAFKA_UI_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
+        USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
         if [ ''$$USE_DEMO_PASSWORDS == 'true' ]; then
           echo 'WARNING: Setting up local demo password for Kafka UI certificate'
-          KAFKA_UI_PASSWORD='Kafka_UI_users_demo_password'
+          USER_PASSWORD='Kafka_UI_users_demo_password'
         fi
-        echo $$KAFKA_UI_PASSWORD > '/ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/password.txt'
+        echo $$USER_PASSWORD > $$USER_OUTPUT_DIR/password.txt
 
         echo 'Creating private key for Kafka UI certificate'
         openssl genrsa \
-          -passout file:/ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/password.txt \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.key $$RSA_BITS
+          -passout file:$$USER_OUTPUT_DIR/password.txt \
+          -out $$USER_OUTPUT_DIR/acl-principal.key $$RSA_BITS
 
         echo 'Creating certificate signing request config for Kafka UI certificate'
         printf '%s\n' \
@@ -575,15 +577,15 @@ services:
           '[req_distinguished_name]' \
           '' \
           '[v3_req]' \
-          'basicConstraints=CA:FALSE' > /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.csr.config
+          'basicConstraints=CA:FALSE' > $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating certificate signing request for Kafka UI certificate'
         openssl req \
           -new \
-          -key /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.key \
-          -subj '/CN=kafka-ui' \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.csr \
-          -config /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.csr.config
+          -key $$USER_OUTPUT_DIR/acl-principal.key \
+          -subj /CN=$$USER_CN \
+          -out $$USER_OUTPUT_DIR/acl-principal.csr \
+          -config $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating and signing certificate for Kafka UI'
         openssl x509 \
@@ -591,44 +593,46 @@ services:
           -CA $$CA_CRT_PATH \
           -CAkey $$CA_KEY_PATH \
           -passin file:$$CA_PASSWORD_PATH \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.csr \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.crt \
+          -in $$USER_OUTPUT_DIR/acl-principal.csr \
+          -out $$USER_OUTPUT_DIR/acl-principal.crt \
           -days $$VALIDITY_DAYS \
           -CAcreateserial \
           -extensions v3_req \
-          -extfile /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.csr.config
+          -extfile $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating pkcs12 certificate bundle for Kafka UI'
         openssl pkcs12 \
-          -inkey /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.key \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.crt \
-          -passin pass:$$KAFKA_UI_PASSWORD \
-          -passout pass:$$KAFKA_UI_PASSWORD \
+          -inkey $$USER_OUTPUT_DIR/acl-principal.key \
+          -in $$USER_OUTPUT_DIR/acl-principal.crt \
+          -passin pass:$$USER_PASSWORD \
+          -passout pass:$$USER_PASSWORD \
           -export \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/acl-principal.pfx
+          -out $$USER_OUTPUT_DIR/acl-principal.pfx
 
         echo 'Copying CA certificate/public key to Kafka UI folder'
-        cp $$CA_CRT_PATH /ContainerData/GeneratedCerts/Kafka/Users/KafkaUi/
+        cp $$CA_CRT_PATH $$USER_OUTPUT_DIR/
         echo '================ Done Creating Certs for Kafka UI =============='
 
         echo '================ Creating Certs for Schema Registry ============'
+        USER_CN=schema-registry
+        USER_OUTPUT_DIR=/ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry
         echo 'Cleaning and setting up folder structure for Schema Registry certificate'
-        rm -rf /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry
-        mkdir -p /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry
-        cd /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry
+        rm -rf $$USER_OUTPUT_DIR
+        mkdir -p $$USER_OUTPUT_DIR
+        cd $$USER_OUTPUT_DIR
 
         echo 'Setting up password for Schema Registry certificate'
-        SCHEMA_REGISTRY_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
+        USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
         if [ ''$$USE_DEMO_PASSWORDS == 'true' ]; then
           echo 'WARNING: Setting up local demo password for Schema Registry certificate'
-          SCHEMA_REGISTRY_PASSWORD='Schema_Registry_users_demo_password'
+          USER_PASSWORD='Schema_Registry_users_demo_password'
         fi
-        echo $$SCHEMA_REGISTRY_PASSWORD > '/ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/password.txt'
+        echo $$USER_PASSWORD > $$USER_OUTPUT_DIR/password.txt
 
         echo 'Creating private key for Schema Registry certificate'
         openssl genrsa \
-          -passout file:/ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/password.txt \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.key $$RSA_BITS
+          -passout file:$$USER_OUTPUT_DIR/password.txt \
+          -out $$USER_OUTPUT_DIR/acl-principal.key $$RSA_BITS
 
         echo 'Creating certificate signing request config for Schema Registry certificate'
         printf '%s\n' \
@@ -642,15 +646,15 @@ services:
           '[req_distinguished_name]' \
           '' \
           '[v3_req]' \
-          'basicConstraints=CA:FALSE' > /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.csr.config
+          'basicConstraints=CA:FALSE' > $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating certificate signing request for Schema Registry certificate'
         openssl req \
           -new \
-          -key /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.key \
-          -subj '/CN=schema-registry' \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.csr \
-          -config /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.csr.config
+          -key $$USER_OUTPUT_DIR/acl-principal.key \
+          -subj /CN=$$USER_CN \
+          -out $$USER_OUTPUT_DIR/acl-principal.csr \
+          -config $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating and signing certificate for Schema Registry'
         openssl x509 \
@@ -658,40 +662,42 @@ services:
           -CA $$CA_CRT_PATH \
           -CAkey $$CA_KEY_PATH \
           -passin file:$$CA_PASSWORD_PATH \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.csr \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.crt \
+          -in $$USER_OUTPUT_DIR/acl-principal.csr \
+          -out $$USER_OUTPUT_DIR/acl-principal.crt \
           -days $$VALIDITY_DAYS \
           -CAcreateserial \
           -extensions v3_req \
-          -extfile /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.csr.config
+          -extfile $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating pkcs12 certificate bundle for Schema Registry'
         openssl pkcs12 \
-          -inkey /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.key \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.crt \
-          -passin pass:$$SCHEMA_REGISTRY_PASSWORD \
-          -passout pass:$$SCHEMA_REGISTRY_PASSWORD \
+          -inkey $$USER_OUTPUT_DIR/acl-principal.key \
+          -in $$USER_OUTPUT_DIR/acl-principal.crt \
+          -passin pass:$$USER_PASSWORD \
+          -passout pass:$$USER_PASSWORD \
           -export \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/acl-principal.pfx
+          -out $$USER_OUTPUT_DIR/acl-principal.pfx
 
         echo 'Copying CA certificate/public key to Schema Registry folder'
-        cp $$CA_CRT_PATH /ContainerData/GeneratedCerts/Kafka/Users/SchemaRegistry/
+        cp $$CA_CRT_PATH $$USER_OUTPUT_DIR/
         echo '================ Done Creating Certs for Schema Registry ======='
 
         echo '================ Creating Certs for Admin User ================='
+        USER_CN=admin
+        USER_OUTPUT_DIR=/ContainerData/GeneratedCerts/Kafka/Users/Admin
         echo 'Cleaning and setting up folder structure for admin user certificate'
-        rm -rf /ContainerData/GeneratedCerts/Kafka/Users/Admin
-        mkdir -p /ContainerData/GeneratedCerts/Kafka/Users/Admin
-        cd /ContainerData/GeneratedCerts/Kafka/Users/Admin
+        rm -rf $$USER_OUTPUT_DIR
+        mkdir -p $$USER_OUTPUT_DIR
+        cd $$USER_OUTPUT_DIR
 
         echo 'Setting up password for admin user certificate'
-        ADMIN_USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
-        echo $$ADMIN_USER_PASSWORD > '/ContainerData/GeneratedCerts/Kafka/Users/Admin/password.txt'
+        USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
+        echo $$USER_PASSWORD > $$USER_OUTPUT_DIR/password.txt
 
         echo 'Creating private key for admin user certificate'
         openssl genrsa \
-          -passout file:/ContainerData/GeneratedCerts/Kafka/Users/Admin/password.txt \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.key $$RSA_BITS
+          -passout file:$$USER_OUTPUT_DIR/password.txt \
+          -out $$USER_OUTPUT_DIR/acl-principal.key $$RSA_BITS
 
         echo 'Creating certificate signing request config for admin user certificate'
         printf '%s\n' \
@@ -705,15 +711,15 @@ services:
           '[req_distinguished_name]' \
           '' \
           '[v3_req]' \
-          'basicConstraints=CA:FALSE' > /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.csr.config
+          'basicConstraints=CA:FALSE' > $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating certificate signing request for admin user certificate'
         openssl req \
           -new \
-          -key /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.key \
-          -subj '/CN=admin' \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.csr \
-          -config /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.csr.config
+          -key $$USER_OUTPUT_DIR/acl-principal.key \
+          -subj /CN=$$USER_CN \
+          -out $$USER_OUTPUT_DIR/acl-principal.csr \
+          -config $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating and signing certificate for admin user'
         openssl x509 \
@@ -721,49 +727,51 @@ services:
           -CA $$CA_CRT_PATH \
           -CAkey $$CA_KEY_PATH \
           -passin file:$$CA_PASSWORD_PATH \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.csr \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.crt \
+          -in $$USER_OUTPUT_DIR/acl-principal.csr \
+          -out $$USER_OUTPUT_DIR/acl-principal.crt \
           -days $$VALIDITY_DAYS \
           -CAcreateserial \
           -extensions v3_req \
-          -extfile /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.csr.config
+          -extfile $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating pkcs12 certificate bundle for admin user'
         openssl pkcs12 \
-          -inkey /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.key \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.crt \
-          -passin pass:$$ADMIN_USER_PASSWORD \
-          -passout pass:$$ADMIN_USER_PASSWORD \
+          -inkey $$USER_OUTPUT_DIR/acl-principal.key \
+          -in $$USER_OUTPUT_DIR/acl-principal.crt \
+          -passin pass:$$USER_PASSWORD \
+          -passout pass:$$USER_PASSWORD \
           -export \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/Admin/acl-principal.pfx
+          -out $$USER_OUTPUT_DIR/acl-principal.pfx
 
         echo 'Copying CA certificate/public key to admin user folder'
-        cp $$CA_CRT_PATH /ContainerData/GeneratedCerts/Kafka/Users/Admin/
+        cp $$CA_CRT_PATH $$USER_OUTPUT_DIR/
 
         echo 'Creating admin client config file for admin user'
         printf '%s\n' \
           'security.protocol=SSL' \
           'ssl.keystore.location=acl-principal.pfx' \
-          'ssl.keystore.password='$$ADMIN_USER_PASSWORD \
+          'ssl.keystore.password='$$USER_PASSWORD \
           'ssl.keystore.type=PKCS12' \
           'ssl.truststore.type=PEM' \
-          'ssl.truststore.location='$$CA_CRT_FILE_NAME > /ContainerData/GeneratedCerts/Kafka/Users/Admin/adminclient-configs.conf
+          'ssl.truststore.location='$$CA_CRT_FILE_NAME > $$USER_OUTPUT_DIR/adminclient-configs.conf
         echo '================ Done Creating Certs for Admin User ============'
 
         echo '================ Creating Certs for Demo Producer User ========='
+        USER_CN=demo-producer
+        USER_OUTPUT_DIR=/ContainerData/GeneratedCerts/Kafka/Users/DemoProducer
         echo 'Cleaning and setting up folder structure for demo producer user certificate'
-        rm -rf /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer
-        mkdir -p /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer
-        cd /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer
+        rm -rf $$USER_OUTPUT_DIR
+        mkdir -p $$USER_OUTPUT_DIR
+        cd $$USER_OUTPUT_DIR
 
         echo 'Setting up password for demo producer user certificate'
-        DEMO_PRODUCER_USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
-        echo $$DEMO_PRODUCER_USER_PASSWORD > '/ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/password.txt'
+        USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
+        echo $$USER_PASSWORD > $$USER_OUTPUT_DIR/password.txt
 
         echo 'Creating private key for demo producer user certificate'
         openssl genrsa \
-          -passout file:/ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/password.txt \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.key $$RSA_BITS
+          -passout file:$$USER_OUTPUT_DIR/password.txt \
+          -out $$USER_OUTPUT_DIR/acl-principal.key $$RSA_BITS
 
         echo 'Creating certificate signing request config for demo producer user certificate'
         printf '%s\n' \
@@ -777,15 +785,15 @@ services:
           '[req_distinguished_name]' \
           '' \
           '[v3_req]' \
-          'basicConstraints=CA:FALSE' > /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.csr.config
+          'basicConstraints=CA:FALSE' > $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating certificate signing request for demo producer user certificate'
         openssl req \
           -new \
-          -key /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.key \
-          -subj '/CN=demo-producer' \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.csr \
-          -config /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.csr.config
+          -key $$USER_OUTPUT_DIR/acl-principal.key \
+          -subj /CN=$$USER_CN \
+          -out $$USER_OUTPUT_DIR/acl-principal.csr \
+          -config $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating and signing certificate for demo producer user'
         openssl x509 \
@@ -793,49 +801,51 @@ services:
           -CA $$CA_CRT_PATH \
           -CAkey $$CA_KEY_PATH \
           -passin file:$$CA_PASSWORD_PATH \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.csr \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.crt \
+          -in $$USER_OUTPUT_DIR/acl-principal.csr \
+          -out $$USER_OUTPUT_DIR/acl-principal.crt \
           -days $$VALIDITY_DAYS \
           -CAcreateserial \
           -extensions v3_req \
-          -extfile /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.csr.config
+          -extfile $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating pkcs12 certificate bundle for demo producer user'
         openssl pkcs12 \
-          -inkey /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.key \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.crt \
-          -passin pass:$$DEMO_PRODUCER_USER_PASSWORD \
-          -passout pass:$$DEMO_PRODUCER_USER_PASSWORD \
+          -inkey $$USER_OUTPUT_DIR/acl-principal.key \
+          -in $$USER_OUTPUT_DIR/acl-principal.crt \
+          -passin pass:$$USER_PASSWORD \
+          -passout pass:$$USER_PASSWORD \
           -export \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/acl-principal.pfx
+          -out $$USER_OUTPUT_DIR/acl-principal.pfx
 
         echo 'Copying CA certificate/public key to demo producer user folder'
-        cp $$CA_CRT_PATH /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/
+        cp $$CA_CRT_PATH $$USER_OUTPUT_DIR/
 
         echo 'Creating admin client config file for demo producer user'
         printf '%s\n' \
           'security.protocol=SSL' \
           'ssl.keystore.location=acl-principal.pfx' \
-          'ssl.keystore.password='$$DEMO_PRODUCER_USER_PASSWORD \
+          'ssl.keystore.password='$$USER_PASSWORD \
           'ssl.keystore.type=PKCS12' \
           'ssl.truststore.type=PEM' \
-          'ssl.truststore.location='$$CA_CRT_FILE_NAME > /ContainerData/GeneratedCerts/Kafka/Users/DemoProducer/adminclient-configs.conf
+          'ssl.truststore.location='$$CA_CRT_FILE_NAME > $$USER_OUTPUT_DIR/adminclient-configs.conf
         echo '================ Done Creating Certs for Demo Producer User ===='
 
         echo '================ Creating Certs for Demo Consumer User ========='
         echo 'Cleaning and setting up folder structure for demo consumer user certificate'
-        rm -rf /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer
-        mkdir -p /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer
-        cd /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer
+        USER_CN=demo-consumer
+        USER_OUTPUT_DIR=/ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer
+        rm -rf $$USER_OUTPUT_DIR
+        mkdir -p $$USER_OUTPUT_DIR
+        cd $$USER_OUTPUT_DIR
 
         echo 'Setting up password for demo consumer user certificate'
-        DEMO_CONSUMER_USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
-        echo $$DEMO_CONSUMER_USER_PASSWORD > '/ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/password.txt'
+        USER_PASSWORD=$(tr -dc 'A-Za-z0-9!$%&()*+,-./<>?@[\]^_{|}~' </dev/urandom | head -c $$CERT_PASSWORD_LENGTH; echo)
+        echo $$USER_PASSWORD > $$USER_OUTPUT_DIR/password.txt
 
         echo 'Creating private key for demo consumer user certificate'
         openssl genrsa \
-          -passout file:/ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/password.txt \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.key $$RSA_BITS
+          -passout file:$$USER_OUTPUT_DIR/password.txt \
+          -out $$USER_OUTPUT_DIR/acl-principal.key $$RSA_BITS
 
         echo 'Creating certificate signing request config for demo consumer user certificate'
         printf '%s\n' \
@@ -849,15 +859,15 @@ services:
           '[req_distinguished_name]' \
           '' \
           '[v3_req]' \
-          'basicConstraints=CA:FALSE' > /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.csr.config
+          'basicConstraints=CA:FALSE' > $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating certificate signing request for demo consumer user certificate'
         openssl req \
           -new \
-          -key /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.key \
-          -subj '/CN=demo-consumer' \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.csr \
-          -config /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.csr.config
+          -key $$USER_OUTPUT_DIR/acl-principal.key \
+          -subj /CN=$$USER_CN \
+          -out $$USER_OUTPUT_DIR/acl-principal.csr \
+          -config $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating and signing certificate for demo consumer user'
         openssl x509 \
@@ -865,33 +875,33 @@ services:
           -CA $$CA_CRT_PATH \
           -CAkey $$CA_KEY_PATH \
           -passin file:$$CA_PASSWORD_PATH \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.csr \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.crt \
+          -in $$USER_OUTPUT_DIR/acl-principal.csr \
+          -out $$USER_OUTPUT_DIR/acl-principal.crt \
           -days $$VALIDITY_DAYS \
           -CAcreateserial \
           -extensions v3_req \
-          -extfile /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.csr.config
+          -extfile $$USER_OUTPUT_DIR/acl-principal.csr.config
 
         echo 'Creating pkcs12 certificate bundle for demo consumer user'
         openssl pkcs12 \
-          -inkey /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.key \
-          -in /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.crt \
-          -passin pass:$$DEMO_CONSUMER_USER_PASSWORD \
-          -passout pass:$$DEMO_CONSUMER_USER_PASSWORD \
+          -inkey $$USER_OUTPUT_DIR/acl-principal.key \
+          -in $$USER_OUTPUT_DIR/acl-principal.crt \
+          -passin pass:$$USER_PASSWORD \
+          -passout pass:$$USER_PASSWORD \
           -export \
-          -out /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/acl-principal.pfx
+          -out $$USER_OUTPUT_DIR/acl-principal.pfx
 
         echo 'Copying CA certificate/public key to demo consumer user folder'
-        cp $$CA_CRT_PATH /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/
+        cp $$CA_CRT_PATH $$USER_OUTPUT_DIR/
 
         echo 'Creating admin client config file for demo consumer user'
         printf '%s\n' \
           'security.protocol=SSL' \
           'ssl.keystore.location=acl-principal.pfx' \
-          'ssl.keystore.password='$$DEMO_CONSUMER_USER_PASSWORD \
+          'ssl.keystore.password='$$USER_PASSWORD \
           'ssl.keystore.type=PKCS12' \
           'ssl.truststore.type=PEM' \
-          'ssl.truststore.location='$$CA_CRT_FILE_NAME > /ContainerData/GeneratedCerts/Kafka/Users/DemoConsumer/adminclient-configs.conf
+          'ssl.truststore.location='$$CA_CRT_FILE_NAME > $$USER_OUTPUT_DIR/adminclient-configs.conf
         echo '================ Done Creating Certs for Demo Consumer User ===='
 
   broker1:
