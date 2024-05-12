@@ -28,7 +28,7 @@ services:
       KAFKA_SSL_CA_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
       KAFKA_SSL_CERTIFICATE_LOCATION: "/kafka/secrets/admin.lokalmaskin.crt"
       KAFKA_SSL_KEY_LOCATION: "/kafka/secrets/admin.lokalmaskin.key"
-      KAFKA_SSL_KEY_PASSWORD: "/kafka/secrets/admin.lokalmaskin.password.txt"
+      KAFKA_SSL_KEY_PASSWORD_LOCATION: "/kafka/secrets/admin.lokalmaskin.password.txt"
       KAFKA_ACKS: "all"
 
       # Consumer config
