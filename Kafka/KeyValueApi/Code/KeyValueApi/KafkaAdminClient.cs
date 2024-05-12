@@ -14,7 +14,7 @@ public class KafkaAdminClient
     public async Task<bool> TryCreateTopics()
     {
         var adminClientConfig = KafkaAdminClientConfigGenerator.GetAdminClientConfig();
-        var topic = Environment.GetEnvironmentVariable(KAFKA_KEY_VALUE_TOPIC);
+        var topic = Environment.GetEnvironmentVariable(KV_API_KAFKA_KEY_VALUE_TOPIC);
 
         using (var adminClient = new AdminClientBuilder(adminClientConfig).Build())
         {

@@ -25,11 +25,11 @@ public class KafkaProducerService
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         var config = KafkaProducerConfigGenerator.GetProducerConfig();
         _producer = new ProducerBuilder<byte[], byte[]?>(config).Build();
-        var topicName = Environment.GetEnvironmentVariable(KAFKA_KEY_VALUE_TOPIC);
+        var topicName = Environment.GetEnvironmentVariable(KV_API_KAFKA_KEY_VALUE_TOPIC);
         if(string.IsNullOrWhiteSpace(topicName))
         {
-            _logger.LogError($"Cannot consume if topic is not specified. Environment variable {nameof(KAFKA_KEY_VALUE_TOPIC)} was not set/is empty.");
-            throw new InvalidOperationException($"Environment variable {nameof(KAFKA_KEY_VALUE_TOPIC)} has to have value.");
+            _logger.LogError($"Cannot consume if topic is not specified. Environment variable {nameof(KV_API_KAFKA_KEY_VALUE_TOPIC)} was not set/is empty.");
+            throw new InvalidOperationException($"Environment variable {nameof(KV_API_KAFKA_KEY_VALUE_TOPIC)} has to have value.");
         }
         _topic = new KafkaTopic { Value = topicName };
         _logger.LogInformation($"{nameof(KafkaProducerService)} initialized");

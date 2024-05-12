@@ -7,7 +7,7 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
     public KeyValeStateOnFileSystemService(ILogger<KeyValeStateOnFileSystemService> logger)
     {
         _logger = logger;
-        var storageRootEnvVarName = KEY_VALUE_STORE_ROOT_DIR;
+        var storageRootEnvVarName = KV_API_KEY_VALUE_STORE_ROOT_DIR;
         var storageRoot = Environment.GetEnvironmentVariable(storageRootEnvVarName);
         if(string.IsNullOrWhiteSpace(storageRoot))
         {
