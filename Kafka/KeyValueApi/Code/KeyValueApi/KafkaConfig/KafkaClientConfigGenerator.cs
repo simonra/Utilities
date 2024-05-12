@@ -19,7 +19,6 @@ public static class KafkaClientConfigGenerator
         var sslCaCertificateStores = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_CERTIFICATE_STORES);
         if(!string.IsNullOrEmpty(sslCaCertificateStores)) clientConfig.SslCaCertificateStores = sslCaCertificateStores;
 
-        // ToDo: Get from location?
         var sslCaPem = Environment.GetEnvironmentVariable(KAFKA_SSL_CA_PEM);
         if(!string.IsNullOrEmpty(sslCaPem)) clientConfig.SslCaPem = sslCaPem;
 
@@ -42,7 +41,7 @@ public static class KafkaClientConfigGenerator
         if(!string.IsNullOrEmpty(sslKeyPassword)) clientConfig.SslKeyPassword = sslKeyPassword;
 
         var sslKeyPasswordLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PASSWORD_LOCATION);
-        if(!string.IsNullOrEmpty(sslKeyPasswordLocation)) clientConfig.SslCaPem = File.ReadAllText(sslKeyPasswordLocation);
+        if(!string.IsNullOrEmpty(sslKeyPasswordLocation)) clientConfig.SslKeyPassword = File.ReadAllText(sslKeyPasswordLocation);
 
         var sslKeyLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_LOCATION);
         if(!string.IsNullOrEmpty(sslKeyLocation)) clientConfig.SslKeyLocation = sslKeyLocation;

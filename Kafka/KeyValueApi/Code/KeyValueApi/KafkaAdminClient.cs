@@ -3,12 +3,10 @@ using Confluent.Kafka.Admin;
 
 public class KafkaAdminClient
 {
-    private readonly EnvHelpers _envHelpers;
     private readonly ILogger<KafkaAdminClient> _logger;
 
-    public KafkaAdminClient(EnvHelpers envHelpers, ILogger<KafkaAdminClient> logger)
+    public KafkaAdminClient(ILogger<KafkaAdminClient> logger)
     {
-        _envHelpers = envHelpers;
         _logger = logger;
         logger.LogInformation($"{nameof(KafkaAdminClient)} initialized");
     }
@@ -16,7 +14,7 @@ public class KafkaAdminClient
     public async Task<bool> TryCreateTopics()
     {
         var adminClientConfig = KafkaAdminClientConfigGenerator.GetAdminClientConfig();
-        var topic = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC);
+        var topic = Environment.GetEnvironmentVariable(KAFKA_KEY_VALUE_TOPIC);
 
         using (var adminClient = new AdminClientBuilder(adminClientConfig).Build())
         {

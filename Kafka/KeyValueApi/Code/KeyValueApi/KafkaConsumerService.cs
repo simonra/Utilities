@@ -4,19 +4,19 @@ public class KafkaConsumerService : BackgroundService
 {
     private readonly ILogger<KafkaConsumerService> _logger;
     private readonly IKeyValueStateService _keyValueStateService;
-    private readonly EnvHelpers _envHelpers;
     private readonly HttpClient _httpClient;
+    private readonly KafkaAdminClient _kafkaAdminClient;
+    private readonly KafkaTopic _topic;
     private readonly Func<byte[], byte[]> _decrypt;
     private readonly Func<string, string> _decryptHeaderKey;
 
-    public KafkaConsumerService(ILogger<KafkaConsumerService> logger, IKeyValueStateService keyValueStateService, EnvHelpers envHelpers, HttpClient httpClient, KafkaAdminClient kafkaAdminClient)
+    public KafkaConsumerService(ILogger<KafkaConsumerService> logger, IKeyValueStateService keyValueStateService, HttpClient httpClient, KafkaAdminClient kafkaAdminClient)
     {
         _logger = logger;
         _keyValueStateService = keyValueStateService;
-        _envHelpers = envHelpers;
         _httpClient = httpClient;
-        var topicsCreated = kafkaAdminClient.TryCreateTopics().GetAwaiter().GetResult();
-        if (_envHelpers.GetEnvironmentVariableContent(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
+        _kafkaAdminClient = kafkaAdminClient;
+        if (Environment.GetEnvironmentVariable(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
         {
             var cryptoService = new CryptoService();
             _decrypt = cryptoService.Decrypt;
@@ -27,11 +27,21 @@ public class KafkaConsumerService : BackgroundService
             _decrypt = delegate(byte[] input) { return input; };
             _decryptHeaderKey = delegate(string input) { return input; };
         }
+
+        var topicName = Environment.GetEnvironmentVariable(KAFKA_KEY_VALUE_TOPIC);
+        if(string.IsNullOrWhiteSpace(topicName))
+        {
+            _logger.LogError($"Cannot consume if topic is not specified. Environment variable {nameof(KAFKA_KEY_VALUE_TOPIC)} was not set/is empty.");
+            throw new InvalidOperationException($"Environment variable {nameof(KAFKA_KEY_VALUE_TOPIC)} has to have value.");
+        }
+        _topic = new KafkaTopic { Value = topicName };
+
         _logger.LogInformation($"{nameof(KafkaConsumerService)} initialized");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var topicsCreated = await _kafkaAdminClient.TryCreateTopics();
         _logger.LogInformation("Kafka consumer service is doing pre startup blocking work.");
 
         await DoWork(stoppingToken);
@@ -49,13 +59,13 @@ public class KafkaConsumerService : BackgroundService
                 return offsets;
             })
             .Build();
-        var topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
-        consumer.Subscribe(topic.Value);
+
+        consumer.Subscribe(_topic.Value);
 
         // Don't check if topic has schemas defined for every invocation, jut do it once and use the appropriate handling method.
         // Note for future me: array[x..] is new more efficient dotnet syntax for skip first x and take rest of array
         Func<byte[], byte[]> handleSchemaMagicBytesInKey =
-            await TopicKeyHasSchema(topic, stoppingToken)
+            await TopicKeyHasSchema(_topic, stoppingToken)
                 ? delegate(byte[] input) { return input[5..]; }
                 : delegate(byte[] input) { return input; };
         // Func<byte[], byte[]> handleSchemaMagicBytesInKey =
@@ -63,7 +73,7 @@ public class KafkaConsumerService : BackgroundService
         //         ? (byte[] input) => input[5..]
         //         : (byte[] input) => input;
         Func<byte[], byte[]> handleSchemaMagicBytesInValue =
-            await TopicValueHasSchema(topic, stoppingToken)
+            await TopicValueHasSchema(_topic, stoppingToken)
                 ? delegate(byte[] input) { return input[5..]; }
                 : delegate(byte[] input) { return input; };
         try
@@ -154,7 +164,7 @@ public class KafkaConsumerService : BackgroundService
 
     private string GetSchemaRegistryAddress()
     {
-        var schemaRegistryAddress = _envHelpers.GetEnvironmentVariableContent(KAFKA_SCHEMA_REGISTRY_ADDRESS);
+        var schemaRegistryAddress = Environment.GetEnvironmentVariable(KAFKA_SCHEMA_REGISTRY_ADDRESS) ?? "";
         if(!schemaRegistryAddress.StartsWith("http"))
         {
             _logger.LogWarning($"Schema registry address found in env variable \"{KAFKA_SCHEMA_REGISTRY_ADDRESS}\" does not start with \"http\"/specify the protocol. It's value is \"{schemaRegistryAddress}\".");

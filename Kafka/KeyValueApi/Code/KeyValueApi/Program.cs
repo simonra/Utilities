@@ -13,7 +13,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<EnvHelpers>();
 builder.Services.AddSingleton<KafkaAdminClient>();
 if(Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_TYPE) == "disk")
 {

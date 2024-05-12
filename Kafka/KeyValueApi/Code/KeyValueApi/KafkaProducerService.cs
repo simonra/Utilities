@@ -3,17 +3,15 @@ using Confluent.Kafka;
 public class KafkaProducerService
 {
     private readonly ILogger<KafkaConsumerService> _logger;
-    private readonly EnvHelpers _envHelpers;
     private readonly IProducer<byte[], byte[]?> _producer;
     private readonly KafkaTopic _topic;
     private readonly Func<byte[], byte[]> _encrypt;
     private readonly Func<string, string> _encryptHeaderKey;
 
-    public KafkaProducerService(ILogger<KafkaConsumerService> logger, EnvHelpers envHelpers)
+    public KafkaProducerService(ILogger<KafkaConsumerService> logger)
     {
         _logger = logger;
-        _envHelpers = envHelpers;
-        if (_envHelpers.GetEnvironmentVariableContent(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
+        if (Environment.GetEnvironmentVariable(KV_API_ENCRYPT_DATA_ON_KAFKA) == "true")
         {
             var cryptoService = new CryptoService();
             _encrypt = cryptoService.Encrypt;
@@ -27,7 +25,13 @@ public class KafkaProducerService
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
         var config = KafkaProducerConfigGenerator.GetProducerConfig();
         _producer = new ProducerBuilder<byte[], byte[]?>(config).Build();
-        _topic = new KafkaTopic { Value = _envHelpers.GetEnvironmentVariableContent(KAFKA_KEY_VALUE_TOPIC) };
+        var topicName = Environment.GetEnvironmentVariable(KAFKA_KEY_VALUE_TOPIC);
+        if(string.IsNullOrWhiteSpace(topicName))
+        {
+            _logger.LogError($"Cannot consume if topic is not specified. Environment variable {nameof(KAFKA_KEY_VALUE_TOPIC)} was not set/is empty.");
+            throw new InvalidOperationException($"Environment variable {nameof(KAFKA_KEY_VALUE_TOPIC)} has to have value.");
+        }
+        _topic = new KafkaTopic { Value = topicName };
         _logger.LogInformation($"{nameof(KafkaProducerService)} initialized");
     }
 
