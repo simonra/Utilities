@@ -25,10 +25,10 @@ services:
       # kafkal client config
       KAFKA_BOOTSTRAP_SERVERS: "broker1:9092,broker2:9092,broker3:9092"
       KAFKA_SECURITY_PROTOCOL: "ssl"
-      KAFKA_SSL_CA_PEM_LOCATION: "/kafka/secrets/CA_lokalmaskin.crt"
-      KAFKA_SSL_CERTIFICATE_LOCATION: "/kafka/secrets/admin.lokalmaskin.crt"
-      KAFKA_SSL_KEY_LOCATION: "/kafka/secrets/admin.lokalmaskin.key"
-      KAFKA_SSL_KEY_PASSWORD_LOCATION: "/kafka/secrets/admin.lokalmaskin.password.txt"
+      KAFKA_SSL_CA_PEM_LOCATION: "/kafka/secrets/ca.crt"
+      KAFKA_SSL_CERTIFICATE_LOCATION: "/kafka/secrets/acl-principal.crt"
+      KAFKA_SSL_KEY_LOCATION: "/kafka/secrets/acl-principal.key"
+      KAFKA_SSL_KEY_PASSWORD_LOCATION: "/kafka/secrets/password.txt"
       KAFKA_ACKS: "all"
 
       # Consumer config
