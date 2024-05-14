@@ -21,19 +21,16 @@
 
 			document.getElementById('keyType').addEventListener('change', () => {
 				onlyShowParamFieldsForCurrentlySelectedKeyType();
-				onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
 				onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
 			});
 
 			Array.from(document.getElementsByClassName('algorithm'))
 				.map((algorithmSelect) => algorithmSelect.addEventListener('change', () => {
-					onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
 					onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
 				})
 			);
 
 			onlyShowParamFieldsForCurrentlySelectedKeyType();
-			onlyShowRelevantFormatsForCurrentlySelectedAlgorithm();
 			onlyShowRelevantUsagesForCurrentlySelectedAlgorithm();
 		}
 
@@ -76,50 +73,6 @@
 					break;
 				}
 			}
-		}
-
-		function onlyShowRelevantFormatsForCurrentlySelectedAlgorithm(){
-			disableAllExportOptions();
-			var chosenAlgorithmFamily = document.getElementById('keyType').value;
-			switch(chosenAlgorithmFamily){
-				case 'rsa':{
-					enableExportOptions(['jwk', 'pkcsSpki']);
-					break;
-				}
-				case 'ec':{
-					// Note that Eliptic Curve private keys can only be exported in the JWK format
-					enableAllExportOptions();
-					break;
-				}
-				case 'aes':
-				case 'hmac':{
-					// Being symetric, note that the AES- and HMAC-keys only have a "public" componenet that gets exported.
-					enableExportOptions(['jwk', 'raw']);
-					break;
-				}
-				default:{
-					enableAllExportOptions();
-					break;
-				}
-			}
-		}
-
-		function enableExportOptions(formatsToEnable){
-			Array.from(getAllExportOptions())
-				.filter((formatOption) => formatsToEnable.includes(formatOption.value))
-				.map((formatOption) => formatOption.removeAttribute('disabled'));
-		}
-
-		function disableAllExportOptions(){
-			Array.from(getAllExportOptions()).map((formatOption) => formatOption.setAttribute('disabled',true));
-		}
-
-		function enableAllExportOptions(){
-			Array.from(getAllExportOptions()).map((formatOption) => formatOption.removeAttribute('disabled'));
-		}
-
-		function getAllExportOptions(){
-			return document.getElementById('exportFormat').getElementsByTagName('option');
 		}
 
 		function onlyShowRelevantUsagesForCurrentlySelectedAlgorithm(){
@@ -271,8 +224,6 @@
 
 			var key = await generateKey(selectedKeyType);
 			clearKeyTextAreas();
-
-			var keyExportFormat = document.getElementById('exportFormat').value;
 
 			if(selectedKeyType === 'ec'){
 				exportKeyToOutputTextArea(key.privateKey, 'jwk', 'jwkPrivateKey');
@@ -498,13 +449,6 @@
 					<label for="keyUsageUnwrapKey">UnwrapKey</label>
 				</div>
 			</fieldset>
-			<br/>
-			<label for="exportFormat">Export Format: </label>
-			<select id="exportFormat" name="exportFormat">
-				<option value="jwk">JWK</option>
-				<option value="pkcsSpki">PKCS #8 & SPKI</option>
-				<option value="raw">Raw</option>
-			</select>
 			<br/>
 			<button id="generateKey">Generate new key</button>
 		</fieldset>
