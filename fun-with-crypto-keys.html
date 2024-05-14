@@ -38,10 +38,17 @@
 		}
 
 		function clearKeyTextAreas(){
-			var publicKeyTextArea = document.getElementById('keyPublic');
-			publicKeyTextArea.value = '';
-
-			var privateKeyTextArea = document.getElementById('keyPrivate');
+			var privateKeyTextArea = document.getElementById('jwkPrivateKey');
+			privateKeyTextArea.value = '';
+			var privateKeyTextArea = document.getElementById('jwkPublicKey');
+			privateKeyTextArea.value = '';
+			var privateKeyTextArea = document.getElementById('pkcs8PrivateKey');
+			privateKeyTextArea.value = '';
+			var privateKeyTextArea = document.getElementById('spkiPublicKey');
+			privateKeyTextArea.value = '';
+			var privateKeyTextArea = document.getElementById('rawKeyPrivate');
+			privateKeyTextArea.value = '';
+			var privateKeyTextArea = document.getElementById('rawKeyPublic');
 			privateKeyTextArea.value = '';
 		}
 
@@ -263,21 +270,34 @@
 			var selectedKeyType = document.getElementById('keyType').value;
 
 			var key = await generateKey(selectedKeyType);
+			clearKeyTextAreas();
 
 			var keyExportFormat = document.getElementById('exportFormat').value;
 
-			if(selectedKeyType === 'ec' || selectedKeyType === 'rsa'){
-				var privateKeyExportFormat = keyExportFormat;
-				var publicKeyExportFormat = keyExportFormat;
-				if(keyExportFormat === 'pkcsSpki'){
-					privateKeyExportFormat = 'pkcs8';
-					publicKeyExportFormat = 'spki';
-				}
-				exportKeyToOutputTextArea(key.privateKey, privateKeyExportFormat, 'keyPrivate');
-				exportKeyToOutputTextArea(key.publicKey, publicKeyExportFormat, 'keyPublic');
+			if(selectedKeyType === 'ec'){
+				exportKeyToOutputTextArea(key.privateKey, 'jwk', 'jwkPrivateKey');
+				exportKeyToOutputTextArea(key.publicKey, 'jwk', 'jwkPublicKey');
+				exportKeyToOutputTextArea(key.privateKey, 'pkcs8', 'pkcs8PrivateKey');
+				exportKeyToOutputTextArea(key.publicKey, 'spki', 'spkiPublicKey');
+				// exportKeyToOutputTextArea(key.privateKey, 'raw', 'rawKeyPrivate'); // not supported
+				exportKeyToOutputTextArea(key.publicKey, 'raw', 'rawKeyPublic');
 			}
-			if(selectedKeyType === 'aes' || selectedKeyType === 'hmac'){
-				exportKeyToOutputTextArea(key, keyExportFormat, 'keyPublic');
+			else if(selectedKeyType === 'rsa'){
+				exportKeyToOutputTextArea(key.privateKey, 'jwk', 'jwkPrivateKey');
+				exportKeyToOutputTextArea(key.publicKey, 'jwk', 'jwkPublicKey');
+				exportKeyToOutputTextArea(key.privateKey, 'pkcs8', 'pkcs8PrivateKey');
+				exportKeyToOutputTextArea(key.publicKey, 'spki', 'spkiPublicKey');
+				// exportKeyToOutputTextArea(key.privateKey, 'raw', 'rawKeyPrivate'); // not supported
+				// exportKeyToOutputTextArea(key.publicKey, 'raw', 'rawKeyPublic');
+			}
+			else if(selectedKeyType === 'aes' || selectedKeyType === 'hmac'){
+				// exportKeyToOutputTextArea(key, keyExportFormat, 'keyPublic');
+				exportKeyToOutputTextArea(key, 'jwk', 'jwkPrivateKey');
+				// exportKeyToOutputTextArea(key, 'jwk', 'jwkPublicKey');
+				// exportKeyToOutputTextArea(key, 'pkcs8', 'pkcs8PrivateKey');
+				// exportKeyToOutputTextArea(key, 'spki', 'spkiPublicKey');
+				// exportKeyToOutputTextArea(key, 'raw', 'rawKeyPrivate');
+				exportKeyToOutputTextArea(key, 'raw', 'rawKeyPrivate');
 			}
 		}
 
@@ -301,13 +321,13 @@
 				}
 				case 'pkcs8':{
 					var exportedKeyAsString = String.fromCharCode.apply(null, new Uint8Array(exportedKey));
-					var exportedKeyInBase64 = window.btoa(exportedKeyAsString);
+					var exportedKeyInBase64 = window.btoa(exportedKeyAsString).replace(/(.{64})/g, "$1\n");
 					var pemExported = `-----BEGIN PRIVATE KEY-----\n${exportedKeyInBase64}\n-----END PRIVATE KEY-----`;
 					return pemExported;
 				}
 				case 'spki':{
 					var exportedKeyAsString = String.fromCharCode.apply(null, new Uint8Array(exportedKey));
-					var exportedKeyInBase64 = window.btoa(exportedKeyAsString);
+					var exportedKeyInBase64 = window.btoa(exportedKeyAsString).replace(/(.{64})/g, "$1\n");
 					const pemExported = `-----BEGIN PUBLIC KEY-----\n${exportedKeyInBase64}\n-----END PUBLIC KEY-----`;
 					return pemExported;
 				}
@@ -491,18 +511,51 @@
 		<br/>
 		<fieldset style="display: grid; grid-template-columns: 1fr 1fr;">
 			<legend>Generated Key(s)</legend>
-			<label for="keyPublic" style="grid-column: 1; grid-row: 1;">Public key</label>
-			<label for="keyPrivate" style="grid-column: 2; grid-row: 1;">Private key</label>
-			<textarea id="keyPublic"
-				name="keyPublic"
-				placeholder="Public key"
-				style="width: 97.5%; height: 20rem; grid-column: 1; grid-row: 2;">
-			</textarea>
-			<textarea id="keyPrivate"
-				name="keyPrivate"
-				placeholder="Private key"
-				style="width: 97.5%; height: 20rem; grid-column: 2; grid-row: 2;">
-			</textarea>
+			<fieldset style="display: inherit; grid-gap: inherit; grid-template-columns: inherit; grid-column: 1/-1;">
+				<legend>JWK Formatted</legend>
+				<label for="jwkPrivateKey" style="grid-column: 1;">Private key JWK</label>
+				<label for="jwkPublicKey" style="grid-column: 2;">Public key JWK</label>
+				<textarea id="jwkPrivateKey"
+					name="jwkPrivateKey"
+					placeholder="Private key JWK formatted"
+					style="width: 97.5%; height: 10rem; grid-column: 1;">
+				</textarea>
+				<textarea id="jwkPublicKey"
+					name="jwkPublicKey"
+					placeholder="Public key JWK formatted"
+					style="width: 97.5%; height: 10rem; grid-column: 2;">
+				</textarea>
+			</fieldset>
+			<fieldset style="display: inherit; grid-gap: inherit; grid-template-columns: inherit; grid-column: 1/-1;">
+				<legend>PKCS #8 and SPKI Formatted</legend>
+				<label for="pkcs8PrivateKey" style="grid-column: 1;">Private key PKCS #8</label>
+				<label for="spkiPublicKey" style="grid-column: 2;">Public key SPKI</label>
+				<textarea id="pkcs8PrivateKey"
+					name="pkcs8PrivateKey"
+					placeholder="Private key PKCS#8 formatted"
+					style="width: 97.5%; height: 10rem; grid-column: 1;">
+				</textarea>
+				<textarea id="spkiPublicKey"
+					name="spkiPublicKey"
+					placeholder="Public Key SPKI formatted"
+					style="width: 97.5%; height: 10rem; grid-column: 2;">
+				</textarea>
+			</fieldset>
+			<fieldset style="display: inherit; grid-gap: inherit; grid-template-columns: inherit; grid-column: 1/-1;">
+				<legend>RAW</legend>
+				<label for="rawKeyPrivate" style="grid-column: 1;">Private key Raw bytes</label>
+				<label for="rawKeyPublic" style="grid-column: 2;">Public key Raw bytes</label>
+				<textarea id="rawKeyPrivate"
+					name="rawKeyPrivate"
+					placeholder="Array with raw bytes"
+					style="width: 97.5%; height: 10rem; grid-column: 1;">
+				</textarea>
+				<textarea id="rawKeyPublic"
+					name="rawKeyPublic"
+					placeholder="Array with raw bytes"
+					style="width: 97.5%; height: 10rem; grid-column: 2;">
+				</textarea>
+			</fieldset>
 		</fieldset>
 	</form>
 </body>
