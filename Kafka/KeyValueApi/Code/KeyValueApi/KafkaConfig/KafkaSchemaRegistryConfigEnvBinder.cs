@@ -1,4 +1,4 @@
-public static class KafkaSchemaRegistryConfigGenerator
+public static class KafkaSchemaRegistryConfigEnvBinder
 {
     public static Confluent.SchemaRegistry.SchemaRegistryConfig GetSchemaRegistryConfig()
     {

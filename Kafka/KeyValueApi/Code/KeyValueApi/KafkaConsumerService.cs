@@ -38,7 +38,7 @@ public class KafkaConsumerService : BackgroundService
         }
         _topic = new KafkaTopic { Value = topicName };
 
-        var schemaRegistryClientConfig = KafkaSchemaRegistryConfigGenerator.GetSchemaRegistryConfig();
+        var schemaRegistryClientConfig = KafkaSchemaRegistryConfigEnvBinder.GetSchemaRegistryConfig();
         var schemaRegistryClient = new Confluent.SchemaRegistry.CachedSchemaRegistryClient(schemaRegistryClientConfig);
         _schemaRegistryClient = schemaRegistryClient;
 
@@ -57,7 +57,7 @@ public class KafkaConsumerService : BackgroundService
     {
         _logger.LogInformation("Kafka consumer service background task started.");
 
-        var consumerConfig = KafkaConsumerConfigGenerator.GetConsumerConfig();
+        var consumerConfig = KafkaConsumerConfigEnvBinder.GetConsumerConfig();
         var consumer = new ConsumerBuilder<byte[], byte[]>(consumerConfig)
             .SetPartitionsAssignedHandler((c, partitions) =>
             {

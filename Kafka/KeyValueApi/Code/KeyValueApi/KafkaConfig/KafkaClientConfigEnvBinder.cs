@@ -1,4 +1,4 @@
-public static class KafkaClientConfigGenerator
+public static class KafkaClientConfigEnvBinder
 {
     public static Confluent.Kafka.ClientConfig GetClientConfig()
     {

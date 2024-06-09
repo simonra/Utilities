@@ -23,7 +23,7 @@ public class KafkaProducerService
             _encryptHeaderKey = delegate(string input) { return input; };
         }
         AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
-        var config = KafkaProducerConfigGenerator.GetProducerConfig();
+        var config = KafkaProducerConfigEnvBinder.GetProducerConfig();
         _producer = new ProducerBuilder<byte[], byte[]?>(config).Build();
         var topicName = Environment.GetEnvironmentVariable(KV_API_KAFKA_KEY_VALUE_TOPIC);
         if(string.IsNullOrWhiteSpace(topicName))

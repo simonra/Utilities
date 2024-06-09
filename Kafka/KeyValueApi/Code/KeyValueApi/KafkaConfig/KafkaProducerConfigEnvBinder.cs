@@ -1,8 +1,8 @@
-public static class KafkaProducerConfigGenerator
+public static class KafkaProducerConfigEnvBinder
 {
     public static Confluent.Kafka.ProducerConfig GetProducerConfig()
     {
-        var clientConfig = KafkaClientConfigGenerator.GetClientConfig();
+        var clientConfig = KafkaClientConfigEnvBinder.GetClientConfig();
         var producerConfig = new Confluent.Kafka.ProducerConfig(clientConfig);
 
         var batchNumMessages = Environment.GetEnvironmentVariable(KAFKA_BATCH_NUM_MESSAGES);

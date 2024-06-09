@@ -1,8 +1,8 @@
-public static class KafkaConsumerConfigGenerator
+public static class KafkaConsumerConfigEnvBinder
 {
     public static Confluent.Kafka.ConsumerConfig GetConsumerConfig()
     {
-        var clientConfig = KafkaClientConfigGenerator.GetClientConfig();
+        var clientConfig = KafkaClientConfigEnvBinder.GetClientConfig();
         var consumerConfig = new Confluent.Kafka.ConsumerConfig(clientConfig);
 
         var IsolationLevel = Environment.GetEnvironmentVariable(KAFKA_ISOLATION_LEVEL);
