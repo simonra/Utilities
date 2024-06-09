@@ -450,6 +450,8 @@ services:
         CreateUserCerts "protobuf-user"
         CreateUserCerts "json-user"
 
+        CreateUserCerts "key-value-api-user"
+
   broker1:
     image: confluentinc/cp-kafka:7.5.0
     hostname: broker1
@@ -782,6 +784,10 @@ services:
         CreateProduceAcl --topic "persons-json" --principal "json-user"
         CreateConsumeAcl --topic "persons-json" --principal "json-user" --group "persons-json-group"
 
+        # Key Value API user
+        CreateProduceAcl --topic "key-value-store" --principal "key-value-api-user"
+        CreateConsumeAcl --topic "key-value-store" --principal "key-value-api-user" --group "key-value-api-instance-x"
+
   create-demo-topics:
     image: confluentinc/cp-kafka:7.5.0
     hostname: create-demo-topics
@@ -839,7 +845,7 @@ services:
         CreateTopic "persons-protobuf"
         CreateTopic "persons-json"
 
-        CreateTopic "t.key-value-store"
+        CreateTopic "key-value-store"
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.3

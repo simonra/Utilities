@@ -61,6 +61,7 @@ public class KafkaConsumerService : BackgroundService
         var consumer = new ConsumerBuilder<byte[], byte[]>(consumerConfig)
             .SetPartitionsAssignedHandler((c, partitions) =>
             {
+                // When starting up, always read the topic from the beginning.
                 var offsets = partitions.Select(tp => new TopicPartitionOffset(tp, Offset.Beginning));
                 return offsets;
             })
