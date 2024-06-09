@@ -1,4 +1,5 @@
 using Confluent.Kafka;
+using Confluent.SchemaRegistry;
 
 public class KafkaConsumerService : BackgroundService
 {
@@ -6,6 +7,7 @@ public class KafkaConsumerService : BackgroundService
     private readonly IKeyValueStateService _keyValueStateService;
     private readonly HttpClient _httpClient;
     private readonly KafkaAdminClient _kafkaAdminClient;
+    private readonly CachedSchemaRegistryClient _schemaRegistryClient;
     private readonly KafkaTopic _topic;
     private readonly Func<byte[], byte[]> _decrypt;
     private readonly Func<string, string> _decryptHeaderKey;
@@ -36,12 +38,16 @@ public class KafkaConsumerService : BackgroundService
         }
         _topic = new KafkaTopic { Value = topicName };
 
+        var schemaRegistryClientConfig = KafkaSchemaRegistryConfigGenerator.GetSchemaRegistryConfig();
+        var schemaRegistryClient = new Confluent.SchemaRegistry.CachedSchemaRegistryClient(schemaRegistryClientConfig);
+        _schemaRegistryClient = schemaRegistryClient;
+
         _logger.LogInformation($"{nameof(KafkaConsumerService)} initialized");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var topicsCreated = await _kafkaAdminClient.TryCreateTopics();
+        _ = await _kafkaAdminClient.TryCreateTopics();
         _logger.LogInformation("Kafka consumer service is doing pre startup blocking work.");
 
         await DoWork(stoppingToken);
@@ -126,50 +132,32 @@ public class KafkaConsumerService : BackgroundService
         // curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"type\": \"string\"}"}' http://localhost:8083/subjects/topicname-key
         // is too much work to stuff into the dotnet http client, and the answer is also more involved to parse than what I can be bothered with right now.
 
-        var schemaRegistryAddress = GetSchemaRegistryAddress();
-        var keySchemaAddress = $"{schemaRegistryAddress}/subjects/{topic}-key/versions";
+        var schemaName = $"{topic.Value}-key";
         try
         {
-            using HttpResponseMessage response = await _httpClient.GetAsync(keySchemaAddress,stoppingToken);
-            if(response.IsSuccessStatusCode && response.Content.ReadAsStringAsync(stoppingToken).Result.Length > 0)
-            {
-                return true;
-            }
+            var registeredSchemas = await _schemaRegistryClient.GetAllSubjectsAsync();
+            return registeredSchemas?.Any(rs => rs == schemaName) == true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Got exception while checking if topic {topic} has schema by retrieving {keySchemaAddress}");
+            _logger.LogError(ex, $"Got exception while checking if topic {topic.Value} key has schema by retrieving {schemaName}");
         }
         return false;
     }
 
     private async Task<bool> TopicValueHasSchema(KafkaTopic topic, CancellationToken stoppingToken)
     {
-        var schemaRegistryAddress = GetSchemaRegistryAddress();
-        var valueSchemaAddress = $"{schemaRegistryAddress}/subjects/{topic}-value/versions";
+        var schemaName = $"{topic.Value}-value";
         try
         {
-            using HttpResponseMessage response = await _httpClient.GetAsync(valueSchemaAddress,stoppingToken);
-            if(response.IsSuccessStatusCode && response.Content.ReadAsStringAsync(stoppingToken).Result.Length > 0)
-            {
-                return true;
-            }
+            var registeredSchemas = await _schemaRegistryClient.GetAllSubjectsAsync();
+            return registeredSchemas?.Any(rs => rs == schemaName) == true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Got exception while checking if topic {topic} has schema by retrieving {valueSchemaAddress}");
+            _logger.LogError(ex, $"Got exception while checking if topic {topic} value has schema by retrieving {schemaName}");
         }
         return false;
-    }
-
-    private string GetSchemaRegistryAddress()
-    {
-        var schemaRegistryAddress = Environment.GetEnvironmentVariable(KAFKA_SCHEMA_REGISTRY_ADDRESS) ?? "";
-        if(!schemaRegistryAddress.StartsWith("http"))
-        {
-            _logger.LogWarning($"Schema registry address found in env variable \"{KAFKA_SCHEMA_REGISTRY_ADDRESS}\" does not start with \"http\"/specify the protocol. It's value is \"{schemaRegistryAddress}\".");
-        }
-        return schemaRegistryAddress;
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)
