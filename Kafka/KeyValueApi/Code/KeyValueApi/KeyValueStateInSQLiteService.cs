@@ -11,9 +11,11 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         _logger = logger;
         _sqliteInMemDb = new SqliteConnection(GetSqliteConnectionStringForInMemory());
         _sqliteInMemDb.Open();
+        InitializeDb();
 
         var isInitialized = false;
         var previousOnDiskCopy = GetDiskDbLocation();
+        previousOnDiskCopy.Directory?.Create();
         _sqliteOnDiskDb = new SqliteConnection(GetSqliteConnectionStringForOnDiskEncrypted(previousOnDiskCopy));
         if(previousOnDiskCopy.Exists && previousOnDiskCopy.Length > 0)
         {
@@ -54,12 +56,16 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         var command = _sqliteInMemDb.CreateCommand();
         command.CommandText =
         @"
-            INSERT INTO keyValueStore
-            VALUES ($k, $v);
+            INSERT INTO keyValueStore(kvKey, kvValue)
+            VALUES ($k, $v)
+            ON CONFLICT (kvKey) DO UPDATE SET kvValue=excluded.kvValue;
         ";
         command.Parameters.AddWithValue("$k", key);
         command.Parameters.AddWithValue("$v", value);
         var rowsAffected = command.ExecuteNonQuery();
+
+        OverWriteDiskDbWithMemoryDb();
+
         return rowsAffected == 1;
     }
 
@@ -85,11 +91,13 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
 
     private void OverWriteMemoryDbWithDiskDb()
     {
+        _logger.LogDebug($"The current in memory db connection string is {GetSqliteConnectionStringForInMemory()}");
         _sqliteOnDiskDb.Open();
         var command = _sqliteOnDiskDb.CreateCommand();
         //Execute the command `VACUUM INTO 'file::memory:?cache=shared';` on CONNECTION_2.
-        command.CommandText = @"VACUUM INTO '$targetDb'";
-        command.Parameters.AddWithValue("$targetDb", GetSqliteConnectionStringForInMemory());
+        // command.CommandText = @"VACUUM INTO '$targetDb'";
+        command.CommandText = $"VACUUM INTO 'file::memory:?cache=shared'";
+        // command.Parameters.AddWithValue("$targetDb", GetSqliteConnectionStringForInMemory());
         var result = command.ExecuteNonQuery();
         _sqliteOnDiskDb.Close();
     }
@@ -103,11 +111,26 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
 
         var dbDiskLocation = GetDiskDbLocation();
         var tempPreviousFile = new FileInfo($"{dbDiskLocation.DirectoryName}/replacement-backup-old-{dbDiskLocation.Name}");
-        dbDiskLocation.CopyTo(tempPreviousFile.FullName, overwrite: true);
+        if(dbDiskLocation.Exists)
+        {
+            dbDiskLocation.CopyTo(tempPreviousFile.FullName, overwrite: true);
 
-        _logger.LogTrace($"Copy of previous version put at {tempPreviousFile.FullName}");
+            _logger.LogTrace($"Copy of previous version put at {tempPreviousFile.FullName}");
+
+        }
 
         var tempNextFile = new FileInfo($"{dbDiskLocation.DirectoryName}/replacement-new-{dbDiskLocation.Name}");
+        var tempDbConnection = new SqliteConnection(GetSqliteConnectionStringForOnDiskEncrypted(tempNextFile));
+        tempDbConnection.Open();
+        var tempDbInitCommand = tempDbConnection.CreateCommand();
+        tempDbInitCommand.CommandText =
+        @"
+            CREATE TABLE IF NOT EXISTS keyValueStore (
+                kvKey BLOB NOT NULL PRIMARY KEY,
+                kvValue BLOB NOT NULL
+            );
+        ";
+        tempDbInitCommand.ExecuteNonQuery();
 
         var command = _sqliteInMemDb.CreateCommand();
         //Execute the command `VACUUM INTO 'file::memory:?cache=shared';` on CONNECTION_2.
@@ -116,15 +139,29 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         var result = command.ExecuteNonQuery();
 
         _logger.LogTrace($"Mem db content put into temporary file {tempNextFile.FullName}");
+        // tempDbConnection.Close();
 
-        tempNextFile.MoveTo(dbDiskLocation.FullName, overwrite: true);
+        // if(tempNextFile.Exists)
+        // {
+        //     tempNextFile.MoveTo(dbDiskLocation.FullName, overwrite: true);
+        //     _logger.LogTrace($"Replaced on disk db copy at {dbDiskLocation.FullName} with new copy from in mem db");
+        // }
+        // else
+        // {
+        //     _logger.LogTrace("Temp file for next db didn't exist. Probably because there are no entries, so it doesn't persist the structure, just nothingness?");
+        //     // if(dbDiskLocation.Exists)
+        //     // {
+        //     //     dbDiskLocation.Delete();
+        //     // }
+        // }
 
-        _logger.LogTrace("Replaced on disk db copy with new copy from in mem db");
 
-        tempPreviousFile.Delete();
-        tempNextFile.Delete();
+        // if(tempPreviousFile.Exists)
+        // {
+        //     tempPreviousFile.Delete();
+        // }
 
-        _logger.LogTrace("Deleted temp files");
+        // _logger.LogTrace("Deleted temp files");
     }
 
     private string GetSqliteConnectionStringForInMemory()

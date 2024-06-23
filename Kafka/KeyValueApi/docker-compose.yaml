@@ -1008,7 +1008,7 @@ services:
         }
       SCHEMA_DEFINITION_PERSONS_JSON: |
         {
-          "$schema": "http://json-schema.org/draft-04/schema#",
+          "$$schema": "http://json-schema.org/draft-04/schema#",
           "title": "Person",
           "type": "object",
           "additionalProperties": false,
@@ -1025,7 +1025,7 @@ services:
                   "type": "null"
                 },
                 {
-                  "$ref": "#/definitions/PersonName"
+                  "$$ref": "#/definitions/PersonName"
                 }
               ]
             },

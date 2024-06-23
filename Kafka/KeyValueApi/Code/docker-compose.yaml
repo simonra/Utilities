@@ -22,6 +22,11 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
 
+      # LOGGING__LOGLEVEL__DEFAULT: "Information"
+      LOGGING__LOGLEVEL__DEFAULT: "Trace"
+      LOGGING__LOGLEVEL__MICROSOFT: "Warning"
+      LOGGING__LOGLEVEL__MICROSOFT.ASPNETCORE.DATAPROTECTION: "Error"
+
       # kafkal client config
       KAFKA_BOOTSTRAP_SERVERS: "broker1:9092,broker2:9092,broker3:9092"
       KAFKA_SECURITY_PROTOCOL: "ssl"
