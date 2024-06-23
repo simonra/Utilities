@@ -262,7 +262,7 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         var command = _sqliteDb.CreateCommand();
         command.CommandText =
         @"
-            CREATE TABLE keyValueStore (
+            CREATE TABLE IF NOT EXISTS keyValueStore (
                 kvKey BLOB NOT NULL PRIMARY KEY,
                 kvValue BLOB NOT NULL
             );
