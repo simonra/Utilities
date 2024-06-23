@@ -788,10 +788,10 @@ services:
         CreateProduceAcl --topic "key-value-store" --principal "key-value-api-user"
         CreateConsumeAcl --topic "key-value-store" --principal "key-value-api-user" --group "key-value-api-instance-x"
 
-  create-demo-topics:
+  create-topics:
     image: confluentinc/cp-kafka:7.5.0
-    hostname: create-demo-topics
-    container_name: create-demo-topics
+    hostname: create-topics
+    container_name: create-topics
     user: 1000:1001
     networks:
       - apps_network
@@ -898,7 +898,7 @@ services:
     volumes:
       - ./ContainerData/GeneratedCerts/Kafka/Users/schema-registry:/kafka/secrets
 
-  create-demo-schemas:
+  create-schemas:
     image: localhost/cert-creator:latest # Re-use same we use for certs
     # user: 1000:1001
     build:
@@ -913,7 +913,7 @@ services:
             && apt-get install -y coreutils \
             && apt-get install -y tar
         # `apt-get install -y base64` is replaced with `apt-get install -y coreutils`
-    container_name: create-demo-schemas
+    container_name: create-schemas
     depends_on:
       schema-registry:
         required: true
@@ -1116,10 +1116,10 @@ services:
         AddSchemaToRegistry --name "persons-protobuf-value" --value "$$SCHEMA_DEFINITION_PERSONS_PROTOBUF" --type "PROTOBUF"
         AddSchemaToRegistry --name "persons-json-value" --value "$$SCHEMA_DEFINITION_PERSONS_JSON" --type "JSON"
 
-  produce-demo-events:
+  produce-events:
     image: confluentinc/cp-schema-registry:7.5.3
-    hostname: produce-demo-events
-    container_name: produce-demo-events
+    hostname: produce-events
+    container_name: produce-events
     user: 1000:1001
     networks:
       - apps_network
@@ -1128,7 +1128,7 @@ services:
         required: true
         restart: false
         condition: service_healthy
-      create-demo-schemas:
+      create-schemas:
         required: true
         restart: false
         condition: service_completed_successfully
@@ -1222,10 +1222,10 @@ services:
 
         echo '================ Done Creating Events on $$TOPIC_USERS Topic ============'
 
-  consume-demo-events:
+  consume-events:
     image: confluentinc/cp-schema-registry:7.5.3
-    hostname: consume-demo-events
-    container_name: consume-demo-events
+    hostname: consume-events
+    container_name: consume-events
     user: 1000:1001
     networks:
       - apps_network
@@ -1242,7 +1242,7 @@ services:
         required: true
         restart: false
         condition: service_healthy
-      create-demo-topics:
+      create-topics:
         required: true
         restart: false
         condition: service_completed_successfully

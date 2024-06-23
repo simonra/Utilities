@@ -44,8 +44,13 @@ services:
       KV_API_KAFKA_KEY_VALUE_TOPIC: "key-value-store"
 
       # Store to local disk options
-      KV_API_STATE_STORAGE_TYPE: "disk" # Defaults to in memory  if not set. If running in kubernetes or docker doing this and mounting an in memory volume/ramdisk could scale better for large amounts of data (dotnet dicts struggle past a couple of gigabytes in size).
-      KV_API_KEY_VALUE_STORE_ROOT_DIR: "/ContainerData/KeyValueApi/LocalState"
+      # KV_API_STATE_STORAGE_TYPE: "sqlite" # Defaults to in memory  if not set. If running in kubernetes or docker doing this and mounting an in memory volume/ramdisk could scale better for large amounts of data (dotnet dicts struggle past a couple of gigabytes in size).
+      # KV_API_KEY_VALUE_STORE_ROOT_DIR: "/ContainerData/KeyValueApi/LocalState"
+
+      # SQLite settings
+      KV_API_STATE_STORAGE_TYPE: "sqlite"
+      KV_API_STATE_STORAGE_SQLITE_PASSWORD: "513925caed8f4774d04d1013bef95cdb37d4f78a01965f25390da8ad9b6da15a"
+      KV_API_STATE_STORAGE_SQLITE_LOCATION: "/ContainerData/KeyValueApi/LocalState/kvApi.db"
 
       # Encryption settings
       # KV_API_AES_KEY: "513925caed8f4774d04d1013bef95cdb37d4f78a01965f25390da8ad9b6da15a"

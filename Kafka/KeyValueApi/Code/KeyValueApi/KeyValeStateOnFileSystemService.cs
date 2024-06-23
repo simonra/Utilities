@@ -7,17 +7,16 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
     public KeyValeStateOnFileSystemService(ILogger<KeyValeStateOnFileSystemService> logger)
     {
         _logger = logger;
-        var storageRootEnvVarName = KV_API_KEY_VALUE_STORE_ROOT_DIR;
-        var storageRoot = Environment.GetEnvironmentVariable(storageRootEnvVarName);
+        var storageRoot = Environment.GetEnvironmentVariable(KV_API_KEY_VALUE_STORE_ROOT_DIR);
         if(string.IsNullOrWhiteSpace(storageRoot))
         {
             if(string.IsNullOrEmpty(storageRoot))
             {
-                _logger.LogWarning($"Failed to read content of environment variable \"{storageRootEnvVarName}\", got null/empty string");
+                _logger.LogWarning($"Failed to read content of environment variable \"{KV_API_KEY_VALUE_STORE_ROOT_DIR}\", got null/empty string");
             }
             else
             {
-                _logger.LogWarning($"Failed to read proper content of environment variable \"{storageRootEnvVarName}\", contained only whitespaces");
+                _logger.LogWarning($"Failed to read proper content of environment variable \"{KV_API_KEY_VALUE_STORE_ROOT_DIR}\", contained only whitespaces");
             }
             storageRoot = "."; // Remove possibility of null, using . further reduces chances of doing weird stuff at root of file system
         }

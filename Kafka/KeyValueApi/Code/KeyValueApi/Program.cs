@@ -14,7 +14,13 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<KafkaAdminClient>();
-if(Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_TYPE) == "disk")
+var configuredStorageType = Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_TYPE);
+if(configuredStorageType == "sqlite")
+{
+    Console.WriteLine($"Setting up local state storage to use SQLite");
+    builder.Services.AddSingleton<IKeyValueStateService,KeyValueStateInSQLiteService>();
+}
+else if(configuredStorageType == "disk")
 {
     Console.WriteLine($"Setting up local state storage to use disk");
     builder.Services.AddSingleton<IKeyValueStateService,KeyValeStateOnFileSystemService>();
