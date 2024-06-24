@@ -112,4 +112,14 @@ public class KeyValueStateInDictService : IKeyValueStateService
             return true;
         }
     }
+
+    public List<KafkaTopicPartitionOffset> GetLastConsumedTopicPartitionOffsets()
+    {
+        return [];
+    }
+
+    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffsets)
+    {
+        return false;
+    }
 }

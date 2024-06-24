@@ -61,6 +61,24 @@ public class KafkaConsumerService : BackgroundService
         var consumer = new ConsumerBuilder<byte[], byte[]>(consumerConfig)
             .SetPartitionsAssignedHandler((c, partitions) =>
             {
+                var savedTpos = _keyValueStateService.GetLastConsumedTopicPartitionOffsets();
+                if(savedTpos.Count > 0)
+                {
+                    // If partitions changed, all hope is lost, just start from the beginning on all of them
+                    if(savedTpos.Count == partitions.Count)
+                    {
+                        // var savedPartitions = savedTpos.Select(x => x.Partition).ToList();
+                        if(partitions.All(p => savedTpos.Any(s => s.Partition.Value == p.Partition.Value)))
+                        {
+                            return savedTpos.Select(tpo => new TopicPartitionOffset(tpo.Topic.Value, new Partition(tpo.Partition.Value), new Offset(tpo.Offset.Value)));
+                        }
+                        _logger.LogWarning($"There were saved processed topic partition offsets in storage, but the partition IDs didn't match the ones received from the consumer group. Something is disturbing.");
+                    }
+                    _logger.LogWarning($"There were saved processed topic partition offsets in storage, but number of saved partitions didn't match number of partitions received from consumer group. Something is fishy.");
+                    _logger.LogInformation($"Topics received form consumer: {System.Text.Json.JsonSerializer.Serialize(partitions)}");
+                    _logger.LogInformation($"Topics form state storage: {System.Text.Json.JsonSerializer.Serialize(savedTpos)}");
+                }
+                _logger.LogInformation($"Starting consuming all topics from beginning");
                 // When starting up, always read the topic from the beginning.
                 var offsets = partitions.Select(tp => new TopicPartitionOffset(tp, Offset.Beginning));
                 return offsets;
@@ -108,6 +126,12 @@ public class KafkaConsumerService : BackgroundService
                         var value = _decrypt(handleSchemaMagicBytesInValue(result.Message.Value));
                         _keyValueStateService.Store(key, value);
                     }
+                    _keyValueStateService.UpdateLastConsumedTopicPartitionOffsets(new KafkaTopicPartitionOffset
+                        {
+                            Topic = new KafkaTopic { Value = result.Topic },
+                            Partition = new KafkaPartition { Value = result.Partition.Value },
+                            Offset = new KafkaOffset{ Value = result.Offset.Value }
+                        });
                 }
             }
         }

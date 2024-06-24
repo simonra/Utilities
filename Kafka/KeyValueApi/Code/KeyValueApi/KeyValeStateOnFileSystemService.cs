@@ -182,6 +182,17 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         return true;
     }
 
+    public List<KafkaTopicPartitionOffset> GetLastConsumedTopicPartitionOffsets()
+    {
+        _logger.LogWarning("Not implemented");
+        return [];
+    }
+    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffsets)
+    {
+        _logger.LogWarning("Not implemented");
+        return false;
+    }
+
     private string GetDirectoryForKey(byte[] key)
     {
         // Make directory for first 3 (16 ^ 3 = up to 4096 directories per level), then next 3, then dump files
