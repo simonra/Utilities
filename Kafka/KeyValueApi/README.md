@@ -45,7 +45,7 @@ However, I also wanted to play around with encryption, and file storage, and cha
 ## Configurations
 
 Im mem vs on disk
-(Can be interesting win on disk in mem/ramdisk in kubernetes for effectively encrypted in mem storage)
+(Can be interesting win on disk in mem/ramdisk in kubernetes for effectively encrypted in mem storage, but then again with key in same memory, why?)
 Plaintext vs encrypted on topic
 
 ### Notes on deletion
