@@ -41,7 +41,7 @@ public static class KafkaClientConfigEnvBinder
         if(!string.IsNullOrEmpty(sslKeyPassword)) clientConfig.SslKeyPassword = sslKeyPassword;
 
         var sslKeyPasswordLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_PASSWORD_LOCATION);
-        if(!string.IsNullOrEmpty(sslKeyPasswordLocation)) clientConfig.SslKeyPassword = File.ReadAllText(sslKeyPasswordLocation);
+        if(!string.IsNullOrEmpty(sslKeyPasswordLocation)) clientConfig.SslKeyPassword = File.ReadAllLines(sslKeyPasswordLocation).FirstOrDefault();
 
         var sslKeyLocation = Environment.GetEnvironmentVariable(KAFKA_SSL_KEY_LOCATION);
         if(!string.IsNullOrEmpty(sslKeyLocation)) clientConfig.SslKeyLocation = sslKeyLocation;

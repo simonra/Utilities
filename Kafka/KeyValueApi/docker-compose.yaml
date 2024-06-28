@@ -253,6 +253,7 @@ services:
 
           echo "Creating private key for $$BROKER_DNS_1 certificate"
           openssl genrsa \
+            -aes256 \
             -passout file:/ContainerData/GeneratedCerts/Kafka/Brokers/$$BROKER_DNS_1/password.txt \
             -out /ContainerData/GeneratedCerts/Kafka/Brokers/$$BROKER_DNS_1/acl-principal.key $$RSA_BITS
 
@@ -286,6 +287,7 @@ services:
           openssl req \
             -new \
             -key /ContainerData/GeneratedCerts/Kafka/Brokers/$$BROKER_DNS_1/acl-principal.key \
+            -passin pass:$$BROKER_DEMO_PASSWORD \
             -subj '/CN='$$BROKERS_CN \
             -out /ContainerData/GeneratedCerts/Kafka/Brokers/$$BROKER_DNS_1/acl-principal.csr \
             -config /ContainerData/GeneratedCerts/Kafka/Brokers/$$BROKER_DNS_1/acl-principal.csr.config
@@ -379,6 +381,7 @@ services:
 
           echo "Creating private key for $$USER_CN certificate"
           openssl genrsa \
+            -aes256 \
             -passout file:$$USER_OUTPUT_DIR/password.txt \
             -out $$USER_OUTPUT_DIR/acl-principal.key $$RSA_BITS
 
@@ -400,6 +403,7 @@ services:
           openssl req \
             -new \
             -key $$USER_OUTPUT_DIR/acl-principal.key \
+            -passin pass:$$USER_PASSWORD \
             -subj /CN=$$USER_CN \
             -out $$USER_OUTPUT_DIR/acl-principal.csr \
             -config $$USER_OUTPUT_DIR/acl-principal.csr.config
@@ -687,6 +691,34 @@ services:
             --topic "$$TOPIC"
         }
 
+        function CreatePrefixedProduceAcl {
+          while [ $$# -gt 0 ]; do
+            case "$$1" in
+              --topic*|-t*)
+                if [[ "$$1" != *=* ]]; then shift; fi # Value is next arg if no `=`
+                TOPIC="$${1#*=}"
+                ;;
+              --principal*|-p*)
+                if [[ "$$1" != *=* ]]; then shift; fi
+                PRINCIPAL="$${1#*=}"
+                ;;
+              *)
+                >&2 printf "Error: Invalid argument\n"
+                exit 1
+                ;;
+            esac
+            shift
+          done
+          kafka-acls --bootstrap-server "$$BOOTSTRAP_SERVERS" \
+            --command-config 'adminclient-configs.conf' \
+            --add \
+            --allow-principal "User:CN=$$PRINCIPAL" \
+            --allow-host '*' \
+            --producer \
+            --topic "$$TOPIC" \
+            --resource-pattern-type prefixed
+        }
+
         function CreateConsumeAcl {
           while [ $$# -gt 0 ]; do
             case "$$1" in
@@ -717,6 +749,39 @@ services:
             --consumer \
             --topic "$$TOPIC" \
             --group "$$GROUP"
+        }
+
+        function CreatePrefixedConsumeAcl {
+          while [ $$# -gt 0 ]; do
+            case "$$1" in
+              --topic*|-t*)
+                if [[ "$$1" != *=* ]]; then shift; fi # Value is next arg if no `=`
+                TOPIC="$${1#*=}"
+                ;;
+              --principal*|-p*)
+                if [[ "$$1" != *=* ]]; then shift; fi
+                PRINCIPAL="$${1#*=}"
+                ;;
+              --group|-g)
+                if [[ "$$1" != *=* ]]; then shift; fi
+                GROUP="$${1#*=}"
+                ;;
+              *)
+                >&2 printf "Error: Invalid argument\n"
+                exit 1
+                ;;
+            esac
+            shift
+          done
+          kafka-acls --bootstrap-server "$$BOOTSTRAP_SERVERS" \
+            --command-config 'adminclient-configs.conf' \
+            --add \
+            --allow-principal "User:CN=$$PRINCIPAL" \
+            --allow-host '*' \
+            --consumer \
+            --topic "$$TOPIC" \
+            --group "$$GROUP" \
+            --resource-pattern-type prefixed
         }
 
         function CreateSchemaRegistryAcls {
@@ -786,7 +851,10 @@ services:
 
         # Key Value API user
         CreateProduceAcl --topic "key-value-store" --principal "key-value-api-user"
-        CreateConsumeAcl --topic "key-value-store" --principal "key-value-api-user" --group "key-value-api-instance-x"
+        CreatePrefixedConsumeAcl --topic "key-value-store" --principal "key-value-api-user" --group "key-value-api-instance"
+
+        ehco "Giving ACLs some time to sync between the brokers"
+        sleep 5
 
   create-topics:
     image: confluentinc/cp-kafka:7.5.0
