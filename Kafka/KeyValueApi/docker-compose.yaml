@@ -854,7 +854,7 @@ services:
         CreatePrefixedConsumeAcl --topic "key-value-store" --principal "key-value-api-user" --group "key-value-api-instance"
 
         ehco "Giving ACLs some time to sync between the brokers"
-        sleep 5
+        sleep 10
 
   create-topics:
     image: confluentinc/cp-kafka:7.5.0
@@ -938,7 +938,9 @@ services:
         restart: false
         condition: service_completed_successfully
     networks:
-      - apps_network
+      apps_network:
+        ipv4_address: 172.80.80.10
+        ipv6_address: 2001:8080:8080::10
     ports:
       - "8083:8083"
     environment:
