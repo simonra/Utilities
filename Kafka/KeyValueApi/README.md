@@ -180,6 +180,9 @@ A minimal configuration for the connection to Kafka
 <summary>App behaviour configuration</summary>
 
 | Config key | possible values | Comment |
+|------------|-----------------|---------|
+| KV_API_DISABLE_WRITE | <ul><li>`true`</li><li>`false`</li><li>not set</li></ul> | If you don't want to enable the possibility to write from this insane (making it a read only instance), you can set this to `true`. |
+| KV_API_DISABLE_READ | <ul><li>`true`</li><li>`false`</li><li>not set</li></ul> | If you don't want to enable the possibility to read from this insane (making it a write only instance), you can set this to `true`. |
 | KV_API_STATE_STORAGE_TYPE | <ul><li>`sqlite`</li><li>`disk`</li><li>not set</li></ul> | ToDo |
 | KV_API_STATE_STORAGE_SQLITE_LOCATION | string path to db location on dis | If using SQLite and not set defaults to running in memory |
 | KV_API_STATE_STORAGE_SQLITE_PASSWORD | string password | If SQLite set to persist to disk, sets the password for encrypting the database |
