@@ -2,8 +2,6 @@ public class KeyValueStateInDictService : IKeyValueStateService
 {
     private readonly ILogger<KeyValueStateInDictService> _logger;
     private readonly Dictionary<string, List<KeyValue>> _keyValueState;
-    private readonly Func<byte[], byte[]> _encrypt;
-    private readonly Func<byte[], byte[]> _decrypt;
     // private readonly ConsumerConfig _consumerConfig;
     // private readonly ProducerConfig _producerConfig;
     // private System.IO.Hashing.Crc32 crc32; // https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32?view=dotnet-plat-ext-8.0
@@ -12,21 +10,6 @@ public class KeyValueStateInDictService : IKeyValueStateService
     {
         _logger = logger;
         _keyValueState = new Dictionary<string, List<KeyValue>>();
-        if (Environment.GetEnvironmentVariable(KV_API_ENCRYPT_DATA_IN_STATE_STORAGE) == "true")
-        {
-            // Why would you encrypt memory while the key has to reside plaintext in memory anyways?
-            // Who knows, gives the good feeling of being able to say "it's encrypted while it's here" I guess.
-            // I think I'm adding it for the feeling of completeness. But for practical use I'd probably remove
-            // it from the in memory/dict implementation for the performance improvement.
-            var cryptoService = new CryptoService();
-            _encrypt = cryptoService.Encrypt;
-            _decrypt = cryptoService.Decrypt;
-        }
-        else
-        {
-            _encrypt = delegate(byte[] input) { return input; };
-            _decrypt = delegate(byte[] input) { return input; };
-        }
         // _consumerConfig = GetConsumerConfig();
         // crc32 = new();
 
@@ -38,30 +21,28 @@ public class KeyValueStateInDictService : IKeyValueStateService
         _logger.LogInformation($"{nameof(KeyValueStateInDictService)} initialized");
     }
 
-    public bool Store(byte[] keyRaw, byte[] valueRaw)
+    public bool Store(byte[] key, byte[] value)
     {
-        _logger.LogInformation($"Storing key {keyRaw}");
-        var keyEncrypted = _encrypt(keyRaw);
-        var valueEncrypted = _encrypt(valueRaw);
-        var keyHash = keyRaw.GetHashString();
+        _logger.LogDebug($"Storing key {key}");
+        var keyHash = key.GetHashString();
         if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
             for (int i = 0; i < pairsSharingHash.Count; i++)
             {
-                if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
+                if(pairsSharingHash[i].Key.SequenceEqual(key))
                 {
-                    pairsSharingHash[i] =  new KeyValue { Key = keyEncrypted, Value = valueEncrypted };
+                    pairsSharingHash[i] =  new KeyValue { Key = key, Value = value };
                     _keyValueState[keyHash] = pairsSharingHash;
                     return true;
                 }
             }
-            pairsSharingHash.Add(new KeyValue { Key = keyEncrypted, Value = valueEncrypted });
+            pairsSharingHash.Add(new KeyValue { Key = key, Value = value });
             _keyValueState[keyHash] = pairsSharingHash;
             return true;
         }
         else
         {
-            _keyValueState.Add(keyHash, [new() { Key = keyEncrypted, Value = valueEncrypted }]);
+            _keyValueState.Add(keyHash, [new() { Key = key, Value = value }]);
             return true;
         }
     }
@@ -73,9 +54,9 @@ public class KeyValueStateInDictService : IKeyValueStateService
         {
             for (int i = 0; i < pairsSharingHash.Count; i++)
             {
-                if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
+                if(pairsSharingHash[i].Key.SequenceEqual(keyRaw))
                 {
-                    value = _decrypt(pairsSharingHash[i].Value);
+                    value = pairsSharingHash[i].Value;
                     return true;
                 }
             }
@@ -91,7 +72,7 @@ public class KeyValueStateInDictService : IKeyValueStateService
         {
             for (int i = 0; i < pairsSharingHash.Count; i++)
             {
-                if(_decrypt(pairsSharingHash[i].Key).SequenceEqual(keyRaw))
+                if(pairsSharingHash[i].Key.SequenceEqual(keyRaw))
                 {
                     if(pairsSharingHash.Count == 1)
                     {

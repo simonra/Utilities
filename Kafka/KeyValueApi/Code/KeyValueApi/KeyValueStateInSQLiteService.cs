@@ -111,18 +111,18 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
 
     private string GetSqliteConnectionString()
     {
-        var configuredLocation = Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_SQLITE_LOCATION);
+        var configuredLocation = Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_DISK_LOCATION);
         if(string.IsNullOrWhiteSpace(configuredLocation))
         {
             if(string.IsNullOrEmpty(configuredLocation))
             {
-                _logger.LogInformation($"Failed to read content of environment variable \"{KV_API_STATE_STORAGE_SQLITE_LOCATION}\", got null/empty string");
+                _logger.LogInformation($"Failed to read content of environment variable \"{KV_API_STATE_STORAGE_DISK_LOCATION}\", got null/empty string");
             }
             else
             {
-                _logger.LogWarning($"Failed to read proper content of environment variable \"{KV_API_STATE_STORAGE_SQLITE_LOCATION}\", contained only whitespaces");
+                _logger.LogWarning($"Failed to read proper content of environment variable \"{KV_API_STATE_STORAGE_DISK_LOCATION}\", contained only whitespaces");
             }
-            _logger.LogInformation($"Because {KV_API_STATE_STORAGE_SQLITE_LOCATION} was not set, setting up in memory sqlite");
+            _logger.LogInformation($"Because {KV_API_STATE_STORAGE_DISK_LOCATION} was not set, setting up in memory sqlite");
             var connectionStringBuilder = new SqliteConnectionStringBuilder
             {
                 DataSource = "KeyValueStateInSQLiteMemDb",
@@ -133,11 +133,32 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
             return connectionString;
         }
 
-        var location = new FileInfo(configuredLocation);
-        if(!location.Exists)
+        configuredLocation = configuredLocation.Trim();
+
+        if(!Path.Exists(configuredLocation))
         {
-            location.Directory?.Create();
+            if(Path.EndsInDirectorySeparator(configuredLocation))
+            {
+                // For future me: Directory.CreateDirectory() handles the case where it already exists.
+                // So same as with mkdir -p, call it just in case instead of bloating path with if()'s.
+                Directory.CreateDirectory(configuredLocation); // Create if not exists
+                configuredLocation = $"{configuredLocation}/kvApi.sqlite";
+            }
+            else
+            {
+                new FileInfo(configuredLocation).Directory?.Create();
+            }
         }
+        else
+        {
+            if(Directory.Exists(configuredLocation))
+            {
+                configuredLocation = $"{configuredLocation}/kvApi.sqlite";
+            }
+        }
+
+        var location = new FileInfo(configuredLocation);
+
         var configuredPassword = Environment.GetEnvironmentVariable(KV_API_STATE_STORAGE_SQLITE_PASSWORD);
         if(string.IsNullOrWhiteSpace(configuredPassword))
         {
