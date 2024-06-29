@@ -54,7 +54,7 @@ services:
 
       # SQLite settings
       KV_API_STATE_STORAGE_TYPE: "sqlite"
-      KV_API_STATE_STORAGE_SQLITE_LOCATION: "/ContainerData/KeyValueApi/LocalState/kvApi.sqlite"
+      # KV_API_STATE_STORAGE_SQLITE_LOCATION: "/ContainerData/KeyValueApi/LocalState/kvApi.sqlite"
       # KV_API_STATE_STORAGE_SQLITE_PASSWORD: "password"
 
       # Encryption settings

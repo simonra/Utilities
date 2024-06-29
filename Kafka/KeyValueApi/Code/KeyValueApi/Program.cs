@@ -49,12 +49,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapPost("/store", (ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
+app.MapPost("/store", (HttpContext http, ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
 {
     var correlationIdValue = System.Guid.NewGuid().ToString("D");
     if(postContent.Headers?.ContainsKey("correlationId") ?? false) correlationIdValue = postContent.Headers["correlationId"];
     if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
     var correlationId = new CorrelationId { Value = correlationIdValue };
+    http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
     var eventKeyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
     var eventValueBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Value);
@@ -69,20 +70,21 @@ app.MapPost("/store", (ApiParamStore postContent, KafkaProducerService kafkaProd
     var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, eventValueBytes, headers, correlationId);
     if(produceSuccess)
     {
-        return Results.Ok($"{correlationId.Value}");
+        return Results.Ok($"Stored");
     }
     return Results.Text(
-        content: $"{correlationId.Value}",
+        content: $"Storage failed",
         contentType: "text/html",
         contentEncoding: Encoding.UTF8,
         statusCode: (int?) HttpStatusCode.InternalServerError);
 });
 
-app.MapPost("/retrieve", (ApiParamRetrieve postContent, IKeyValueStateService keyValueStateService) =>
+app.MapPost("/retrieve", (HttpContext http, ApiParamRetrieve postContent, IKeyValueStateService keyValueStateService) =>
 {
     var correlationIdValue = System.Guid.NewGuid().ToString("D");
     if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
     var correlationId = new CorrelationId { Value = correlationIdValue };
+    http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
     var keyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
     var retrieveSuccess = keyValueStateService.TryRetrieve(keyBytes, out var valueBytes);
@@ -90,11 +92,12 @@ app.MapPost("/retrieve", (ApiParamRetrieve postContent, IKeyValueStateService ke
     return Results.Ok(retrievedValueAsString);
 });
 
-app.MapPost("/remove", (ApiParamRemove postContent, KafkaProducerService kafkaProducerService) =>
+app.MapPost("/remove", (HttpContext http, ApiParamRemove postContent, KafkaProducerService kafkaProducerService) =>
 {
     var correlationIdValue = System.Guid.NewGuid().ToString("D");
     if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
     var correlationId = new CorrelationId { Value = correlationIdValue };
+    http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
     var eventKeyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
 
@@ -104,22 +107,23 @@ app.MapPost("/remove", (ApiParamRemove postContent, KafkaProducerService kafkaPr
     var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, null, headers, correlationId);
     if(produceSuccess)
     {
-        return Results.Ok($"{correlationId.Value}");
+        return Results.Ok($"Removed");
     }
     return Results.Text(
-        content: $"{correlationId.Value}",
+        content: $"Removal failed",
         contentType: "text/html",
         contentEncoding: Encoding.UTF8,
         statusCode: (int?) HttpStatusCode.InternalServerError);
 });
 
 
-app.MapPost("/store/b64", (ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
+app.MapPost("/store/b64", (HttpContext http, ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
 {
     var correlationIdValue = System.Guid.NewGuid().ToString("D");
     if(postContent.Headers?.ContainsKey("correlationId") ?? false) correlationIdValue = postContent.Headers["correlationId"];
     if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
     var correlationId = new CorrelationId { Value = correlationIdValue };
+    http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
     var eventKeyBytes = Convert.FromBase64String(postContent.Key);
     var eventValueBytes = Convert.FromBase64String(postContent.Value);
@@ -134,20 +138,21 @@ app.MapPost("/store/b64", (ApiParamStore postContent, KafkaProducerService kafka
     var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, eventValueBytes, headers, correlationId);
     if(produceSuccess)
     {
-        return Results.Ok($"{correlationId.Value}");
+        return Results.Ok($"Stored");
     }
     return Results.Text(
-        content: $"{correlationId.Value}",
+        content: $"Storage failed",
         contentType: "text/html",
         contentEncoding: Encoding.UTF8,
         statusCode: (int?) HttpStatusCode.InternalServerError);
 });
 
-app.MapPost("/retrieve/b64", (ApiParamRetrieve postContent, IKeyValueStateService keyValueStateService) =>
+app.MapPost("/retrieve/b64", (HttpContext http, ApiParamRetrieve postContent, IKeyValueStateService keyValueStateService) =>
 {
     var correlationIdValue = System.Guid.NewGuid().ToString("D");
     if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
     var correlationId = new CorrelationId { Value = correlationIdValue };
+    http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
     var keyBytes = Convert.FromBase64String(postContent.Key);
     var retrieveSuccess = keyValueStateService.TryRetrieve(keyBytes, out var valueBytes);
