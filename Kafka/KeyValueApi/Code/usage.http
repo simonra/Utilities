@@ -21,16 +21,6 @@ Content-Type: application/json
 
 ###
 
-POST {{baseurl}}/retrieve
-Content-Type: application/json
-
-{
-    "Key": "my first key!",
-    "CorrelationId": "nah"
-}
-
-###
-
 POST {{baseurl}}/store
 Content-Type: application/json
 
@@ -50,6 +40,17 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{baseurl}}/retrieve
+Content-Type: application/json
+
+{
+    "Key": "my first key!",
+    "CorrelationId": "nah"
+}
+
+###
+
 
 POST {{baseurl}}/retrieve
 Content-Type: application/json
