@@ -64,9 +64,17 @@ if(writeEnabled)
     app.MapPost("/store", (HttpContext http, ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
     {
         var correlationIdValue = System.Guid.NewGuid().ToString("D");
-        if(postContent.Headers?.ContainsKey("correlationId") ?? false) correlationIdValue = postContent.Headers["correlationId"];
-        if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
+        if(http.Request.Headers.TryGetValue("X-Correlation-Id", out Microsoft.Extensions.Primitives.StringValues value))
+        {
+            if(!string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                correlationIdValue = value.ToString();
+            }
+        }
+        if(postContent.Headers?.ContainsKey("Correlation-Id") ?? false) correlationIdValue = postContent.Headers["Correlation-Id"];
+
         var correlationId = new CorrelationId { Value = correlationIdValue };
+
         http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
         var eventKeyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
@@ -77,7 +85,7 @@ if(writeEnabled)
         {
             headers.Add(kvp.Key, System.Text.Encoding.UTF8.GetBytes(kvp.Value));
         }
-        if(!headers.ContainsKey("correlationId")) headers["correlationId"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
+        if(!headers.ContainsKey("Correlation-Id")) headers["Correlation-Id"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
 
         var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, eventValueBytes, headers, correlationId);
         if(produceSuccess)
@@ -94,14 +102,20 @@ if(writeEnabled)
     app.MapPost("/remove", (HttpContext http, ApiParamRemove postContent, KafkaProducerService kafkaProducerService) =>
     {
         var correlationIdValue = System.Guid.NewGuid().ToString("D");
-        if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
+        if(http.Request.Headers.TryGetValue("X-Correlation-Id", out Microsoft.Extensions.Primitives.StringValues value))
+        {
+            if(!string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                correlationIdValue = value.ToString();
+            }
+        }
         var correlationId = new CorrelationId { Value = correlationIdValue };
         http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
         var eventKeyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
 
         Dictionary<string, byte[]> headers = [];
-        headers["correlationId"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
+        headers["Correlation-Id"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
 
         var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, null, headers, correlationId);
         if(produceSuccess)
@@ -121,7 +135,13 @@ if(readEnabled)
     app.MapPost("/retrieve", (HttpContext http, ApiParamRetrieve postContent, IKeyValueStateService keyValueStateService) =>
     {
         var correlationIdValue = System.Guid.NewGuid().ToString("D");
-        if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
+        if(http.Request.Headers.TryGetValue("X-Correlation-Id", out Microsoft.Extensions.Primitives.StringValues value))
+        {
+            if(!string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                correlationIdValue = value.ToString();
+            }
+        }
         var correlationId = new CorrelationId { Value = correlationIdValue };
         http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
@@ -137,8 +157,14 @@ if(writeEnabled)
     app.MapPost("/store/b64", (HttpContext http, ApiParamStore postContent, KafkaProducerService kafkaProducerService) =>
     {
         var correlationIdValue = System.Guid.NewGuid().ToString("D");
+        if(http.Request.Headers.TryGetValue("X-Correlation-Id", out Microsoft.Extensions.Primitives.StringValues value))
+        {
+            if(!string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                correlationIdValue = value.ToString();
+            }
+        }
         if(postContent.Headers?.ContainsKey("correlationId") ?? false) correlationIdValue = postContent.Headers["correlationId"];
-        if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
         var correlationId = new CorrelationId { Value = correlationIdValue };
         http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 
@@ -150,7 +176,7 @@ if(writeEnabled)
         {
             headers.Add(kvp.Key, Convert.FromBase64String(kvp.Value));
         }
-        if(!headers.ContainsKey("correlationId")) headers["correlationId"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
+        if(!headers.ContainsKey("Correlation-Id")) headers["Correlation-Id"] = System.Text.Encoding.UTF8.GetBytes(correlationId.Value);
 
         var produceSuccess = kafkaProducerService.Produce(eventKeyBytes, eventValueBytes, headers, correlationId);
         if(produceSuccess)
@@ -170,7 +196,13 @@ if(readEnabled)
     app.MapPost("/retrieve/b64", (HttpContext http, ApiParamRetrieve postContent, IKeyValueStateService keyValueStateService) =>
     {
         var correlationIdValue = System.Guid.NewGuid().ToString("D");
-        if(!string.IsNullOrEmpty(postContent.CorrelationId)) correlationIdValue = postContent.CorrelationId;
+        if(http.Request.Headers.TryGetValue("X-Correlation-Id", out Microsoft.Extensions.Primitives.StringValues value))
+        {
+            if(!string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                correlationIdValue = value.ToString();
+            }
+        }
         var correlationId = new CorrelationId { Value = correlationIdValue };
         http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
 

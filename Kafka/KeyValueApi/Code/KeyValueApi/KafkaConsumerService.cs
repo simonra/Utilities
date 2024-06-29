@@ -108,12 +108,14 @@ public class KafkaConsumerService : BackgroundService
                 var result = consumer.Consume(stoppingToken);
                 if (result?.Message == null)
                 {
-                    Console.WriteLine("We've reached the end of the topic.");
+                    _logger.LogDebug("We've reached the end of the topic.");
                     await Task.Delay(TimeSpan.FromSeconds(8), stoppingToken);
                 }
                 else
                 {
-                    // Console.WriteLine($"The next event on topic {result.TopicPartitionOffset.Topic} partition {result.TopicPartitionOffset.Partition.Value} offset {result.TopicPartitionOffset.Offset.Value} received to the topic at the time {result.Message.Timestamp.UtcDateTime:u} has the value {result.Message.Value}");
+                    var correlationIdFromHeader = string.Empty;
+                    if(result.Message.Headers.TryGetLastBytes("Correlation-Id", out byte[] correlationIdHeaderValue)) correlationIdFromHeader = System.Text.Encoding.UTF8.GetString(correlationIdHeaderValue);
+                    _logger.LogTrace($"The next event on topic {result.TopicPartitionOffset.Topic} partition {result.TopicPartitionOffset.Partition.Value} offset {result.TopicPartitionOffset.Offset.Value} received to the topic at the time {result.Message.Timestamp.UtcDateTime:o} has correlation ID \"{correlationIdFromHeader}\"");
                     if(result.Message.Value == null)
                     {
                         // ToDo: handle tombstone, delete from dict

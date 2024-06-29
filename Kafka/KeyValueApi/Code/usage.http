@@ -5,6 +5,7 @@ GET {{baseurl}} HTTP/1.1
 
 POST {{baseurl}}/store
 Content-Type: application/json
+X-Correlation-Id: submitting correlation id should be optional
 
 {
     "Key": "my first key!",
@@ -15,8 +16,7 @@ Content-Type: application/json
         "should": "moaar",
         "be": "I can has value?",
         "optional": "truely"
-    },
-    "CorrelationId": "submitting correlation id should be optional"
+    }
 }
 
 ###
@@ -43,10 +43,10 @@ Content-Type: application/json
 
 POST {{baseurl}}/retrieve
 Content-Type: application/json
+X-Correlation-Id: nah
 
 {
-    "Key": "my first key!",
-    "CorrelationId": "nah"
+    "Key": "my first key!"
 }
 
 ###
