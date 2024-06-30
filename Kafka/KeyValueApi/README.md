@@ -6,8 +6,8 @@ key-value pairs using a web/REST/http API.
 ## What does it do
 
 It sets up a dotnet web server, that allows you to send in data you want to store.
-Upon submission, the data is immediately dispatched to a kafka topic.
-Then there is another background process listens for new events on the kafka topic,
+Upon submission, the data is immediately dispatched to a [Kafka](https://developer.confluent.io/what-is-apache-kafka/) topic.
+Then there is another background process listens for new events on the Kafka topic,
 which it uses to update the local state which is used when the data is requested.
 
 <details>
@@ -19,7 +19,7 @@ sequenceDiagram
     box Grey Web Server
         participant api_write as Write Endpoint
         participant api_read as Read Endpoint
-        participant api_state as Local State<br>(In memory SQLite<br>or encrypted<br>on disk SQLite)
+        participant api_state as Local State
         participant api_consumer as State Updater
     end
     participant Kafka
@@ -29,7 +29,9 @@ sequenceDiagram
         api_write ->> api_write: Encrypt key and value<br>using AES key from config
     end
     api_write ->> Kafka: A new Key/Value pair has arrived,<br>could you store it for me?
-    Kafka ->> api_consumer: Got a<br>new Key/Value pair<br>for you!
+    Kafka -->> api_write: Done, it has been saved on as many nodes as you asked for
+    api_consumer ->> Kafka: Seen any new events<br>lately?
+    Kafka -->> api_consumer: Yup! Got a<br>new Key/Value pair<br>for you!
     alt no encryption for topic
     else if encryption for topic
         api_consumer ->> api_consumer: Decrypt key and value<br>using AES key from config
@@ -56,7 +58,7 @@ flowchart LR
         api3_endpoint_input[Write Endpoint]
         api3_endpoint_output[Read Endpoint]
         api3_kafka_consumer(Kafka Consumer Service)
-        api3_internal_state[(SQLite State)]
+        api3_internal_state[(Local State)]
         api3_kafka_consumer-->api3_internal_state
         api3_internal_state-->api3_endpoint_output
     end
@@ -65,7 +67,7 @@ flowchart LR
         api2_endpoint_input[Write Endpoint]
         api2_endpoint_output[Read Endpoint]
         api2_kafka_consumer(Kafka Consumer Service)
-        api2_internal_state[(SQLite State)]
+        api2_internal_state[(Local State)]
         api2_kafka_consumer-->api2_internal_state
         api2_internal_state-->api2_endpoint_output
     end
@@ -74,7 +76,7 @@ flowchart LR
         api1_endpoint_input[Write Endpoint]
         api1_endpoint_output[Read Endpoint]
         api1_kafka_consumer(Kafka Consumer Service)
-        api1_internal_state[(SQLite State)]
+        api1_internal_state[(Local State)]
         api1_kafka_consumer-->api1_internal_state
         api1_internal_state-->api1_endpoint_output
     end
@@ -117,13 +119,13 @@ flowchart LR
 </details>
 
 If you don't care for using this API to add data, you can also point it to pretty much
-any Kafka topic where the key and value can be read as strings, and it will strip any
-leading kafka schema magic bytes if present and happily serve it out as string.
+any Kafka topic where the key and value can be read as strings. It will strip any
+leading [Kafka schema magic bytes](https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#wire-format) preceding the data if present, and happily serve it out as string.
 
 ## Why
 
 Primarily to illustrate that it's fairly trivial to get a distributed key value store
-up and running if you've got a kafka cluster laying around.
+up and running if you've got a Kafka cluster laying around.
 
 However, I also wanted to play around with encryption, and file storage, and challenge
 myself to see how simple I could make it.
@@ -137,7 +139,7 @@ Im mem vs on disk
 (Can be interesting win on disk in mem/ramdisk in kubernetes for effectively encrypted in mem storage, but then again with key in same memory, why?)
 Plaintext vs encrypted on topic
 
-For configuring the connection to your Kafka cluster beyond the basics, see config settings supported by this utility and the environment variable names [in the KafkaConfig directory in the project](./Code/KeyValueApi/KafkaConfig/README.md#supported-variables) (should be everything per the 2.2.0 dotnet kafka packages).
+For configuring the connection to your Kafka cluster beyond the basics, see config settings supported by this utility and the environment variable names [in the KafkaConfig directory in the project](./Code/KeyValueApi/KafkaConfig/README.md#supported-variables) (should be everything per the 2.2.0 dotnet Kafka packages).
 
 <details>
 <summary>Baseline .NET configuration</summary>
@@ -171,23 +173,25 @@ A minimal configuration for the connection to Kafka
 | KAFKA_GROUP_ID                  | required | `key-value-api-instance` | The consumer group this instance should use when connecting to Kafka when retrieving events. Beware that if you set up multiple instances to use the same group, only one of them will be getting the events. |
 | KAFKA_ENABLE_AUTO_COMMIT        | optional | `true` | Whether to store/commit the offset that has been consumed to the consumer group. Not used by the application, but useful in that it allows monitoring the group to see how far the application has come or if it's falling behind. |
 | KAFKA_AUTO_COMMIT_INTERVAL_MS   | optional | `200` | How often to store the consumed offsets back into the consumer group. |
-| KAFKA_SCHEMA_REGISTRY_URL       | required | `http://172.80.80.10:8083` | The address of the schema registry associated with the Kafka cluster. Used to determine whether there are schemas associated with the topics read from. |
+| KAFKA_SCHEMA_REGISTRY_URL       | required | `http://172.80.80.10:8083` | The address of the [Schema Registry](https://developer.confluent.io/courses/apache-kafka/schema-registry/) associated with the Kafka cluster. Used to determine whether there are schemas associated with the topics read from. |
 | KV_API_KAFKA_KEY_VALUE_TOPIC    | required | `key-value-store` | The topic with the keys and values you want to serve out/ingest to. |
 
 </details>
+
+<br>
 
 <details open>
 <summary>App behaviour configuration</summary>
 
 | Config key | possible values | Comment |
 |------------|-----------------|---------|
-| KV_API_DISABLE_WRITE | <ul><li>`true`</li><li>`false`</li><li>not set</li></ul> | If you don't want to enable the possibility to write from this insane (making it a read only instance), you can set this to `true`. |
-| KV_API_DISABLE_READ | <ul><li>`true`</li><li>`false`</li><li>not set</li></ul> | If you don't want to enable the possibility to read from this insane (making it a write only instance), you can set this to `true`. |
-| KV_API_STATE_STORAGE_TYPE | <ul><li>`sqlite`</li><li>`disk`</li><li>not set</li></ul> | ToDo |
-| KV_API_STATE_STORAGE_SQLITE_LOCATION | string path to db location on dis | If using SQLite and not set defaults to running in memory |
+| KV_API_STATE_STORAGE_TYPE | <ul><li>`"sqlite"`</li><li>`"disk"`</li><li>`"dict"`</li><li>not set</li></ul> | If read has not been disabled by setting the `KV_API_DISABLE_READ` environment variable, this will determine what kind of local storage is used. If `"dict"` is selected, an plain dotnet dictionary in memory is used. If `"disk"` is selected, the application stores the local lookup state as files directly on the file system where it's running. If `"sqlite"` is selected, it runs an SQLite DB instance either in memory, or on disk if the `KV_API_STATE_STORAGE_DISK_LOCATION` environment variable has been set. If no value/any other value has been set, the application defaults to using the settings as if `"sqlite"` had been selected. |
+| KV_API_STATE_STORAGE_DISK_LOCATION | string path to storage location on disk | If `KV_API_STATE_STORAGE_TYPE` is set to `"sqlite"`, SQLite defaults to running in memory. If it is set to a directory, a new SQLite database file is created in the directory. If it points to an existing file, SQLite will assume it's its database. Otherwise, if If `KV_API_STATE_STORAGE_TYPE` is set to `"disk"`, it will use this as the base directory for storage. |
 | KV_API_STATE_STORAGE_SQLITE_PASSWORD | string password | If SQLite set to persist to disk, sets the password for encrypting the database |
 | KV_API_ENCRYPT_DATA_ON_KAFKA | <ul><li>`"true"`</li><li>not set</li></ul> | Whether the data that goes to/comes from Kafka is encrypted. Affects both producing and consuming. If set, you also have to specify the key in the `KV_API_AES_KEY` config variable |
-| KV_API_AES_KEY | 64 hex characters (`0-9a-fA-F`, 256 bits) | If encrypting the data on the topic, set the key here |
+| KV_API_AES_KEY | 64 hex characters (`0-9a-fA-F`, 256 bits) | If encrypting the data on the topic, set the key here. Only used if the `KV_API_AES_KEY` environment variable has been set to `"true"`. |
+| KV_API_DISABLE_WRITE | <ul><li>`"true"`</li><li>`"false"`</li><li>not set</li></ul> | If you don't want to enable the possibility to write from this insane (making it a read only instance), you can set this to `"true"`. |
+| KV_API_DISABLE_READ | <ul><li>`"true"`</li><li>`"false"`</li><li>not set</li></ul> | If you don't want to enable the possibility to read from this insane (making it a write only instance), you can set this to `"true"`. |
 
 
 </details>
