@@ -295,3 +295,9 @@ dotnet add package SQLitePCLRaw.bundle_e_sqlcipher
 
 dotnet add package System.IO.Hashing
 ```
+
+# External resources
+
+- Kafka dotnet client documentation: https://docs.confluent.io/platform/current/clients/confluent-kafka-dotnet/_site/api/Confluent.Kafka.html
+- Compose file specification: https://docs.docker.com/compose/compose-file/05-services/
+- Microsoft SQLite integration documentation: https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/?tabs=net-cli
