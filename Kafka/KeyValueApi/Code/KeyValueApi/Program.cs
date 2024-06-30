@@ -267,7 +267,7 @@ else
             // Because kubernetes by default treats responses with status codes 200-399 as passes and 400+ as failures, blindly follow that convention and rely on the juicy status code.
             // https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request
             return Results.Text(
-                content: $"State hasn't caught up",
+                content: "State hasn't caught up",
                 contentType: "text/html",
                 contentEncoding: Encoding.UTF8,
                 statusCode: (int?) HttpStatusCode.ServiceUnavailable);
