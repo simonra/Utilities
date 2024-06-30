@@ -189,7 +189,7 @@ A minimal configuration for the connection to Kafka
 | KV_API_STATE_STORAGE_DISK_LOCATION | string path to storage location on disk | If `KV_API_STATE_STORAGE_TYPE` is set to `"sqlite"`, SQLite defaults to running in memory. If it is set to a directory, a new SQLite database file is created in the directory. If it points to an existing file, SQLite will assume it's its database. Otherwise, if If `KV_API_STATE_STORAGE_TYPE` is set to `"disk"`, it will use this as the base directory for storage. |
 | KV_API_STATE_STORAGE_SQLITE_PASSWORD | string password | If SQLite set to persist to disk, sets the password for encrypting the database |
 | KV_API_ENCRYPT_DATA_ON_KAFKA | <ul><li>`"true"`</li><li>not set</li></ul> | Whether the data that goes to/comes from Kafka is encrypted. Affects both producing and consuming. If set, you also have to specify the key in the `KV_API_AES_KEY` config variable |
-| KV_API_AES_KEY | 64 hex characters (`0-9a-fA-F`, 256 bits) | If encrypting the data on the topic, set the key here. Only used if the `KV_API_AES_KEY` environment variable has been set to `"true"`. |
+| KV_API_AES_KEY | 64 hex characters (`0-9a-fA-F`, 256 bits) | If encrypting the data on the topic, set the key here. Only used if the `KV_API_ENCRYPT_DATA_ON_KAFKA` environment variable has been set to `"true"`. |
 | KV_API_DISABLE_WRITE | <ul><li>`"true"`</li><li>`"false"`</li><li>not set</li></ul> | If you don't want to enable the possibility to write from this insane (making it a read only instance), you can set this to `"true"`. |
 | KV_API_DISABLE_READ | <ul><li>`"true"`</li><li>`"false"`</li><li>not set</li></ul> | If you don't want to enable the possibility to read from this insane (making it a write only instance), you can set this to `"true"`. |
 
@@ -259,11 +259,16 @@ VS Code REST Client: https://marketplace.visualstudio.com/items?itemName=humao.r
 
 Once everything is up and running here is where you'll find the most interesting starting points
 
-| What                     | Where                          |
-|--------------------------|--------------------------------|
-| The APIs Write endpoint  | http://localhost:8080/store    |
-| The APIs Read endpoint   | http://localhost:8080/retrieve |
-| The APIs Delete endpoint | http://localhost:8080/remove   |
+| What                                              | Where                  |
+|---------------------------------------------------|------------------------|
+| The APIs Write endpoint                           | /store                 |
+| The APIs Read endpoint                            | /retrieve              |
+| The APIs Delete endpoint                          | /remove                |
+| Endpoint for submitting everything as base64      | /store/b64             |
+| Endpoint for fetching everything as base64        | /retrieve/b64          |
+| Health check: Startup                             | /healthz               |
+| Health check: Readiness                           | /healthz/ready         |
+| Health check: Liveliness                          | /healthz/live          |
 | [Kafka UI](https://github.com/provectus/kafka-ui) | http://localhost:8081/ |
 
 # Retracing the creation steps
