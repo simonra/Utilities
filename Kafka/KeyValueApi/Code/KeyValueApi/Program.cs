@@ -157,12 +157,17 @@ if(readEnabled)
             }
         }
         var correlationId = new CorrelationId { Value = correlationIdValue };
-        http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
+        var returnValue = string.Empty;
 
         var keyBytes = System.Text.Encoding.UTF8.GetBytes(postContent.Key);
-        var retrieveSuccess = keyValueStateService.TryRetrieve(keyBytes, out var valueBytes);
-        var retrievedValueAsString = System.Text.Encoding.UTF8.GetString(valueBytes);
-        return Results.Ok(retrievedValueAsString);
+        if(keyValueStateService.TryRetrieve(keyBytes, out var retrieveResult))
+        {
+            returnValue = System.Text.Encoding.UTF8.GetString(retrieveResult.Value);
+            correlationId = new CorrelationId { Value = retrieveResult.CorrelationId };
+        }
+
+        http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
+        return Results.Ok(returnValue);
     });
 }
 
@@ -217,13 +222,57 @@ if(readEnabled)
                 correlationIdValue = value.ToString();
             }
         }
+
         var correlationId = new CorrelationId { Value = correlationIdValue };
-        http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
+        var returnValue = string.Empty;
 
         var keyBytes = Convert.FromBase64String(postContent.Key);
-        var retrieveSuccess = keyValueStateService.TryRetrieve(keyBytes, out var valueBytes);
-        var retrievedValueAsString = Convert.ToBase64String(valueBytes);
-        return Results.Ok(retrievedValueAsString);
+        if(keyValueStateService.TryRetrieve(keyBytes, out var retrieveResult))
+        {
+            returnValue = Convert.ToBase64String(retrieveResult.Value);
+            correlationId = new CorrelationId { Value = retrieveResult.CorrelationId };
+        }
+
+        http.Response.Headers.Append("X-Correlation-Id", correlationId.Value);
+
+        return Results.Ok(returnValue);
     });
 }
+
+// If we've gotten this far, all config and everything has been parsed ok and set up.
+// In the future more thorough validation could be done, like checking that the kafka consumer has happily connected, and the state storage is up and running.
+// However, during first time start up when there are no events or data anywhere things become complicated.
+// So, just don't bother with it until a pressing need arises.
+app.MapGet("/healthz", () => Results.Ok("Started successfully"));
+app.MapGet("/healthz/live", () => Results.Ok("Alive and well"));
+// /healthz/live
+if(!writeEnabled && !readEnabled)
+{
+    app.MapGet("/healthz/ready", () => Results.Ok("Both reading and writing are disabled? Why even bother"));
+}
+else if(writeEnabled && !readEnabled)
+{
+    app.MapGet("/healthz/ready", () => Results.Ok("ready"));
+}
+else
+{
+    app.MapGet("/healthz/ready", (IKeyValueStateService keyValueStateService) =>
+    {
+        if(keyValueStateService.Ready())
+        {
+            return Results.Ok("ready");
+        }
+        else
+        {
+            // Because kubernetes by default treats responses with status codes 200-399 as passes and 400+ as failures, blindly follow that convention and rely on the juicy status code.
+            // https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request
+            return Results.Text(
+                content: $"State hasn't caught up",
+                contentType: "text/html",
+                contentEncoding: Encoding.UTF8,
+                statusCode: (int?) HttpStatusCode.ServiceUnavailable);
+        }
+    });
+}
+
 app.Run();

@@ -5,6 +5,9 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
     private readonly ILogger<KeyValueStateInSQLiteService> _logger;
     private readonly SqliteConnection _sqliteDb;
 
+    private List<KafkaTopicPartitionOffset> _highestOffsetsAtStartupTime;
+    private bool _ready;
+
     public KeyValueStateInSQLiteService(ILogger<KeyValueStateInSQLiteService> logger)
     {
         _logger = logger;
@@ -12,9 +15,12 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         _logger.LogInformation($"Connection to db using connection string \"{GetSqliteConnectionString()}\" set up");
         _sqliteDb.Open();
         InitializeDb();
+        _highestOffsetsAtStartupTime = [];
+
+        _logger.LogDebug($"{nameof(KeyValueStateInSQLiteService)} initialized");
     }
 
-    public bool Remove(byte[] key)
+    public bool Remove(byte[] key, string correlationId)
     {
         var command = _sqliteDb.CreateCommand();
         command.CommandText =
@@ -27,39 +33,57 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         return rowsAffected == 1;
     }
 
-    public bool Store(byte[] key, byte[] value)
+    public bool Store(byte[] key, byte[] value, string correlationId)
     {
         var command = _sqliteDb.CreateCommand();
         command.CommandText =
         @"
-            INSERT INTO keyValueStore(kvKey, kvValue)
-            VALUES ($k, $v)
+            INSERT INTO keyValueStore(kvKey, kvValue, correlationId)
+            VALUES ($k, $v, $c)
             ON CONFLICT (kvKey) DO UPDATE SET kvValue=excluded.kvValue;
         ";
         command.Parameters.AddWithValue("$k", key);
         command.Parameters.AddWithValue("$v", value);
+        command.Parameters.AddWithValue("$c", correlationId);
         var rowsAffected = command.ExecuteNonQuery();
 
         return rowsAffected == 1;
     }
 
-    public bool TryRetrieve(byte[] key, out byte[] value)
+    public bool TryRetrieve(byte[] key, out (byte[] Value, string CorrelationId) result)
     {
         var command = _sqliteDb.CreateCommand();
         command.CommandText =
         @"
-            SELECT kvValue
+            SELECT kvValue, correlationId
             FROM keyValueStore
             WHERE kvKey = $k
         ";
         command.Parameters.AddWithValue("$k", key);
-        var result = command.ExecuteScalar();
-        if(result != null && result is byte[] converted)
+        using (var reader = command.ExecuteReader())
         {
-            value = converted;
-            return true;
+            while (reader.Read())
+            {
+                var valueRaw = reader.GetStream(0);
+                var correlationId = reader.GetString(1);
+
+                byte[] valueConverted = [];
+                if(valueRaw is MemoryStream stream)
+                {
+                    valueConverted = stream.ToArray();
+                }
+                else
+                {
+                    using MemoryStream ms = new();
+                    valueRaw.CopyTo(ms);
+                    valueConverted = ms.ToArray();
+                }
+
+                result = (Value: valueConverted, CorrelationId: correlationId);
+                return true;
+            }
         }
-        value = [];
+        result = (Value: [], CorrelationId: string.Empty);
         return false;
     }
 
@@ -92,7 +116,7 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         return topicPartitionOffsets;
     }
 
-    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffsets)
+    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffset)
     {
         var command = _sqliteDb.CreateCommand();
         command.CommandText =
@@ -101,12 +125,85 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
             VALUES ($t, $p, $o)
             ON CONFLICT (topic, partition) DO UPDATE SET offset=excluded.offset;
         ";
-        command.Parameters.AddWithValue("$t", topicPartitionOffsets.Topic.Value);
-        command.Parameters.AddWithValue("$p", topicPartitionOffsets.Partition.Value);
-        command.Parameters.AddWithValue("$o", topicPartitionOffsets.Offset.Value);
+        command.Parameters.AddWithValue("$t", topicPartitionOffset.Topic.Value);
+        command.Parameters.AddWithValue("$p", topicPartitionOffset.Partition.Value);
+        command.Parameters.AddWithValue("$o", topicPartitionOffset.Offset.Value);
         var rowsAffected = command.ExecuteNonQuery();
 
         return rowsAffected == 1;
+    }
+
+    // public List<KafkaTopicPartitionOffset> GetStartupTimeTopicPartitionOffsets()
+    // {
+    //     List<KafkaTopicPartitionOffset> topicPartitionOffsets = [];
+
+    //     var command = _sqliteDb.CreateCommand();
+    //     command.CommandText =
+    //     @"
+    //         SELECT topic, partition, offset
+    //         FROM topicPartitionOffsetsHighAtStartup
+    //     ";
+    //     using (var reader = command.ExecuteReader())
+    //     {
+    //         while (reader.Read())
+    //         {
+    //             var topic = reader.GetString(0);
+    //             var partition = reader.GetInt32(1);
+    //             var offset = reader.GetInt64(2);
+
+    //             topicPartitionOffsets.Add(new KafkaTopicPartitionOffset
+    //                 {
+    //                     Topic = new KafkaTopic { Value = topic },
+    //                     Partition = new KafkaPartition { Value = partition },
+    //                     Offset = new KafkaOffset{ Value = offset }
+    //                 });
+    //         }
+    //     }
+    //     return topicPartitionOffsets;
+    // }
+
+    public bool SetStartupTimeHightestTopicPartitionOffsets(List<KafkaTopicPartitionOffset> topicPartitionOffsets)
+    {
+        _highestOffsetsAtStartupTime = topicPartitionOffsets;
+        return true;
+        // var rowsAffected = 0;
+        // foreach(var tpo in topicPartitionOffsets)
+        // {
+        //     var command = _sqliteDb.CreateCommand();
+        //     command.CommandText =
+        //     @"
+        //         INSERT INTO topicPartitionOffsetsHighAtStartup(topic, partition, offset)
+        //         VALUES ($t, $p, $o)
+        //         ON CONFLICT (topic, partition) DO UPDATE SET offset=excluded.offset;
+        //     ";
+        //     command.Parameters.AddWithValue("$t", tpo.Topic.Value);
+        //     command.Parameters.AddWithValue("$p", tpo.Partition.Value);
+        //     command.Parameters.AddWithValue("$o", tpo.Offset.Value);
+        //     rowsAffected += command.ExecuteNonQuery();
+
+        // }
+        // return rowsAffected == topicPartitionOffsets.Count;
+    }
+
+    public bool Ready()
+    {
+        _logger.LogTrace($"{nameof(KeyValueStateInSQLiteService)} received request to check readiness");
+        if(_ready) return true;
+
+        if(_highestOffsetsAtStartupTime.Count == 0) return false;
+
+        var latestConsumedOffsets = GetLastConsumedTopicPartitionOffsets();
+        foreach(var latestOffset in latestConsumedOffsets)
+        {
+            var partitionHighWatermarkAtStartupTime = _highestOffsetsAtStartupTime.FirstOrDefault(tpo => tpo.Topic == latestOffset.Topic && tpo.Partition == latestOffset.Partition);
+            if(latestOffset.Offset.Value < (partitionHighWatermarkAtStartupTime?.Offset.Value ?? long.MaxValue))
+            {
+                return false;
+            }
+        }
+
+        _ready = true;
+        return _ready;
     }
 
     private string GetSqliteConnectionString()
@@ -187,7 +284,8 @@ public class KeyValueStateInSQLiteService : IKeyValueStateService
         @"
             CREATE TABLE IF NOT EXISTS keyValueStore (
                 kvKey BLOB NOT NULL PRIMARY KEY,
-                kvValue BLOB NOT NULL
+                kvValue BLOB NOT NULL,
+                correlationId TEXT NOT NULL
             );
 
             CREATE TABLE IF NOT EXISTS topicPartitionOffsets (

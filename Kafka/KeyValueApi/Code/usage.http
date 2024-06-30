@@ -96,3 +96,15 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{baseurl}}/healthz/ready
+
+###
+
+GET {{baseurl}}/healthz/live
+
+###
+
+GET {{baseurl}}/healthz
+
+###

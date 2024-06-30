@@ -3,6 +3,9 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
     private readonly ILogger<KeyValeStateOnFileSystemService> _logger;
     private readonly string _storageRootDirectoryPath;
 
+    private List<KafkaTopicPartitionOffset> _highestOffsetsAtStartupTime;
+    private bool _ready;
+
     public KeyValeStateOnFileSystemService(ILogger<KeyValeStateOnFileSystemService> logger)
     {
         _logger = logger;
@@ -20,10 +23,11 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
             storageRoot = "."; // Remove possibility of null, using . further reduces chances of doing weird stuff at root of file system
         }
         _storageRootDirectoryPath = storageRoot;
-        _logger.LogInformation($"{nameof(KeyValeStateOnFileSystemService)} initialized");
+        _highestOffsetsAtStartupTime = [];
+        _logger.LogDebug($"{nameof(KeyValeStateOnFileSystemService)} initialized");
     }
 
-    public bool Store(byte[] key, byte[] value)
+    public bool Store(byte[] key, byte[] value, string correlationId)
     {
         var directory = GetDirectoryForKey(key);
         // For future me: Directory.CreateDirectory() handles the case where it already exists.
@@ -32,12 +36,15 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         string[] preExistingFiles = Directory.GetFiles(directory);
         var keyPath = string.Empty;
         var valuePath = string.Empty;
+        var correlationIdPath = string.Empty;
         if(preExistingFiles.Length == 0)
         {
             keyPath = $"{directory}/0.key";
             valuePath = $"{directory}/0.value";
+            correlationIdPath = $"{directory}/0.correlationId";
             File.WriteAllBytes(keyPath, key);
             File.WriteAllBytes(valuePath, value);
+            File.WriteAllText(correlationIdPath, correlationId);
             return true;
         }
         var keyFiles = preExistingFiles.Where(fileName => fileName.EndsWith(".key")).ToArray();
@@ -46,7 +53,9 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
             if(File.ReadAllBytes(keyFile).SequenceEqual(key))
             {
                 var associatedValueFile = keyFile[0..^3] + "value";
+                var associatedCorrelationIdFile = keyFile[0..^3] + "correlationId";
                 File.WriteAllBytes(associatedValueFile, value);
+                File.WriteAllText(associatedCorrelationIdFile, correlationId);
                 return true;
             }
         }
@@ -81,18 +90,20 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
         }
         keyPath = $"{directory}/{nextAvailableBaseName}.key";
         valuePath = $"{directory}/{nextAvailableBaseName}.value";
+        correlationIdPath = $"{directory}/{nextAvailableBaseName}.correlationId";
         File.WriteAllBytes(keyPath, key);
         File.WriteAllBytes(valuePath, value);
+        File.WriteAllText(correlationIdPath, correlationId);
         return true;
     }
 
-    public bool TryRetrieve(byte[] key, out byte[] value)
+    public bool TryRetrieve(byte[] key, out (byte[] Value, string CorrelationId) result)
     {
         // var keyEncrypted = _encrypt(keyRaw);
         var directory = GetDirectoryForKey(key);
         if(!Directory.Exists(directory))
         {
-            value = [];
+            result = (Value: [], CorrelationId: string.Empty);
             return false;
         }
         string[] preExistingFiles = Directory.GetFiles(directory);
@@ -104,7 +115,14 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
                 var associatedValueFile = keyFile[0..^3] + "value";
                 if(File.Exists(associatedValueFile))
                 {
-                    value = File.ReadAllBytes(associatedValueFile);
+                    var value = File.ReadAllBytes(associatedValueFile);
+                    var correlationId = string.Empty;
+                    var associatedCorrelationIdFile = keyFile[0..^3] + "correlationId";
+                    if(File.Exists(associatedValueFile))
+                    {
+                        correlationId = File.ReadAllText(associatedCorrelationIdFile);
+                    }
+                    result = (Value: value, CorrelationId: correlationId);
                     return true;
                 }
                 else
@@ -115,11 +133,11 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
                 }
             }
         }
-        value = [];
+        result = (Value: [], CorrelationId: string.Empty);
         return false;
     }
 
-    public bool Remove(byte[] key)
+    public bool Remove(byte[] key, string correlationId)
     {
         // var keyEncrypted = _encrypt(keyRaw);
         var directory = GetDirectoryForKey(key);
@@ -169,13 +187,96 @@ public class KeyValeStateOnFileSystemService : IKeyValueStateService
 
     public List<KafkaTopicPartitionOffset> GetLastConsumedTopicPartitionOffsets()
     {
-        _logger.LogWarning("Not implemented");
-        return [];
+        // The triple nested foreach (+ all the linq) has huge potential for performance gains by being minimally clever.
+        // However, seeing as it's most likely there will only ever be 1 topic + a single digit number of partitions, it will normally not be a noticeable penalty.
+        // Also, should these expectations not be met the outcome is crippling slowness, instead of weird reads of random data and odd behaviour.
+        // Should you be lucky enough that your solution is used enough for high performance to matter, well, then you will need to invest time in optimizing.
+        // At that point, consider the SQLite or in mem dict solution?
+        List<KafkaTopicPartitionOffset> result = [];
+        var tpoTopicGroupDirs = $"{_storageRootDirectoryPath}/topicPartitionOffsets/";
+        Directory.CreateDirectory(tpoTopicGroupDirs); // Create if not exists
+        string[] topicsGroup = Directory.GetDirectories(tpoTopicGroupDirs);
+        foreach(var topicDirsInGroup in topicsGroup)
+        {
+            string[] topicsDirs = Directory.GetDirectories(topicDirsInGroup);
+            foreach(var topicDir in topicsDirs)
+            {
+                string[] topicDirFiles = Directory.GetFiles(topicDir);
+                var topicNameFile = topicDirFiles.FirstOrDefault(f => f.EndsWith("topicName.txt"));
+                var topicName = !string.IsNullOrEmpty(topicNameFile) ? File.ReadAllText(topicNameFile) : string.Empty;
+                var partitionFiles = topicDirFiles.Where(f => f.EndsWith(".partition"));
+                foreach(var partitionFile in partitionFiles)
+                {
+                    var partitionFileName = new FileInfo(partitionFile).Name;
+                    result.Add(new KafkaTopicPartitionOffset {
+                        Topic     = new KafkaTopic { Value = topicName },
+                        Partition = new KafkaPartition { Value = int.Parse(partitionFileName[0..^10])},
+                        Offset    = new KafkaOffset { Value = long.Parse(File.ReadAllText(partitionFile))},
+                    });
+                }
+            }
+        }
+        return result;
     }
-    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffsets)
+
+    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffset)
     {
-        _logger.LogWarning("Not implemented");
-        return false;
+        var topicDirectory = $"{_storageRootDirectoryPath}/topicPartitionOffsets/{topicPartitionOffset.Topic.Value.GetHashString()}"; // Guard agains weird topic names not playing along with file system
+        // var topicPartitionOffsetsDirectory = $"{_storageRootDirectoryPath}/topicPartitionOffsets";
+        // For future me: Directory.CreateDirectory() handles the case where it already exists.
+        // So same as with mkdir -p, call it just in case instead of bloating path with if()'s.
+        Directory.CreateDirectory(topicDirectory); // Create if not exists
+        string[] preExistingTopics = Directory.GetDirectories(topicDirectory);
+        if(preExistingTopics.Length == 0)
+        {
+            Directory.CreateDirectory($"{topicDirectory}/0");
+            File.WriteAllText($"{topicDirectory}/0/topicName.txt", topicPartitionOffset.Topic.Value);
+            File.WriteAllText($"{topicDirectory}/0/{topicPartitionOffset.Partition.Value}.partition", $"{topicPartitionOffset.Offset.Value}");
+            return true;
+        }
+        foreach(var candidateTopicDirectory in preExistingTopics)
+        {
+            string[] preExistingFiles = Directory.GetFiles(candidateTopicDirectory);
+            var topicNameFile = preExistingFiles.FirstOrDefault(f => f.EndsWith("topicName.txt"));
+            if(!string.IsNullOrEmpty(topicNameFile))
+            {
+                if(File.ReadAllText(topicNameFile) == topicPartitionOffset.Topic.Value)
+                {
+                    File.WriteAllText($"{candidateTopicDirectory}/{topicPartitionOffset.Partition.Value}.partition", $"{topicPartitionOffset.Offset.Value}");
+                    return true;
+                }
+            }
+        }
+
+        var nextDirNumber = preExistingTopics.Select(dirName => int.Parse(dirName.Remove(0,topicDirectory.Length))).Max() + 1;
+        Directory.CreateDirectory($"{topicDirectory}/{nextDirNumber}");
+        File.WriteAllText($"{topicDirectory}/{nextDirNumber}/topicName.txt", topicPartitionOffset.Topic.Value);
+        File.WriteAllText($"{topicDirectory}/{nextDirNumber}/{topicPartitionOffset.Partition.Value}.partition", $"{topicPartitionOffset.Offset.Value}");
+        return true;
+    }
+
+    public bool Ready()
+    {
+        if(_ready) return true;
+        if(_highestOffsetsAtStartupTime.Count == 0) return false;
+
+        var latestConsumedOffsets = GetLastConsumedTopicPartitionOffsets();
+        foreach(var latestOffset in latestConsumedOffsets)
+        {
+            var partitionHighWatermarkAtStartupTime = _highestOffsetsAtStartupTime.FirstOrDefault(tpo => tpo.Topic == latestOffset.Topic && tpo.Partition == latestOffset.Partition);
+            if(latestOffset.Offset.Value < (partitionHighWatermarkAtStartupTime?.Offset.Value ?? long.MaxValue))
+            {
+                return false;
+            }
+        }
+
+        _ready = true;
+        return _ready;
+    }
+    public bool SetStartupTimeHightestTopicPartitionOffsets(List<KafkaTopicPartitionOffset> topicPartitionOffsets)
+    {
+        _highestOffsetsAtStartupTime = topicPartitionOffsets;
+        return true;
     }
 
     private string GetDirectoryForKey(byte[] key)

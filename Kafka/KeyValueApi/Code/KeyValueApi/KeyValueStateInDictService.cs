@@ -2,9 +2,9 @@ public class KeyValueStateInDictService : IKeyValueStateService
 {
     private readonly ILogger<KeyValueStateInDictService> _logger;
     private readonly Dictionary<string, List<KeyValue>> _keyValueState;
-    // private readonly ConsumerConfig _consumerConfig;
-    // private readonly ProducerConfig _producerConfig;
-    // private System.IO.Hashing.Crc32 crc32; // https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32?view=dotnet-plat-ext-8.0
+    private List<KafkaTopicPartitionOffset> _highestOffsetsAtStartupTime;
+    private readonly List<KafkaTopicPartitionOffset> _lastConsumedOffsets;
+    private bool _ready;
 
     public KeyValueStateInDictService(ILogger<KeyValueStateInDictService> logger)
     {
@@ -18,12 +18,16 @@ public class KeyValueStateInDictService : IKeyValueStateService
         // https://docs.axual.io/axual/2022.1/getting_started/producer/dotnet/dotnet-kafka-client-producer.html
         // https://docs.confluent.io/platform/current/clients/confluent-kafka-dotnet/_site/api/Confluent.Kafka.IConsumer-2.html
 
-        _logger.LogInformation($"{nameof(KeyValueStateInDictService)} initialized");
+        _highestOffsetsAtStartupTime = [];
+        _lastConsumedOffsets = [];
+
+        _logger.LogDebug($"{nameof(KeyValueStateInDictService)} initialized");
     }
 
-    public bool Store(byte[] key, byte[] value)
+    public bool Store(byte[] key, byte[] value, string correlationId)
     {
         _logger.LogDebug($"Storing key {key}");
+        var cid = new CorrelationId { Value = correlationId };
         var keyHash = key.GetHashString();
         if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
         {
@@ -31,23 +35,23 @@ public class KeyValueStateInDictService : IKeyValueStateService
             {
                 if(pairsSharingHash[i].Key.SequenceEqual(key))
                 {
-                    pairsSharingHash[i] =  new KeyValue { Key = key, Value = value };
+                    pairsSharingHash[i] =  new KeyValue { Key = key, Value = value, CorrelationId = cid };
                     _keyValueState[keyHash] = pairsSharingHash;
                     return true;
                 }
             }
-            pairsSharingHash.Add(new KeyValue { Key = key, Value = value });
+            pairsSharingHash.Add(new KeyValue { Key = key, Value = value, CorrelationId = cid });
             _keyValueState[keyHash] = pairsSharingHash;
             return true;
         }
         else
         {
-            _keyValueState.Add(keyHash, [new() { Key = key, Value = value }]);
+            _keyValueState.Add(keyHash, [new() { Key = key, Value = value, CorrelationId = cid }]);
             return true;
         }
     }
 
-    public bool TryRetrieve(byte[] keyRaw, out byte[] value)
+    public bool TryRetrieve(byte[] keyRaw, out (byte[] Value, string CorrelationId) result)
     {
         var keyHash = keyRaw.GetHashString();
         if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
@@ -56,16 +60,16 @@ public class KeyValueStateInDictService : IKeyValueStateService
             {
                 if(pairsSharingHash[i].Key.SequenceEqual(keyRaw))
                 {
-                    value = pairsSharingHash[i].Value;
+                    result = (Value: pairsSharingHash[i].Value, CorrelationId: pairsSharingHash[i].CorrelationId.Value);
                     return true;
                 }
             }
         }
-        value = [];
+        result = (Value: [], CorrelationId: string.Empty);
         return false;
     }
 
-    public bool Remove(byte[] keyRaw)
+    public bool Remove(byte[] keyRaw, string correlationId)
     {
         var keyHash = keyRaw.GetHashString();
         if(_keyValueState.TryGetValue(keyHash, out List<KeyValue>? pairsSharingHash))
@@ -96,11 +100,50 @@ public class KeyValueStateInDictService : IKeyValueStateService
 
     public List<KafkaTopicPartitionOffset> GetLastConsumedTopicPartitionOffsets()
     {
-        return [];
+        return _lastConsumedOffsets;
     }
 
-    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffsets)
+    public bool UpdateLastConsumedTopicPartitionOffsets(KafkaTopicPartitionOffset topicPartitionOffset)
     {
-        return false;
+        for (int i = 0; i < _lastConsumedOffsets.Count; i++)
+        {
+            var tpo = _lastConsumedOffsets[i];
+            if(tpo.Topic.Value == topicPartitionOffset.Topic.Value && tpo.Partition.Value == topicPartitionOffset.Partition.Value)
+            {
+                _lastConsumedOffsets.RemoveAt(i);
+                break;
+            }
+        }
+        _lastConsumedOffsets.Add(topicPartitionOffset);
+        return true;
+    }
+
+    public bool Ready()
+    {
+        _logger.LogTrace($"{nameof(KeyValueStateInDictService)} received request to check readiness");
+        if(_ready) return true;
+
+        if(_highestOffsetsAtStartupTime.Count == 0) return false;
+
+        _logger.LogTrace($"{nameof(KeyValueStateInDictService)} readiness check checking topics against highest initial offset");
+        var latestConsumedOffsets = GetLastConsumedTopicPartitionOffsets();
+        foreach(var latestOffset in latestConsumedOffsets)
+        {
+            var partitionHighWatermarkAtStartupTime = _highestOffsetsAtStartupTime.FirstOrDefault(tpo => tpo.Topic == latestOffset.Topic && tpo.Partition == latestOffset.Partition);
+            if(latestOffset.Offset.Value < (partitionHighWatermarkAtStartupTime?.Offset.Value ?? long.MaxValue))
+            {
+                _logger.LogDebug($"{nameof(KeyValueStateInDictService)} readiness check; Failed because initial value {partitionHighWatermarkAtStartupTime} offset was higher than {latestOffset}");
+                return false;
+            }
+        }
+
+        _ready = true;
+        return _ready;
+    }
+
+    public bool SetStartupTimeHightestTopicPartitionOffsets(List<KafkaTopicPartitionOffset> topicPartitionOffsets)
+    {
+        _highestOffsetsAtStartupTime = topicPartitionOffsets;
+        return true;
     }
 }

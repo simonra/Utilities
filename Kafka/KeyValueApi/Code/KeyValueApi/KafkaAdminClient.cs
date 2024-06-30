@@ -65,4 +65,25 @@ public class KafkaAdminClient
         return false;
     }
 
+    public async Task<List<TopicPartition>> GetTopicPartitions(KafkaTopic topic)
+    {
+        var adminClientConfig = KafkaAdminClientEnvBinder.GetAdminClientConfig();
+        using var adminClient = new AdminClientBuilder(adminClientConfig).Build();
+        try
+        {
+            var description = await adminClient.DescribeTopicsAsync(TopicCollection.OfTopicNames([topic.Value]));
+            List<TopicPartition> topicPartitions = description.TopicDescriptions
+                .FirstOrDefault(tDescription => tDescription.Name == topic.Value)
+                ?.Partitions
+                .Select(tpInfo => new TopicPartition(topic.Value, tpInfo.Partition))
+                .ToList() ?? [];
+            return topicPartitions;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, $"An error occurred when retrieving list of partitions on topic");
+        }
+        return [];
+    }
+
 }
