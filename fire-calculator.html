@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIRE Calculator</title>
+    <script type="text/javascript">
+        var weeksPerYear = 52;
+        var vacationWeeks = 5;
+        var workdaysPerWeek = 5;
+        var workHoursPerDay = 8;
+        var workHoursPerYear = (weeksPerYear-vacationWeeks)*workdaysPerWeek*workHoursPerDay;
+
+        window.addEventListener("load", (loadedEvent) => {
+            console.log("page is fully loaded");
+            resetAmounts();
+            calculateFromDesiredExpenses();
+            document.getElementById('assets_withdrawal_spendable_amount_per_year')
+                .addEventListener("input", (spendableInputEvent) => {
+                    calculateFromDesiredExpenses();
+                }
+            );
+            document.getElementById('assets_withdrawal_spendable_amount_per_moth').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_spendable_amount_per_year').value = parseFromElement(inputEvent.target) * 12.0;
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('assets_withdrawal_spendable_amount_per_week').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_spendable_amount_per_year').value = parseFromElement(inputEvent.target) * 52.0;
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('assets_withdrawal_spendable_amount_per_day').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_spendable_amount_per_year').value = parseFromElement(inputEvent.target) * 365.0;
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('assets_withdrawal_spendable_amount_per_hour').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_spendable_amount_per_year').value = parseFromElement(inputEvent.target) * workHoursPerYear;
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('assets_withdrawal_rate_per_year').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('tax_rate_fortune_tax').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('primary_residence_market_value').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('primary_residence_fortune_tax_rebate').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('tax_rate_property_tax').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('other_assets_value').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('tax_rate_capital_gains').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('assets_withdrawal_amount_per_year').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromTotalWithdrawn();
+                });
+            document.getElementById('assets_withdrawal_amount_per_moth').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_amount_per_year').value = parseFromElement(inputEvent.target) * 12.0;
+                    calculateFromTotalWithdrawn();
+                });
+            document.getElementById('assets_withdrawal_amount_per_week').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_amount_per_year').value = parseFromElement(inputEvent.target) * 52.0;
+                    calculateFromTotalWithdrawn();
+                });
+            document.getElementById('assets_withdrawal_amount_per_day').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_amount_per_year').value = parseFromElement(inputEvent.target) * 365.0;
+                    calculateFromTotalWithdrawn();
+                });
+            document.getElementById('assets_withdrawal_amount_per_hour').
+                addEventListener('input', (inputEvent) => {
+                    document.getElementById('assets_withdrawal_amount_per_year').value = parseFromElement(inputEvent.target) * workHoursPerYear;
+                    calculateFromTotalWithdrawn();
+                });
+            document.getElementById('liquid_assets_amount').
+                addEventListener('input', (inputEvent) => {
+                    var liquidAssets = parseFromElement(inputEvent.target);
+                    var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
+                    var annualWithdrawal = liquidAssets * annualWithdrawalRate;
+                    console.log(`AW: ${annualWithdrawal}`);
+                    document.getElementById('assets_withdrawal_amount_per_year').value = annualWithdrawal;
+                    calculateFromTotalWithdrawn();
+                });
+        });
+
+        function calculateFromDesiredExpenses()
+        {
+            var desiredAnnualExpenses = parseFromElement(document.getElementById('assets_withdrawal_spendable_amount_per_year'));
+
+            // liquid assets = (desired spending amount + fortune tax rate * (home value - deduction percentage) + fortune tax rate * other illiquid assets + property tax rate * home value)/(withdrawal rate - fortune tax rate - withdrawal rate * capital gains tax rate)
+            var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
+            var fortuneTaxRate = parseFromElement(document.getElementById('tax_rate_fortune_tax')) / 100.0;
+            var homeValue = parseFromElement(document.getElementById('primary_residence_market_value'));
+            var homeValueTaxRebate = parseFromElement(document.getElementById('primary_residence_fortune_tax_rebate')) / 100.0;
+            var propertyTaxRate = parseFromElement(document.getElementById('tax_rate_property_tax')) / 100.0;
+            var otherAssetsValue = parseFromElement(document.getElementById('other_assets_value'));
+            var capitalGainsTaxRate = parseFromElement(document.getElementById('tax_rate_capital_gains')) / 100.0;
+
+            var homeFortuneTax = fortuneTaxRate * (homeValue*(1.0 - homeValueTaxRebate));
+            var homePropertyTax = homeValue * propertyTaxRate;
+            var otherAssetTaxes = fortuneTaxRate * otherAssetsValue;
+            var temp = desiredAnnualExpenses + homeFortuneTax + homePropertyTax + otherAssetTaxes;
+            var divideBy = annualWithdrawalRate - fortuneTaxRate - annualWithdrawalRate * capitalGainsTaxRate;
+
+            var liquidAssetsCalculated = temp / divideBy;
+
+            // liquidAssetsCalculated = roundNumber(liquidAssetsCalculated, 2);
+            // console.log(`
+            //     homeFortuneTax: ${homeFortuneTax}
+            //     homePropertyTax: ${homePropertyTax}
+            //     otherAssetTaxes: ${otherAssetTaxes}
+            //     temp: ${temp}
+            //     divideBy: ${divideBy}
+            //     liquidAssetsCalculated: ${liquidAssetsCalculated}
+            // `);
+
+            document.getElementById('liquid_assets_amount').value = roundNumber(liquidAssetsCalculated, 0);
+            updateWithdrawalTotal();
+            updateSpending();
+            formatAmounts();
+        }
+
+        function calculateFromTotalWithdrawn()
+        {
+            // console.log(`CWD called`);
+            var annualWithdrawnAmount = parseFromElement(document.getElementById('assets_withdrawal_amount_per_year'));
+            var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
+            var liquidAssets = annualWithdrawnAmount / annualWithdrawalRate;
+            document.getElementById('liquid_assets_amount').value = liquidAssets;
+            // console.log(`LAM calculated: ${liquidAssets}`);
+            // console.log(`Lam in doc: ${document.getElementById('liquid_assets_amount').value}`);
+
+            var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
+            var fortuneTaxRate = parseFromElement(document.getElementById('tax_rate_fortune_tax')) / 100.0;
+            var homeValue = parseFromElement(document.getElementById('primary_residence_market_value'));
+            var homeValueTaxRebate = parseFromElement(document.getElementById('primary_residence_fortune_tax_rebate')) / 100.0;
+            var propertyTaxRate = parseFromElement(document.getElementById('tax_rate_property_tax')) / 100.0;
+            var otherAssetsValue = parseFromElement(document.getElementById('other_assets_value'));
+            var capitalGainsTaxRate = parseFromElement(document.getElementById('tax_rate_capital_gains')) / 100.0;
+
+            // var homeFortuneTax = fortuneTaxRate * (homeValue*(1.0 - homeValueTaxRebate));
+            // var homePropertyTax = homeValue * propertyTaxRate;
+            // var otherAssetTaxes = fortuneTaxRate * otherAssetsValue;
+
+            var leftForSpending = annualWithdrawnAmount - (fortuneTaxRate * (liquidAssets + homeValue*(1.0 - homeValueTaxRebate) + otherAssetsValue) + homeValue * propertyTaxRate + capitalGainsTaxRate * annualWithdrawnAmount);
+            document.getElementById('assets_withdrawal_spendable_amount_per_year').value = roundNumber(leftForSpending, 2);
+            updateSpending();
+            updateWithdrawalTotal();
+            formatAmounts();
+            // desired spending amount = annualWithdrawnAmount - (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (annualWithdrawnAmount) * capital gains tax rate)
+        }
+
+        function updateWithdrawalTotal()
+        {
+            var liquidAssets = parseFromElement(document.getElementById('liquid_assets_amount'));
+            var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
+            var annualWithdrawal = liquidAssets * annualWithdrawalRate;
+            document.getElementById('assets_withdrawal_amount_per_year').value = roundNumber(annualWithdrawal, 2);
+            document.getElementById('assets_withdrawal_amount_per_moth').value = roundNumber(annualWithdrawal / 12.0, 2);
+            document.getElementById('assets_withdrawal_amount_per_week').value = roundNumber(annualWithdrawal / 52.0, 2);
+            document.getElementById('assets_withdrawal_amount_per_day').value = roundNumber(annualWithdrawal / 365.0, 2);
+            document.getElementById('assets_withdrawal_amount_per_hour').value = roundNumber(annualWithdrawal / workHoursPerYear, 2);
+        }
+
+        function updateSpending()
+        {
+            var annualSpending = parseFromElement(document.getElementById('assets_withdrawal_spendable_amount_per_year'));
+            document.getElementById('assets_withdrawal_spendable_amount_per_moth').value = roundNumber(annualSpending / 12.0, 2);
+            document.getElementById('assets_withdrawal_spendable_amount_per_week').value = roundNumber(annualSpending / 52.0, 2);
+            document.getElementById('assets_withdrawal_spendable_amount_per_day').value = roundNumber(annualSpending / 365.0, 2);
+            document.getElementById('assets_withdrawal_spendable_amount_per_hour').value = roundNumber(annualSpending / workHoursPerYear, 2);
+        }
+
+        function formatAmounts(){
+            var amountElements = document.getElementsByTagName('input');
+            for (var i = 0; i < amountElements.length; i++) {
+                // console.log(`Formatted: ${formatForPrint(parseFromPrint(amountElements[i].value))}`);
+                // amountElements[i].value = parseFloat(amountElements[i].value).toLocaleString("no");
+                if(1000 <= parseFromPrint(amountElements[i].value.replace(/-/,'')))
+                    amountElements[i].value = formatForPrint(parseFromPrint(amountElements[i].value));
+            }
+        }
+
+        function resetAmounts(){
+            var amountElements = document.getElementsByTagName('input');
+            for (var i = 0; i < amountElements.length; i++) {
+                var resetValue = 0;
+                if(amountElements[i].getAttribute('data-original-amount') > 0.0)
+                {
+                    resetValue = amountElements[i].getAttribute('data-original-amount');
+                }
+                amountElements[i].value = resetValue;
+            }
+        }
+
+        // All changes trigger change in assets_withdrawal_spendable_amount_per_year, trigger change of everything else
+        function roundNumber(number, decimalPlaces) {
+            return +(Math.round(number + "e+" + decimalPlaces)  + "e-" + decimalPlaces);
+        }
+
+        function formatForPrint(number)
+        {
+            const n = String(number),
+                  p = n.indexOf('.');
+            return n.replace(
+                /\d(?=(?:\d{3})+(?:\.|$))/g,
+                (m, i) => p < 0 || i < p ? `${m} ` : m
+            );
+        }
+
+        function parseFromPrint(formattedNumberString)
+        {
+            // if(formattedNumberString == null) return 0;
+            // if(formattedNumberString == undefined) return 0;
+            return parseFloat(formattedNumberString.replace(/\s/g,''));
+        }
+        function parseFromElement(element)
+        {
+            var numberString = parseFromPrint(element.value);
+            if(isNaN(numberString)) return 0;
+            return numberString;
+        }
+    </script>
+</head>
+<body>
+    <h1>FIRE Calculator</h1>
+    <form>
+        <fieldset>
+            <legend>Assets</legend>
+            <fieldset>
+                <legend>General taxes</legend>
+                <div>
+                    <label for="tax_rate_fortune_tax">Fortune tax rate (%)</label>
+                    <input id="tax_rate_fortune_tax" value="1.1" data-original-amount="1.1" step="0.1" type="number">
+                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
+                </div>
+                <div>
+                    <label for="tax_rate_capital_gains">Capital gains tax rate (%)</label>
+                    <input id="tax_rate_capital_gains" value="37.84" data-original-amount="37.84" type="number">
+                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/faktor-for-oppjustering-av-gevinsttap-eller-utbytte-pa-aksjer/">Further reading</a> 2024: 37.84% for stocks, 22% for other sources.</span>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Liquid Assets</legend>
+                <div>
+                    <label for="liquid_assets_amount">Value</label>
+                    <input id="liquid_assets_amount">
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Illiquid Assets</legend>
+                <fieldset>
+                    <legend>Primary residence</legend>
+                    <div>
+                        <label for="primary_residence_market_value">Market value</label>
+                        <input id="primary_residence_market_value" value="4814968" data-original-amount="4814968">
+                        <span class="read-more"><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home primary_residence_fortune_tax_rebate</a>, <a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">Housing statistics</a></span>
+                    </div>
+                    <div>
+                        <label for="primary_residence_fortune_tax_rebate">Taxation rebate for fortune tax (%)</label>
+                        <input id="primary_residence_fortune_tax_rebate" value="75" data-original-amount="75" type="number">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a> 2024: 75% of value below 10M, 30% of value above</span>
+                    </div>
+                    <div>
+                        <label for="tax_rate_property_tax">Property tax rate (%)</label>
+                        <input id="tax_rate_property_tax" value="0.4" data-original-amount="0.4" step="0.01" type="number">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/bolig-og-eiendeler/bolig-eiendom-tomt/eiendomsskatt/hvor-mye-skatt-ma-jeg-betale/">Further reading</a></span>
+                    </div>
+                </fieldset>
+                <legend>Other</legend>
+                <div>
+                    <label for="other_assets_value">Value</label>
+                    <input id="other_assets_value" value="0">
+                </div>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Withdrawal from liquid assets</legend>
+            <div>
+                <label for="assets_withdrawal_rate_per_year">Withdrawal rate per year (%)</label>
+                <input id="assets_withdrawal_rate_per_year" value="3" data-original-amount="3" type="number" step="0.1">
+            </div>
+            <fieldset>
+                <legend>Total Amount (including amount to pay taxes)</legend>
+                <div>
+                    <label for="assets_withdrawal_amount_per_year">Amount per year</label>
+                    <input id="assets_withdrawal_amount_per_year">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_month">Amount per month</label>
+                    <input id="assets_withdrawal_amount_per_moth">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_week">Amount per week</label>
+                    <input id="assets_withdrawal_amount_per_week">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_day">Amount per day</label>
+                    <input id="assets_withdrawal_amount_per_day">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_hour">Amount per "work" hour</label>
+                    <input id="assets_withdrawal_amount_per_hour">
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Spendable Amount</legend>
+                <!-- https://www.oslomet.no/om/sifo/referansebudsjettet -->
+                <div>
+                    <label for="assets_withdrawal_spendable_amount_per_year">Amount per year</label>
+                    <input id="assets_withdrawal_spendable_amount_per_year" value="150000" data-original-amount="150000">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_spendable_amount_per_month">Amount per month</label>
+                    <input id="assets_withdrawal_spendable_amount_per_moth">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_spendable_amount_per_week">Amount per week</label>
+                    <input id="assets_withdrawal_spendable_amount_per_week">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_spendable_amount_per_day">Amount per day</label>
+                    <input id="assets_withdrawal_spendable_amount_per_day">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_spendable_amount_per_hour">Amount per "work" hour</label>
+                    <input id="assets_withdrawal_spendable_amount_per_hour">
+                </div>
+                <span class="read-more"><a href="https://www.oslomet.no/om/sifo/referansebudsjettet">Reference budget calculator</a></span>
+            </fieldset>
+        </fieldset>
+        <button onclick="resetAmounts()">Reset</button>
+    </form>
+    <h1>About</h1>
+    <p>I occasionally catch myself wondering, what would it take to effectively just retire? I know that there isn't that much math to it, but it's slightly more tricky than I can quickly ballpark in my head and be satisfied with the answer. This could probably have been a spreadsheet, but it's more fun this way (and accessible with regards to keeping the code/logic up to date, and sharable if others would want to play with it).</p>
+    <p>It is heavily oriented towards Norway, because that's where I live.</p>
+    <p>Also note that the tax rules are complex, and this only gives a quick overview. However, it's mostly based around worst case scenarios with no deductions and similar.</p>
+    <h2>The math behind</h2>
+    <p>Here is the calculation this is based on</p>
+    <p>(Annual) withdrawal = desired spending amount + taxes = liquid assets * withdrawal rate</p>
+    <p>taxes = fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + amount withdrawn * capital gains tax rate</p>
+    <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + amount withdrawn * capital gains tax rate)</p>
+    <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (liquid assets * withdrawal rate) * capital gains tax rate</p>
+
+    <p>Solved for liquid assets</p>
+
+    <p>liquid assets * withdrawal rate = desired spending amount + fortune tax rate * liquid assets + fortune tax rate * (home value - deduction percentage) + fortune tax rate * other illiquid assets + property tax rate * home value + liquid assets * withdrawal rate * capital gains tax rate</p>
+
+    <p>liquid assets * withdrawal rate - fortune tax rate * liquid assets - liquid assets * withdrawal rate * capital gains tax rate = desired spending amount + fortune tax rate * (home value - deduction percentage) + fortune tax rate * other illiquid assets + property tax rate * home value</p>
+
+    <p>liquid assets = (desired spending amount + fortune tax rate * (home value - deduction percentage) + fortune tax rate * other illiquid assets + property tax rate * home value)/(withdrawal rate - fortune tax rate - withdrawal rate * capital gains tax rate)</p>
+
+    <p>Solved for spending amount</p>
+
+    <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (liquid assets * withdrawal rate) * capital gains tax rate</p>
+
+    <p>desired spending amount = liquid assets * withdrawal rate - (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (liquid assets * withdrawal rate) * capital gains tax rate)</p>
+</body>
+</html>
