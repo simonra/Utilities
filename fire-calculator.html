@@ -14,7 +14,6 @@
         window.addEventListener("load", (loadedEvent) => {
             console.log("page is fully loaded");
             resetAmounts();
-            // calculateFromDesiredExpenses();
             document.getElementById('assets_withdrawal_spendable_amount_per_year')
                 .addEventListener("input", (spendableInputEvent) => {
                     calculateFromDesiredExpenses();
@@ -136,24 +135,6 @@
                 liquidAssetsCalculated = (fortuneTaxRate * (GetHomeFortuneTaxValuation() + otherAssetsValue - fortuneTaxZeroRateCutoff) + desiredAnnualExpenses + GetHomePropertyTax()) / (annualWithdrawalRate - annualWithdrawalRate * capitalGainsTaxRate - fortuneTaxRate);
             }
 
-            // var homeFortuneTax = fortuneTaxRate * GetHomeFortuneTaxValuation();
-            // var homePropertyTax = GetHomePropertyTax();
-            // var otherAssetTaxes = fortuneTaxRate * otherAssetsValue;
-            // var temp = desiredAnnualExpenses + homeFortuneTax + homePropertyTax + otherAssetTaxes;
-            // var divideBy = annualWithdrawalRate - fortuneTaxRate - annualWithdrawalRate * capitalGainsTaxRate;
-
-            // var liquidAssetsCalculated = temp / divideBy;
-
-            // liquidAssetsCalculated = roundNumber(liquidAssetsCalculated, 2);
-            // console.log(`
-            //     homeFortuneTax: ${homeFortuneTax}
-            //     homePropertyTax: ${homePropertyTax}
-            //     otherAssetTaxes: ${otherAssetTaxes}
-            //     temp: ${temp}
-            //     divideBy: ${divideBy}
-            //     liquidAssetsCalculated: ${liquidAssetsCalculated}
-            // `);
-
             document.getElementById('liquid_assets_amount').value = roundNumber(liquidAssetsCalculated, 0);
             updateWithdrawalTotal();
             updateSpending();
@@ -162,13 +143,10 @@
 
         function calculateFromTotalWithdrawn()
         {
-            // console.log(`CWD called`);
             var annualWithdrawnAmount = parseFromElement(document.getElementById('assets_withdrawal_amount_per_year'));
             var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
             var liquidAssets = annualWithdrawnAmount / annualWithdrawalRate;
             document.getElementById('liquid_assets_amount').value = roundNumber(liquidAssets, 2);
-            // console.log(`LAM calculated: ${liquidAssets}`);
-            // console.log(`Lam in doc: ${document.getElementById('liquid_assets_amount').value}`);
 
             var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
             var fortuneTaxRate = parseFromElement(document.getElementById('tax_rate_fortune_tax')) / 100.0;
@@ -181,7 +159,6 @@
             updateSpending();
             updateWithdrawalTotal();
             formatAmounts();
-            // desired spending amount = annualWithdrawnAmount - (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (annualWithdrawnAmount) * capital gains tax rate)
         }
 
         function GetHomeFortuneTaxValuation() {
@@ -265,8 +242,6 @@
 
         function parseFromPrint(formattedNumberString)
         {
-            // if(formattedNumberString == null) return 0;
-            // if(formattedNumberString == undefined) return 0;
             return parseFloat(formattedNumberString.replace(/\s/g,''));
         }
         function parseFromElement(element)
@@ -278,101 +253,10 @@
     </script>
 </head>
 <body>
-    <h1>FIRE Calculator</h1>
+    <h1>FIRE Norway Calculator</h1>
     <div>
         <fieldset>
-            <legend>Assets</legend>
-            <fieldset>
-                <legend>General taxes</legend>
-                <div>
-                    <label for="tax_rate_fortune_tax">Fortune tax rate (%)</label>
-                    <input id="tax_rate_fortune_tax" value="1.1" data-original-amount="1.1" step="0.1" type="number">
-                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
-                </div>
-                <div>
-                    <label for="tax_fortune_tax_zero_bracket_cutoff">Fortune tax zero bracket</label>
-                    <input id="tax_fortune_tax_zero_bracket_cutoff" value="1700000" data-original-amount="1700000" step="100000">
-                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
-                </div>
-                <div>
-                    <label for="tax_rate_capital_gains">Capital gains tax rate (%)</label>
-                    <input id="tax_rate_capital_gains" value="37.84" data-original-amount="37.84" type="number">
-                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/faktor-for-oppjustering-av-gevinsttap-eller-utbytte-pa-aksjer/">Further reading</a> 2024: 37.84% for stocks, 22% for other sources.</span>
-                </div>
-            </fieldset>
-            <fieldset>
-                <legend>Liquid Assets</legend>
-                <div>
-                    <label for="liquid_assets_amount">Value</label>
-                    <input id="liquid_assets_amount">
-                </div>
-            </fieldset>
-            <fieldset>
-                <legend>Illiquid Assets</legend>
-                <fieldset>
-                    <legend>Primary residence</legend>
-                    <div>
-                        <label for="primary_residence_market_value">Market value</label>
-                        <input id="primary_residence_market_value" value="4814968" data-original-amount="4814968">
-                        <span class="read-more"><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home price</a>, <a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">Housing statistics</a></span>
-                    </div>
-                    <div>
-                        <label for="tax_rate_property_tax">Property tax rate (%)</label>
-                        <input id="tax_rate_property_tax" value="0.4" data-original-amount="0.4" step="0.01" type="number">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/bolig-og-eiendeler/bolig-eiendom-tomt/eiendomsskatt/hvor-mye-skatt-ma-jeg-betale/">Further reading</a></span>
-                    </div>
-                    <div>
-                        <label for="primary_residence_fortune_tax_value_reduction_first_bracket">Tax value reduction for fortune tax (%) first bracket</label>
-                        <input id="primary_residence_fortune_tax_value_reduction_first_bracket" value="75" data-original-amount="75" type="number">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
-                    </div>
-                    <div>
-                        <label for="primary_residence_fortune_tax_first_bracket_cutoff">Fortune tax first bracket cutoff</label>
-                        <input id="primary_residence_fortune_tax_first_bracket_cutoff" value="10000000" data-original-amount="10000000">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
-                    </div>
-                    <div>
-                        <label for="primary_residence_fortune_tax_value_reduction_second_bracket">Tax value reduction for fortune tax (%) second bracket</label>
-                        <input id="primary_residence_fortune_tax_value_reduction_second_bracket" value="30" data-original-amount="30" type="number">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
-                    </div>
-                </fieldset>
-                <legend>Other</legend>
-                <div>
-                    <label for="other_assets_value">Value</label>
-                    <input id="other_assets_value" value="0">
-                </div>
-            </fieldset>
-        </fieldset>
-        <fieldset>
             <legend>Withdrawal from liquid assets</legend>
-            <div>
-                <label for="assets_withdrawal_rate_per_year">Withdrawal rate per year (%)</label>
-                <input id="assets_withdrawal_rate_per_year" value="3" data-original-amount="3" type="number" step="0.1">
-            </div>
-            <fieldset>
-                <legend>Total Amount (including amount to pay taxes)</legend>
-                <div>
-                    <label for="assets_withdrawal_amount_per_year">Amount per year</label>
-                    <input id="assets_withdrawal_amount_per_year">
-                </div>
-                <div>
-                    <label for="assets_withdrawal_amount_per_month">Amount per month</label>
-                    <input id="assets_withdrawal_amount_per_moth">
-                </div>
-                <div>
-                    <label for="assets_withdrawal_amount_per_week">Amount per week</label>
-                    <input id="assets_withdrawal_amount_per_week">
-                </div>
-                <div>
-                    <label for="assets_withdrawal_amount_per_day">Amount per day</label>
-                    <input id="assets_withdrawal_amount_per_day">
-                </div>
-                <div>
-                    <label for="assets_withdrawal_amount_per_hour">Amount per "work" hour</label>
-                    <input id="assets_withdrawal_amount_per_hour">
-                </div>
-            </fieldset>
             <fieldset>
                 <legend>Spendable Amount</legend>
                 <!-- https://www.oslomet.no/om/sifo/referansebudsjettet -->
@@ -397,6 +281,103 @@
                     <input id="assets_withdrawal_spendable_amount_per_hour">
                 </div>
                 <span class="read-more"><a href="https://www.oslomet.no/om/sifo/referansebudsjettet">Reference budget calculator</a></span>
+            </fieldset>
+            <fieldset>
+                <legend>Total Amount (including amount to pay taxes)</legend>
+                <div>
+                    <label for="assets_withdrawal_amount_per_year">Amount per year</label>
+                    <input id="assets_withdrawal_amount_per_year">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_month">Amount per month</label>
+                    <input id="assets_withdrawal_amount_per_moth">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_week">Amount per week</label>
+                    <input id="assets_withdrawal_amount_per_week">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_day">Amount per day</label>
+                    <input id="assets_withdrawal_amount_per_day">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_amount_per_hour">Amount per "work" hour</label>
+                    <input id="assets_withdrawal_amount_per_hour">
+                </div>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Assets</legend>
+            <fieldset>
+                <legend>Liquid Assets</legend>
+                <div>
+                    <label for="liquid_assets_amount">Value</label>
+                    <input id="liquid_assets_amount">
+                </div>
+                <div>
+                    <label for="assets_withdrawal_rate_per_year">Withdrawal rate per year (%)</label>
+                    <input id="assets_withdrawal_rate_per_year" value="3" data-original-amount="3" type="number" step="0.1">
+                </div>
+            </fieldset>
+            <div>
+                <label for="primary_residence_market_value">Primary residence market value</label>
+                <input id="primary_residence_market_value" value="4814968" data-original-amount="4814968">
+                <span class="read-more"><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home price</a>, <a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">Housing statistics</a></span>
+            </div>
+            <div>
+                <label for="other_assets_value">Other Illiquid Assets Value</label>
+                <input id="other_assets_value" value="0">
+            </div>
+            <!-- <fieldset>
+                <legend>Illiquid Assets</legend>
+                <fieldset>
+                    <legend>Primary residence</legend>
+                </fieldset>
+                <legend>Other</legend>
+            </fieldset> -->
+        </fieldset>
+        <fieldset>
+            <legend>Taxes</legend>
+            <div>
+                <label for="tax_rate_capital_gains">Capital gains tax rate (%)</label>
+                <input id="tax_rate_capital_gains" value="37.84" data-original-amount="37.84" type="number">
+                <span class="read-more"><a href="https://www.skatteetaten.no/satser/faktor-for-oppjustering-av-gevinsttap-eller-utbytte-pa-aksjer/">Further reading</a> 2024: 37.84% for stocks, 22% for other sources.</span>
+            </div>
+            <div>
+                <label for="tax_rate_property_tax">Property tax rate (%)</label>
+                <input id="tax_rate_property_tax" value="0.4" data-original-amount="0.4" step="0.01" type="number">
+                <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/bolig-og-eiendeler/bolig-eiendom-tomt/eiendomsskatt/hvor-mye-skatt-ma-jeg-betale/">Further reading</a></span>
+            </div>
+            <fieldset>
+                <legend>Fortune tax</legend>
+                <div>
+                    <label for="tax_rate_fortune_tax">Fortune tax rate (%)</label>
+                    <input id="tax_rate_fortune_tax" value="1.1" data-original-amount="1.1" step="0.1" type="number">
+                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
+                </div>
+                <div>
+                    <label for="tax_fortune_tax_zero_bracket_cutoff">Fortune tax zero bracket</label>
+                    <input id="tax_fortune_tax_zero_bracket_cutoff" value="1700000" data-original-amount="1700000" step="100000">
+                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
+                </div>
+                <fieldset>
+                    <legend>Primary residence fortune tax valuation</legend>
+                    <div>
+                        <label for="primary_residence_fortune_tax_value_reduction_first_bracket">Tax value reduction for fortune tax (%) first bracket</label>
+                        <input id="primary_residence_fortune_tax_value_reduction_first_bracket" value="75" data-original-amount="75" type="number">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
+                    </div>
+                    <div>
+                        <label for="primary_residence_fortune_tax_first_bracket_cutoff">Fortune tax home value first bracket cutoff</label>
+                        <input id="primary_residence_fortune_tax_first_bracket_cutoff" value="10000000" data-original-amount="10000000">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
+                    </div>
+                    <div>
+                        <label for="primary_residence_fortune_tax_value_reduction_second_bracket">Tax value reduction for fortune tax (%) second bracket</label>
+                        <input id="primary_residence_fortune_tax_value_reduction_second_bracket" value="30" data-original-amount="30" type="number">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
+                    </div>
+                </fieldset>
             </fieldset>
         </fieldset>
         <button onclick="resetAmounts()">Reset</button>
