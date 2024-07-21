@@ -252,17 +252,12 @@
         }
     </script>
     <style>
-        body {
-            /* margin: 2rem; */
-        }
-        h1 {
+        /* body {
+            margin: 2rem;
+        } */
+        /* h1 {
             font-size: 12pt;
-        }
-        fieldset {
-            /* display: inline-block; */
-            /* /* display: grid; */
-            columns: auto;
-        }
+        } */
         label {
             padding-right: 0.5rem;
         }
@@ -287,32 +282,34 @@
         }
         #form_container {
             display: grid;
+            /* max-width: 100%; */
+            /* grid-template-columns: repeat(auto-fit, minmax(16rem, 18rem)); */
             /* align-items: center; */
-            /* grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); */
+            grid-template-columns: repeat(auto-fit, minmax(20rem, 2fr));
         }
         .three-colum-long-start > .input-group {
             display: grid;
             /* grid-template-columns: inherit; */
-            grid-template-columns: minmax(8rem, 27rem) 6rem 12rem;
+            grid-template-columns: minmax(8rem, 27rem) 6rem;
             /* position: relative;
             width: 100%; */
         }
-        .read-more {
+        /* .read-more {
             margin-left: 0.5rem;
-        }
+        } */
         .three-column-balanced > .input-group {
             display: grid;
-            grid-template-columns: 13rem 6rem 12rem;
+            grid-template-columns: 13rem 6rem;
             /* justify-items: left; */
             max-width: 35rem;
         }
         .three-column-long-end > .input-group {
             display: grid;
-            grid-template-columns: minmax(5rem, 13rem) 6rem minmax(6rem, 31rem);
+            grid-template-columns: minmax(5rem, 13rem) 6rem;
         }
         .three-column-assets > .input-group {
             display: grid;
-            grid-template-columns: minmax(5rem, 16rem) 6rem minmax(6rem, 19rem);
+            grid-template-columns: minmax(5rem, 16rem) 6rem;
         }
         .withdrawal-container {
             display: grid;
@@ -340,6 +337,10 @@
             grid-template-columns: 9rem 6rem;
             /* max-width: 17rem; */
          }
+         button {
+            grid-column: 1;
+            max-height: 2rem;
+         }
     </style>
 </head>
 <body>
@@ -347,10 +348,8 @@
     <div id="form_container">
         <fieldset class="withdrawal-container">
             <legend>Withdrawal from liquid assets</legend>
-            <!-- <span class="read-more"><a href="https://www.oslomet.no/om/sifo/referansebudsjettet">Reference budget calculator</a></span><br> -->
             <fieldset class="two-columns">
                 <legend>Spendable Amount</legend>
-                <!-- https://www.oslomet.no/om/sifo/referansebudsjettet -->
                 <div class="input-group">
                     <label for="assets_withdrawal_spendable_amount_per_year">Amount per year</label>
                     <input id="assets_withdrawal_spendable_amount_per_year" value="150000" data-original-amount="150000" inputmode="numeric" pattern="[0-9 \.]">
@@ -367,13 +366,6 @@
                     <label for="assets_withdrawal_spendable_amount_per_day">Amount per day</label>
                     <input id="assets_withdrawal_spendable_amount_per_day" inputmode="numeric" pattern="[0-9 \.]">
                 </div>
-                <!-- <div class="input-group">
-                    <label for="assets_withdrawal_spendable_amount_per_hour">Amount per "work" hour</label>
-                    <input id="assets_withdrawal_spendable_amount_per_hour" inputmode="numeric" pattern="[0-9 \.]">
-                </div> -->
-                <!-- <div class="two-columns">
-
-                </div> -->
             </fieldset>
             <fieldset class="two-columns">
                 <legend>Total Amount (including amount to pay taxes)</legend>
@@ -393,13 +385,8 @@
                     <label for="assets_withdrawal_amount_per_day">Amount per day</label>
                     <input id="assets_withdrawal_amount_per_day" inputmode="numeric" pattern="[0-9 \.]">
                 </div>
-                <!-- <div class="input-group">
-                    <label for="assets_withdrawal_amount_per_hour">Amount per "work" hour</label>
-                    <input id="assets_withdrawal_amount_per_hour" inputmode="numeric" pattern="[0-9 \.]">
-                </div> -->
             </fieldset>
         </fieldset>
-        <span class="read-more"><a href="https://www.oslomet.no/om/sifo/referansebudsjettet">Reference budget calculator</a></span><br>
         <fieldset class="three-column-assets">
             <legend>Assets</legend>
             <fieldset id="liquid_assets_fieldset">
@@ -416,60 +403,45 @@
             <div class="input-group">
                 <label for="primary_residence_market_value">Primary residence market value</label>
                 <input id="primary_residence_market_value" value="4814968" data-original-amount="4814968" inputmode="numeric" pattern="[0-9 \.]">
-                <span class="read-more"><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home price</a>, <a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">Housing statistics</a></span>
             </div>
             <div class="input-group">
-                <label for="other_assets_value">Other Illiquid Assets Value</label>
+                <label for="other_assets_value">Other illiquid assets value</label>
                 <input id="other_assets_value" value="0" inputmode="numeric" pattern="[0-9 \.]">
             </div>
-            <!-- <fieldset>
-                <legend>Illiquid Assets</legend>
-                <fieldset>
-                    <legend>Primary residence</legend>
-                </fieldset>
-                <legend>Other</legend>
-            </fieldset> -->
         </fieldset>
         <fieldset class="three-column-long-end">
             <legend>Taxes</legend>
             <div class="input-group input-percentage">
                 <label for="tax_rate_capital_gains">Capital gains tax rate (%)</label>
                 <input id="tax_rate_capital_gains" value="37.84" data-original-amount="37.84" type="number">
-                <span class="read-more"><a href="https://www.skatteetaten.no/satser/faktor-for-oppjustering-av-gevinsttap-eller-utbytte-pa-aksjer/">Further reading</a> 2024: 37.84% for stocks, 22% for other sources.</span>
             </div>
             <div class="input-group">
                 <label for="tax_rate_property_tax">Property tax rate (%)</label>
                 <input id="tax_rate_property_tax" value="0.4" data-original-amount="0.4" step="0.01" type="number">
-                <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/bolig-og-eiendeler/bolig-eiendom-tomt/eiendomsskatt/hvor-mye-skatt-ma-jeg-betale/">Further reading</a></span>
             </div>
             <fieldset class="three-column-balanced">
                 <legend>Fortune tax</legend>
                 <div class="input-group input-percentage">
                     <label for="tax_rate_fortune_tax">Fortune tax rate (%)</label>
                     <input id="tax_rate_fortune_tax" value="1.1" data-original-amount="1.1" step="0.1" type="number">
-                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
                 </div>
                 <div class="input-group">
                     <label for="tax_fortune_tax_zero_bracket_cutoff">Fortune tax zero bracket</label>
                     <input id="tax_fortune_tax_zero_bracket_cutoff" value="1700000" data-original-amount="1700000" step="100000" inputmode="numeric" pattern="[0-9 \.]">
-                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
                 </div>
                 <fieldset class="three-colum-long-start">
                     <legend>Primary residence fortune tax valuation</legend>
                     <div class="input-group input-percentage">
                         <label for="primary_residence_fortune_tax_value_reduction_first_bracket">Tax value reduction for fortune tax (%) first bracket</label>
                         <input id="primary_residence_fortune_tax_value_reduction_first_bracket" value="75" data-original-amount="75" type="number">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
                     </div>
                     <div class="input-group">
                         <label for="primary_residence_fortune_tax_first_bracket_cutoff">Fortune tax home value first bracket cutoff</label>
                         <input id="primary_residence_fortune_tax_first_bracket_cutoff" value="10000000" data-original-amount="10000000" inputmode="numeric" pattern="[0-9 \.]">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
                     </div>
                     <div class="input-group input-percentage">
                         <label for="primary_residence_fortune_tax_value_reduction_second_bracket">Tax value reduction for fortune tax (%) second bracket</label>
                         <input id="primary_residence_fortune_tax_value_reduction_second_bracket" value="30" data-original-amount="30" type="number">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
                     </div>
                 </fieldset>
             </fieldset>
@@ -481,6 +453,19 @@
     <p>I occasionally catch myself wondering, what would it take to effectively just retire? I know that there isn't that much math to it, but it's slightly more tricky than I can quickly ballpark in my head and be satisfied with the answer. This could probably have been a spreadsheet, but it's more fun this way (and accessible with regards to keeping the code/logic up to date, and sharable if others would want to play with it).</p>
     <p>It is heavily oriented towards Norway, because that's where I live.</p>
     <p>Also note that the tax rules are complex, and this only gives a quick overview. However, it's mostly based around worst case scenarios with no deductions and similar.</p>
+
+    <h2>Resources</h2>
+
+    <ul>
+        <li><a href="https://www.oslomet.no/om/sifo/referansebudsjettet">Reference budget calculator</a></li>
+        <li><a href="https://www.skatteetaten.no/satser/faktor-for-oppjustering-av-gevinsttap-eller-utbytte-pa-aksjer/">Capital gains tax rate</a> 2024: 37.84% for stocks, 22% for other sources.</li>
+        <li><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home price</a></li>
+        <li><a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">General housing statistics</a></li>
+        <li><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/bolig-og-eiendeler/bolig-eiendom-tomt/eiendomsskatt/hvor-mye-skatt-ma-jeg-betale/">Property tax rates</a></li>
+        <li><a href="https://www.skatteetaten.no/satser/formuesskatt/">Fortune tax rates and deductions</a></li>
+        <li><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Property valuation for fortune tax</a></li>
+    </ul>
+
     <h2>The math behind</h2>
     <p>Here is the calculation this is based on</p>
     <p>(Annual) withdrawal = desired spending amount + taxes = liquid assets * withdrawal rate</p>
