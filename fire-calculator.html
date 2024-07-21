@@ -450,9 +450,9 @@
         <button onclick="resetAmounts()">Reset</button>
     </div>
     <h1>About</h1>
-    <p>I occasionally catch myself wondering, what would it take to effectively just retire? I know that there isn't that much math to it, but it's slightly more tricky than I can quickly ballpark in my head and be satisfied with the answer. This could probably have been a spreadsheet, but it's more fun this way (and accessible with regards to keeping the code/logic up to date, and sharable if others would want to play with it).</p>
+    <p>I occasionally catch myself wondering, what would it take to effectively just retire? I know that there isn't that much math to it, but it's slightly more tricky than I can quickly ballpark in my head and be satisfied with the answer. Especially with the fortune tax requiring you to constantly withdraw a small amount of you assets, which triggers additional taxes on the realized gains, and so on. This could probably have been a spreadsheet, but it's more fun this way (and accessible with regards to keeping the code/logic up to date, and sharable if others would want to play with it).</p>
     <p>It is heavily oriented towards Norway, because that's where I live.</p>
-    <p>Also note that the tax rules are complex, and this only gives a quick overview. However, it's mostly based around worst case scenarios with no deductions and similar.</p>
+    <p>Also note that the tax rules are more complex, and this only gives a quick overview. However, it's mostly based around worst case scenarios with no deductions and similar.</p>
 
     <h2>Resources</h2>
 
@@ -466,9 +466,23 @@
         <li><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Property valuation for fortune tax</a></li>
     </ul>
 
+    <h2>Flaws</h2>
+
+    <p>The major shortcomings I'm aware of</p>
+
+    <ul>
+        <li>The capital gains tax is only 1.0 percent up til 20 000 000, it's only after that it's 1.1%. At the moment, I just can't be bothered implementing it. Just adjust the value in the field if you want more accuracy for a lower bracket</li>
+        <li>Not all municipalities take their part of the fortune taxes (though these are pathological cases).</li>
+        <li>The property tax is based on the highest legal rate, based on the property market value. Most municipalities run with a discounted valuation for primary residences, and few charge the highest rate.</li>
+        <li>The calculation assumes all liquid assets are in stocks. Ideally it should support a mixture with other asset classes where capital gains are taxed at the lower 22% rate.</li>
+    </ul>
+
+
     <h2>The math behind</h2>
     <p>Here is the calculation this is based on</p>
     <p>(Annual) withdrawal = desired spending amount + taxes = liquid assets * withdrawal rate</p>
+
+    <p>The below is outdated, but I'm leaving it until I find the motivation to clean it up</p>
 
     <p>taxes = fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets - zero bracket cutoff) + property tax rate * home value + amount withdrawn * capital gains tax rate</p>
     <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets - zero bracket cutoff) + property tax rate * home value + amount withdrawn * capital gains tax rate)</p>
