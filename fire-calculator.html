@@ -14,7 +14,7 @@
         window.addEventListener("load", (loadedEvent) => {
             console.log("page is fully loaded");
             resetAmounts();
-            calculateFromDesiredExpenses();
+            // calculateFromDesiredExpenses();
             document.getElementById('assets_withdrawal_spendable_amount_per_year')
                 .addEventListener("input", (spendableInputEvent) => {
                     calculateFromDesiredExpenses();
@@ -48,11 +48,23 @@
                 addEventListener('input', (inputEvent) => {
                     calculateFromDesiredExpenses();
                 });
+            document.getElementById('tax_fortune_tax_zero_bracket_cutoff').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
             document.getElementById('primary_residence_market_value').
                 addEventListener('input', (inputEvent) => {
                     calculateFromDesiredExpenses();
                 });
-            document.getElementById('primary_residence_fortune_tax_rebate').
+            document.getElementById('primary_residence_fortune_tax_value_reduction_first_bracket').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('primary_residence_fortune_tax_first_bracket_cutoff').
+                addEventListener('input', (inputEvent) => {
+                    calculateFromDesiredExpenses();
+                });
+            document.getElementById('primary_residence_fortune_tax_value_reduction_second_bracket').
                 addEventListener('input', (inputEvent) => {
                     calculateFromDesiredExpenses();
                 });
@@ -110,19 +122,27 @@
             // liquid assets = (desired spending amount + fortune tax rate * (home value - deduction percentage) + fortune tax rate * other illiquid assets + property tax rate * home value)/(withdrawal rate - fortune tax rate - withdrawal rate * capital gains tax rate)
             var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
             var fortuneTaxRate = parseFromElement(document.getElementById('tax_rate_fortune_tax')) / 100.0;
-            var homeValue = parseFromElement(document.getElementById('primary_residence_market_value'));
-            var homeValueTaxRebate = parseFromElement(document.getElementById('primary_residence_fortune_tax_rebate')) / 100.0;
-            var propertyTaxRate = parseFromElement(document.getElementById('tax_rate_property_tax')) / 100.0;
+            var fortuneTaxZeroRateCutoff = parseFromElement(document.getElementById('tax_fortune_tax_zero_bracket_cutoff'));
             var otherAssetsValue = parseFromElement(document.getElementById('other_assets_value'));
             var capitalGainsTaxRate = parseFromElement(document.getElementById('tax_rate_capital_gains')) / 100.0;
 
-            var homeFortuneTax = fortuneTaxRate * (homeValue*(1.0 - homeValueTaxRebate));
-            var homePropertyTax = homeValue * propertyTaxRate;
-            var otherAssetTaxes = fortuneTaxRate * otherAssetsValue;
-            var temp = desiredAnnualExpenses + homeFortuneTax + homePropertyTax + otherAssetTaxes;
-            var divideBy = annualWithdrawalRate - fortuneTaxRate - annualWithdrawalRate * capitalGainsTaxRate;
+            var liquidAssetsCalculated = 0.0;
+            var noFortuneTaxLiquidAssets = (desiredAnnualExpenses + GetHomePropertyTax()) / (annualWithdrawalRate * (1.0 - capitalGainsTaxRate));
+            if(noFortuneTaxLiquidAssets + GetHomeFortuneTaxValuation() + otherAssetsValue <= fortuneTaxZeroRateCutoff) {
+                liquidAssetsCalculated = noFortuneTaxLiquidAssets;
+            }
+            else
+            {
+                liquidAssetsCalculated = (fortuneTaxRate * (GetHomeFortuneTaxValuation() + otherAssetsValue - fortuneTaxZeroRateCutoff) + desiredAnnualExpenses + GetHomePropertyTax()) / (annualWithdrawalRate - annualWithdrawalRate * capitalGainsTaxRate - fortuneTaxRate);
+            }
 
-            var liquidAssetsCalculated = temp / divideBy;
+            // var homeFortuneTax = fortuneTaxRate * GetHomeFortuneTaxValuation();
+            // var homePropertyTax = GetHomePropertyTax();
+            // var otherAssetTaxes = fortuneTaxRate * otherAssetsValue;
+            // var temp = desiredAnnualExpenses + homeFortuneTax + homePropertyTax + otherAssetTaxes;
+            // var divideBy = annualWithdrawalRate - fortuneTaxRate - annualWithdrawalRate * capitalGainsTaxRate;
+
+            // var liquidAssetsCalculated = temp / divideBy;
 
             // liquidAssetsCalculated = roundNumber(liquidAssetsCalculated, 2);
             // console.log(`
@@ -146,28 +166,42 @@
             var annualWithdrawnAmount = parseFromElement(document.getElementById('assets_withdrawal_amount_per_year'));
             var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
             var liquidAssets = annualWithdrawnAmount / annualWithdrawalRate;
-            document.getElementById('liquid_assets_amount').value = liquidAssets;
+            document.getElementById('liquid_assets_amount').value = roundNumber(liquidAssets, 2);
             // console.log(`LAM calculated: ${liquidAssets}`);
             // console.log(`Lam in doc: ${document.getElementById('liquid_assets_amount').value}`);
 
             var annualWithdrawalRate = parseFromElement(document.getElementById('assets_withdrawal_rate_per_year')) / 100.0;
             var fortuneTaxRate = parseFromElement(document.getElementById('tax_rate_fortune_tax')) / 100.0;
-            var homeValue = parseFromElement(document.getElementById('primary_residence_market_value'));
-            var homeValueTaxRebate = parseFromElement(document.getElementById('primary_residence_fortune_tax_rebate')) / 100.0;
-            var propertyTaxRate = parseFromElement(document.getElementById('tax_rate_property_tax')) / 100.0;
+            var fortuneTaxZeroRateCutoff = parseFromElement(document.getElementById('tax_fortune_tax_zero_bracket_cutoff'));
             var otherAssetsValue = parseFromElement(document.getElementById('other_assets_value'));
             var capitalGainsTaxRate = parseFromElement(document.getElementById('tax_rate_capital_gains')) / 100.0;
 
-            // var homeFortuneTax = fortuneTaxRate * (homeValue*(1.0 - homeValueTaxRebate));
-            // var homePropertyTax = homeValue * propertyTaxRate;
-            // var otherAssetTaxes = fortuneTaxRate * otherAssetsValue;
-
-            var leftForSpending = annualWithdrawnAmount - (fortuneTaxRate * (liquidAssets + homeValue*(1.0 - homeValueTaxRebate) + otherAssetsValue) + homeValue * propertyTaxRate + capitalGainsTaxRate * annualWithdrawnAmount);
+            var leftForSpending = annualWithdrawnAmount - (fortuneTaxRate * Math.max(0, liquidAssets + GetHomeFortuneTaxValuation() + otherAssetsValue - fortuneTaxZeroRateCutoff) + GetHomePropertyTax() + capitalGainsTaxRate * annualWithdrawnAmount);
             document.getElementById('assets_withdrawal_spendable_amount_per_year').value = roundNumber(leftForSpending, 2);
             updateSpending();
             updateWithdrawalTotal();
             formatAmounts();
             // desired spending amount = annualWithdrawnAmount - (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (annualWithdrawnAmount) * capital gains tax rate)
+        }
+
+        function GetHomeFortuneTaxValuation() {
+            var homeValue = parseFromElement(document.getElementById('primary_residence_market_value'));
+            var firstBracketCutoff = parseFromElement(document.getElementById('primary_residence_fortune_tax_first_bracket_cutoff'));
+            var firstBracketValuationReduction = parseFromElement(document.getElementById('primary_residence_fortune_tax_value_reduction_first_bracket')) / 100.0;
+
+            if(homeValue <= firstBracketCutoff) {
+                return homeValue * (1.0 - firstBracketValuationReduction);
+            }
+
+            var secondBracketValuationReduction = parseFromElement(document.getElementById('primary_residence_fortune_tax_value_reduction_second_bracket')) / 100.0;
+
+            return firstBracketCutoff * (1.0 - firstBracketValuationReduction) + (homeValue - firstBracketCutoff) * (1.0 - secondBracketValuationReduction);
+        }
+
+        function GetHomePropertyTax() {
+            var homeValue = parseFromElement(document.getElementById('primary_residence_market_value'));
+            var propertyTaxRate = parseFromElement(document.getElementById('tax_rate_property_tax')) / 100.0;
+            return homeValue * propertyTaxRate;
         }
 
         function updateWithdrawalTotal()
@@ -211,6 +245,7 @@
                 }
                 amountElements[i].value = resetValue;
             }
+            calculateFromDesiredExpenses();
         }
 
         // All changes trigger change in assets_withdrawal_spendable_amount_per_year, trigger change of everything else
@@ -244,7 +279,7 @@
 </head>
 <body>
     <h1>FIRE Calculator</h1>
-    <form>
+    <div>
         <fieldset>
             <legend>Assets</legend>
             <fieldset>
@@ -252,6 +287,11 @@
                 <div>
                     <label for="tax_rate_fortune_tax">Fortune tax rate (%)</label>
                     <input id="tax_rate_fortune_tax" value="1.1" data-original-amount="1.1" step="0.1" type="number">
+                    <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
+                </div>
+                <div>
+                    <label for="tax_fortune_tax_zero_bracket_cutoff">Fortune tax zero bracket</label>
+                    <input id="tax_fortune_tax_zero_bracket_cutoff" value="1700000" data-original-amount="1700000" step="100000">
                     <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
                 </div>
                 <div>
@@ -274,17 +314,27 @@
                     <div>
                         <label for="primary_residence_market_value">Market value</label>
                         <input id="primary_residence_market_value" value="4814968" data-original-amount="4814968">
-                        <span class="read-more"><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home primary_residence_fortune_tax_rebate</a>, <a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">Housing statistics</a></span>
-                    </div>
-                    <div>
-                        <label for="primary_residence_fortune_tax_rebate">Taxation rebate for fortune tax (%)</label>
-                        <input id="primary_residence_fortune_tax_rebate" value="75" data-original-amount="75" type="number">
-                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a> 2024: 75% of value below 10M, 30% of value above</span>
+                        <span class="read-more"><a href="https://eiendomnorge.no/boligprisstatistikk/">Average home price</a>, <a href="https://www.ssb.no/bygg-bolig-og-eiendom/faktaside/bolig">Housing statistics</a></span>
                     </div>
                     <div>
                         <label for="tax_rate_property_tax">Property tax rate (%)</label>
                         <input id="tax_rate_property_tax" value="0.4" data-original-amount="0.4" step="0.01" type="number">
                         <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/bolig-og-eiendeler/bolig-eiendom-tomt/eiendomsskatt/hvor-mye-skatt-ma-jeg-betale/">Further reading</a></span>
+                    </div>
+                    <div>
+                        <label for="primary_residence_fortune_tax_value_reduction_first_bracket">Tax value reduction for fortune tax (%) first bracket</label>
+                        <input id="primary_residence_fortune_tax_value_reduction_first_bracket" value="75" data-original-amount="75" type="number">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
+                    </div>
+                    <div>
+                        <label for="primary_residence_fortune_tax_first_bracket_cutoff">Fortune tax first bracket cutoff</label>
+                        <input id="primary_residence_fortune_tax_first_bracket_cutoff" value="10000000" data-original-amount="10000000">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/satser/formuesskatt/">Further reading</a></span>
+                    </div>
+                    <div>
+                        <label for="primary_residence_fortune_tax_value_reduction_second_bracket">Tax value reduction for fortune tax (%) second bracket</label>
+                        <input id="primary_residence_fortune_tax_value_reduction_second_bracket" value="30" data-original-amount="30" type="number">
+                        <span class="read-more"><a href="https://www.skatteetaten.no/person/skatt/hjelp-til-riktig-skatt/verdsettingsrabatt-ved-fastsetting-av-formue/">Further reading</a></span>
                     </div>
                 </fieldset>
                 <legend>Other</legend>
@@ -350,7 +400,7 @@
             </fieldset>
         </fieldset>
         <button onclick="resetAmounts()">Reset</button>
-    </form>
+    </div>
     <h1>About</h1>
     <p>I occasionally catch myself wondering, what would it take to effectively just retire? I know that there isn't that much math to it, but it's slightly more tricky than I can quickly ballpark in my head and be satisfied with the answer. This could probably have been a spreadsheet, but it's more fun this way (and accessible with regards to keeping the code/logic up to date, and sharable if others would want to play with it).</p>
     <p>It is heavily oriented towards Norway, because that's where I live.</p>
@@ -358,6 +408,15 @@
     <h2>The math behind</h2>
     <p>Here is the calculation this is based on</p>
     <p>(Annual) withdrawal = desired spending amount + taxes = liquid assets * withdrawal rate</p>
+
+    <p>taxes = fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets - zero bracket cutoff) + property tax rate * home value + amount withdrawn * capital gains tax rate</p>
+    <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets - zero bracket cutoff) + property tax rate * home value + amount withdrawn * capital gains tax rate)</p>
+    <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets- zero bracket cutoff) + property tax rate * home value + (liquid assets * withdrawal rate) * capital gains tax rate</p>
+    <p>Solved for liquid assets</p>
+    <p>liquid assets * withdrawal rate = desired spending amount + fortune tax rate * liquid assets + fortune tax rate * (home value - deduction percentage) + fortune tax rate * other illiquid assets - fortune tax rate * zero bracket cutoff + property tax rate * home value + liquid assets * withdrawal rate * capital gains tax rate</p>
+
+
+
     <p>taxes = fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + amount withdrawn * capital gains tax rate</p>
     <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + (fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + amount withdrawn * capital gains tax rate)</p>
     <p>(Annual) withdrawal = liquid assets * withdrawal rate = desired spending amount + fortune tax rate * (liquid assets + (home value - deduction percentage) + other illiquid assets) + property tax rate * home value + (liquid assets * withdrawal rate) * capital gains tax rate</p>
